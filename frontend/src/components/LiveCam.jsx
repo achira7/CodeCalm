@@ -15,6 +15,7 @@ const LiveCam = () => {
 
   const webcamRef = useRef(null);
   const intervalRef = useRef(null);
+  //frft5gftg
 
   useEffect(() => {
     (async () => {
