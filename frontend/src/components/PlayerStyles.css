@@ -1,0 +1,203 @@
+/* src/components/PlayerStyles.css */
+
+
+.circle-content {
+    position: relative;
+    width: 250px; /* 56 * 4 */
+    height: 250px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border-color: rgba(37, 31, 28, 0.737);
+    border-width: 4px;
+    transition: box-shadow 0.3s ease;
+  }
+
+  .circle-border {
+    position: relative;
+    width: 235px; /* 56 * 4 */
+    height: 235px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border-color: rgba(37, 31, 28, 0.737);
+    border-width: 4px;
+    transition: box-shadow 0.3s ease;
+  }
+  
+  .breathing {
+    animation: breathing 2s infinite;
+  }
+  
+  .circle-content img {
+    width: 250px; /* 56 * 4 */
+    height: 250px;
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+    z-index: -1;
+  }
+  
+  .spinning {
+    animation: spinning 10s linear infinite;
+  }
+  
+  .song-title {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: rgb(229, 241, 245);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    font-size: 1.5rem;
+    text-align: center;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+  }
+  
+  @keyframes breathing {
+    0% {
+      box-shadow: 0 0 15px var(--dominant-color);
+    }
+    50% {
+      box-shadow: 0 0 30px var(--dominant-color);
+    }
+    100% {
+      box-shadow: 0 0 15px var(--dominant-color);
+    }
+  }
+  
+  @keyframes spinning {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+  
+  .rhap_container {
+    box-sizing: border-box;
+    display: inline-flex;
+    flex-direction: column;
+    padding: 10px 15px;
+    background-color: rgb(1, 161, 219);
+    border-radius: 20px;
+    margin: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(27, 45, 248, 0.248);
+    border-radius: 16px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  
+    &:focus:not(:focus-visible) {
+      outline: 0;
+    }
+  }
+
+  .rhap_controls-section {
+    display: inline-flex;
+    flex: 1 1 auto;
+    justify-content: center;
+    align-items: center;
+    padding: 10px, 10px, 10px, 10px;
+    max-width: 600px;
+  }
+  
+  .rhap_main-controls-button {
+    margin: 0 3px;
+    color: rgb(229, 241, 245);
+    font-size: 35px;
+    width: 35px;
+    height: 35px;
+  }
+
+  .rhap_play-pause-button {
+    font-size: 50px;
+    width: 50px;
+    height: 50px;
+    margin-left: 12px;
+    margin-right: 12px;
+    filter: drop-shadow(5px 5px 5px rgba(24, 25, 26, 0.205));
+
+  }
+  
+  .rhap_repeat-button {
+    font-size: 26px;
+    width: 26px;
+    height: 26px;
+    color: rgb(229, 241, 245);
+    margin-right: 6px;
+    justify-content: flex-start;
+  }
+
+  .rhap_volume-button {
+    flex: 0 0 26px;
+    font-size: 26px;
+    height: 26px;
+    color:rgb(229, 241, 245);
+    margin-right: 6px;
+  }
+
+  .rhap_volume-controls {
+    display: flex;
+    flex: 1 0 auto;
+    justify-content: flex-end;
+    align-items: center;
+  }
+
+  .rhap_volume-bar-area {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 14px;
+    cursor: pointer;
+  
+    &:focus:not(:focus-visible) {
+      outline: 0;
+    }
+  }
+
+  .rhap_volume-bar {
+    box-sizing: border-box;
+    position: relative;
+    width: 100%;
+    height: 4px;
+    background: rgb(2, 128, 170);
+    border-radius: 2px;
+  }
+
+  .rhap_volume-indicator {
+    box-sizing: border-box;
+    margin-left: -6px;
+    top: -4px;
+    background: rgb(43, 114, 172);
+    opacity: 0.9;
+    border-radius: 50px;
+    box-shadow: rgb(229, 241, 245);
+    cursor: pointer;
+  
+    &:hover {
+      opacity: .9;
+    }
+  }
+
+  .rhap_volume-filled {
+    height: 100%;
+    position: absolute;
+    border-radius: 2px;
+    width: 100%;
+  }
+
+  .rhap_jump-forward-button, .rhap_jump-backward-button {
+    margin-left: 6px;
+    margin-left: 6px;
+  }

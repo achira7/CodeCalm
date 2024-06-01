@@ -1,0 +1,13 @@
+NORMAL USER
+1. Password reset / Account activation using email (imp)
+2. FaceLogin
+3. Light mode / Dark mode
+
+SUPERVISOR
+1. View team stress (imp)
+2. Msg System (imp)
+
+ADMIN
+1. Report download (imp)
+2. Add a team (imp)
+3. Team selection from dropdown (imp)

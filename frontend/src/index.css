@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.font-google {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .ccprimary-blue{
+    background-color: '#74BCFF';
+  }
+
+ body{
+  background-color: rgb(168, 246, 255);
+ }
