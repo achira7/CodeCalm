@@ -1,11 +1,11 @@
 import axios from "axios"
-import React, { useState, useContext } from "react"
-import { Navigate } from "react-router-dom"
+import React, { useState } from "react"
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+//import { useSetRecoilState } from 'recoil';
 
-const loginUrl = "http://127.0.0.1:8000/api/login/"
+//import { userIdAtom, userFirstNameAtom, userLastNameAtom, userIsStaffAtom, userIsSuperuserAtom, userProfilePictureAtom, userEmailAtom } from '../atoms';
 
 const media = 'http://127.0.0.1:8000/media/assets/'
 
@@ -16,9 +16,17 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  //const [navigate, setNavigate] = useState(false);
-  const [isStaff, setIsStaff] = useState(false);
-  const navigate = useNavigate()
+  const [userData, setUserData] = useState({})
+
+  const navigate = useNavigate();
+
+  /*const setUserId = useSetRecoilState(userIdAtom);
+  const setUserFirstName = useSetRecoilState(userFirstNameAtom);
+  const setUserLastName = useSetRecoilState(userLastNameAtom);
+  const setUserEmail = useSetRecoilState(userEmailAtom);
+  const setUserIsStaff = useSetRecoilState(userIsStaffAtom);
+  const setUserIsSuperuser = useSetRecoilState(userIsSuperuserAtom);
+  const setUserProfilePicture = useSetRecoilState(userProfilePictureAtom);*/
 
   const submitLoginForm = async (e) => {
     e.preventDefault();
@@ -29,10 +37,21 @@ const Login = () => {
       }, { withCredentials: true });
 
       if (response.data.message === 'Login successful') {
+        setUserData(response.data)
+        /*setUserId(response.data.user.id);
+        setUserFirstName(response.data.user.first_name);
+        setUserLastName(response.data.user.last_name);
+        setUserEmail(response.data.user.email);
+        setUserIsStaff(response.data.user.is_staff);
+        setUserIsSuperuser(response.data.user.is_superuser);
+        setUserProfilePicture(response.data.user.profile_picture);*/
+
         setFormError(false);
         if (response.data.is_staff) {
           navigate("/admin/dashboard");
-        } else {
+        } else if (response.data.is_superuser) {
+          navigate("/admin/dashboard");
+        }else{
           navigate("/employee/dashboard");
         }
       } 
@@ -46,15 +65,12 @@ const Login = () => {
           draggable: true,
           progress: undefined,
           theme: "colored",
-          toastId: customId,
-      });
+        });
         setFormError(true);
         setErrorMsg("Login failed");
-
-          
       }
     } catch (error) {
-      toast.error(response.data.message, {
+      toast.error("An error occurred during login", {
         position: "top-right",
         autoClose: 5000,
         hideProgressBar: false,
@@ -63,16 +79,12 @@ const Login = () => {
         draggable: true,
         progress: undefined,
         theme: "colored",
-        toastId: customId,
-    });
+      });
       setFormError(true);
       setErrorMsg("An error occurred during login");
       console.error(error);
     }
   };
-
-  
- 
 
   return (
     <div className="items-center">

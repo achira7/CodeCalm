@@ -44,11 +44,11 @@ const EmployeeDashboard = () => {
     }
   };
 
-  const fetchEmotionData = async (userId) => {
+  const fetchEmotionData = async () => {
     try {
       const response = await axios.get(
         "http://localhost:8000/api/getallemotions/",
-        { params: { user_id: userId } }
+        //{ params: { user_id: userId } }
       );
       const data = response.data;
       setEmotions(data);
@@ -58,7 +58,7 @@ const EmployeeDashboard = () => {
         setChartError("No data recorded");
       } else {
         setChartError(null);
-      }//
+      }
 
       try {
         const response = await axios.get(
@@ -78,13 +78,15 @@ const EmployeeDashboard = () => {
         console.log(e)
     }
 
-
       const values = Object.values(data);
       const keys = Object.keys(data);
       const maxValue = Math.max(...values);
       const maxKey = keys[values.indexOf(maxValue)];
+      
       setHighestEmotion({ key: maxKey, value: maxValue });
+
     } catch (error) {
+      
       console.error("Error fetching data:", error);
       setChartError("An error occurred!");
     }

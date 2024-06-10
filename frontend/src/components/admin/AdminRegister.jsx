@@ -30,8 +30,6 @@ function AdminRegister(){
     if(registerSucess){
         console.log('register sucess!')
     }
-
-
   return (
     <div className='items-center'>
         <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -51,8 +49,10 @@ function AdminRegister(){
                 <h2 className="mt-6 text-center text-3xl leading-9 font-extrabold text-gray-900 font-google">
                     Add an Admin
                 </h2>
-                <h3 className='font-google text-center text-sky-500'>to CodeCalm</h3>
-              
+
+                <h3 className='font-google text-center text-sky-500'>
+                    to CodeCalm
+                </h3>
             </div>
 
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
@@ -85,10 +85,7 @@ function AdminRegister(){
                                     onChange={e => setLast_Name(e.target.value)}
                                 />
 							</div>
-                           
 						</div>
-
-
 
                     <label htmlFor="email" className="block text-sm font-medium leading-5  text-gray-700">
                         E-mail Address
@@ -105,13 +102,7 @@ function AdminRegister(){
                         </div>
                     </div>
 
-
-
                 </div>
-
-              
-
-                
 
                 <div class="mt-6">
                     <label htmlFor="password" className="block text-sm font-medium leading-5 text-gray-700">
@@ -125,7 +116,6 @@ function AdminRegister(){
                         type="password"/>
                     </div>
                 </div>
-
 
                 <div class="mt-6">
                     <span class="block w-full rounded-md shadow-sm">

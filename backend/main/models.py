@@ -80,6 +80,20 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email + " | " + self.first_name
 
+
+class Employee_Team(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField(null=True, blank=True)
+
+    @classmethod
+    def create_team(cls, name, description):
+        team = cls(name=name, description=description)
+        team.save(using=cls._default_manager.db)
+        return team
+
+    def __str__(self):
+        return self.name
+
 class Employee_Stress(models.Model):  
     employee = models.ForeignKey(UserAccount, on_delete=models.CASCADE)
     time = models.DateTimeField(auto_now_add=True)
@@ -90,15 +104,14 @@ class Employee_Emotion(models.Model):
     time = models.DateTimeField(auto_now_add=True)
     emotion_data = models.CharField(max_length=10)
 
-class UserTokens(models.Model):
-    user_id = models.IntegerField()
-    token = models.CharField(max_length=255)
-    created_at = models.DateTimeField(auto_now_add=True)
-    expired_at = models.DateTimeField()
+class Employee_Focus(models.Model):  
+    employee = models.ForeignKey(UserAccount, on_delete=models.CASCADE)
+    time = models.DateTimeField(auto_now_add=True)
+    focus_data = models.CharField(max_length=5)
 
-class PasswordReset(models.Model):
-    email = models.EmailField(max_length=255)
-    token = models.CharField(max_length=255, unique=True)
+
+
+
 
 
 

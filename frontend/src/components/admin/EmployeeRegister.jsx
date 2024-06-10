@@ -7,18 +7,33 @@ import React, { useEffect, useState } from "react";
 const baseUrl = "http://127.0.0.1:8000/api/register/";
 
 function EmployeeRegister() {
-  const [first_name, setFirst_Name] = useState("")
-  const [last_name, setLast_Name] = useState("")
-  const [email, setEmail] = useState("")
-  const [team, setTeam] = useState("")
-  const [gender, setGender] = useState("")
-  const [employment_type, setEmployment_type] = useState("")
-  const [work_location, setWork_location] = useState("")
-  const [password, setPassword] = useState("")
-  const [registerSucess, setregisterSucess] = useState(false)
-  const [profile_picture, setProfilePicture] = useState(null)
-  const is_staff = "False"
-  const is_superuser = "False"
+  const [first_name, setFirst_Name] = useState("");
+  const [last_name, setLast_Name] = useState("");
+  const [email, setEmail] = useState("");
+  const [team, setTeam] = useState("");
+  const [gender, setGender] = useState("");
+  const [employment_type, setEmployment_type] = useState("");
+  const [work_location, setWork_location] = useState("");
+  const [password, setPassword] = useState("");
+  const [registerSucess, setregisterSucess] = useState(false);
+  const [profile_picture, setProfilePicture] = useState(null);
+  const is_staff = "False";
+  const is_superuser = "False";
+
+  const [selectedTeam, setSelectedTeam] = useState("");
+  const [teams, setTeams] = useState([]);
+
+  useEffect(() => {
+    axios
+      .get("http://127.0.0.1:8000/api/teamlist/")
+      .then((response) => {
+        console.log(response.data);
+        setTeams(response.data);
+      })
+      .catch((error) => {
+        console.error("Error fetching teams:", error);
+      });
+  }, []);
 
   const registerFormSubmit = async (e) => {
     e.preventDefault();
@@ -39,25 +54,38 @@ function EmployeeRegister() {
   };
 
   if (registerSucess) {
-    console.log("register sucess!")
+    console.log("register sucess!");
   }
 
-    const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            (e) => setProfilePicture(e.target.value)
-          setProfilePicture(file)
-          const reader = new FileReader();
-          reader.onload = () => {
-            setPreviewSrc(reader.result)
-          }
-          reader.readAsDataURL(file)
-        }
-      }
-    
-      const [previewSrc, setPreviewSrc] = useState(
-        "http://127.0.0.1:8000/media/profilePictures/default.jpg"
-      )
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      (e) => setProfilePicture(e.target.value);
+      setProfilePicture(file);
+      const reader = new FileReader();
+      reader.onload = () => {
+        setPreviewSrc(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const [previewSrc, setPreviewSrc] = useState(
+    "http://127.0.0.1:8000/media/profilePictures/default.jpg"
+  );
+
+  const handleAddTeam = () => {
+    navigate("/admin/addteam");
+  };
+
+  const handleTeamChange = (e) => {
+    const value = e.target.value;
+    if (value === "add_team") {
+      handleAddTeam();
+    } else {
+      setSelectedTeam(value);
+    }
+  };
 
   return (
     <div className="items-center">
@@ -154,13 +182,36 @@ function EmployeeRegister() {
                     >
                       Team
                     </label>
-                    <input
-                      className="w-full px-3 py-2 text-sm leading-tight text-gray-700 border rounded shadow appearance-none focus:outline-none focus:shadow-outline "
-                      name="team"
-                      type="text"
-                      placeholder="Team"
-                      onChange={(e) => setTeam(e.target.value)}
-                    />
+
+                    <div className="mb-4">
+                      <label
+                        className="block mb-2 text-sm font-bold text-gray-700"
+                        htmlFor="team"
+                      >
+                        Team
+                      </label>
+                      <select
+                        className="w-full px-3 py-2 text-sm leading-tight text-gray-700 border rounded shadow appearance-none focus:outline-none focus:shadow-outline"
+                        name="team"
+                        onChange={(e) => {
+                          if (e.target.value === "addTeam") {
+                            navigate("/admin/addteam");
+                          } else {
+                            setTeam(e.target.value);
+                          }
+                        }}
+                      >
+                        <option value="" selected disabled hidden>
+                          Choose Team
+                        </option>
+                        {teams.map((team) => (
+                          <option key={team.id} value={team.name}>
+                            {team.name}
+                          </option>
+                        ))}
+                        <option value="addTeam">Add a Team</option>
+                      </select>
+                    </div>
                   </div>
                   <div class="md:ml-2">
                     <label
@@ -258,32 +309,33 @@ function EmployeeRegister() {
                   Profile Picture
                 </label>
                 <div class="mt-1 rounded-md shadow-sm">
-                <div className="mt-6">
-          <label
-            htmlFor="profile_picture"
-            className="block text-sm font-medium leading-5 text-gray-700"
-          >
-            Profile Picture
-          </label>
-          <div className="mt-1 flex items-center">
-            <input
-              name="profile_picture"
-              type="file"
-              onChange={(e) => handleFileChange} // Handle file input change
-              className="block w-full text-sm text-slate-500
+                  <div className="mt-6">
+                    <label
+                      htmlFor="profile_picture"
+                      className="block text-sm font-medium leading-5 text-gray-700"
+                    >
+                      Profile Picture
+                    </label>
+                    <div className="mt-1 flex items-center">
+                      <input
+                        name="profile_picture"
+                        type="file"
+                        onChange={(e) => handleFileChange} // Handle file input change
+                        className="block w-full text-sm text-slate-500
                 file:mr-4 file:py-2 file:px-4
                 file:rounded-full file:border-0
                 file:text-sm file:font-semibold
                 file:bg-violet-50 file:text-violet-700
-                hover:file:bg-violet-100"/>
-            <img
-              id="preview_img"
-              className="h-16 w-16 object-cover rounded-full"
-              src={previewSrc}
-              alt="Current profile photo"
-            />
-          </div>
-        </div>
+                hover:file:bg-violet-100"
+                      />
+                      <img
+                        id="preview_img"
+                        className="h-16 w-16 object-cover rounded-full"
+                        src={previewSrc}
+                        alt="Current profile photo"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 

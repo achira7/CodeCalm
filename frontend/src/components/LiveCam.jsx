@@ -9,13 +9,13 @@ import 'react-toastify/dist/ReactToastify.css';
 const LiveCam = () => {
   const [userData, setUserData] = useState({});
   const [message, setMessage] = useState("You are not authenticated");
-  const [emotionResponse, setEmotionResponse] = useState("");
+  const [emotionResponseState, setEmotionResponseState] = useState("");
   const [emotionFrequency, setEmotionFrequency] = useState("");
+  const [gaze, setGaze] = useState("");
   const [progress, setProgress] = useState(0);
 
   const webcamRef = useRef(null);
   const intervalRef = useRef(null);
-  //frft5gftg
 
   useEffect(() => {
     (async () => {
@@ -40,19 +40,21 @@ const LiveCam = () => {
         formData.append("user_id", userData.id);
 
         const response = await axios.post(
-          "http://127.0.0.1:8000/api/emotion/",
-          formData,
-          {
-            headers: {
-              accept: "application/json",
-              "Accept-Language": "en-US,en;q=0.8",
-            },
-          }
-        );
+            "http://127.0.0.1:8000/api/emotion/",
+            formData,
+            {
+              headers: {
+                accept: "application/json",
+                "Accept-Language": "en-US,en;q=0.8",
+              },
+            }
+          )
+
         if (response) {
-          const { emo, frq } = response.data;
-          setEmotionResponse(emo);
-          setEmotionFrequency(frq);
+          const { emo, frq, gaze } = response.data;
+            setEmotionResponseState(emo);
+            setEmotionFrequency(frq);
+            setGaze(gaze);
 
           if (
             response.data.emo === "No Face Detected" ||
@@ -90,8 +92,9 @@ const LiveCam = () => {
             });
           }
         }
+
       } catch (error) {
-        console.error("Error in POST request:", error);
+        console.error("Error in POST requests:", error);
       }
     };
 
@@ -157,7 +160,8 @@ const LiveCam = () => {
           width={500}
           screenshotFormat="image/jpeg"
         />
-        <h2 className="font-google">Detected Emotion is: {emotionResponse}</h2>
+        <h2 className="font-google">Detected Emotion is: {emotionResponseState}</h2>
+        <h2 className="font-google">User Focus is: {gaze}</h2>
         <div style={{ width: 50, height: 50, marginTop: 20 }}>
           <CircularProgressbar
             value={progress}

@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 User = get_user_model()
-from .models import Employee_Emotion
+from .models import Employee_Emotion, Employee_Team
 
 class RegistrationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -32,7 +32,12 @@ class EmployeeEmotionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employee_Emotion
         fields = ['employee_id', 'emotion_data']
+
     
+class EmployeeTeamSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Employee_Team
+        fields = '__all__'
 
 
 

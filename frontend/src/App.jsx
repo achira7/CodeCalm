@@ -1,4 +1,6 @@
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { RecoilRoot } from 'recoil';
 
 import Login from "./components/Login";
 import NavBar from "./components/NavBar";
@@ -11,36 +13,32 @@ import LiveCam from "./components/LiveCam";
 import EditEmployee from "./components/admin/EditEmployee";
 import AdminRegister from "./components/admin/AdminRegister";
 import FaceLogin from "./components/FaceLogin";
-
-import {
-  RecoilRoot,
-  atom,
-  selector,
-  useRecoilState,
-  useRecoilValue,
-} from 'recoil';
+import AddTeam  from "./components/admin/AddTeam";
 import AdminDashboard from "./components/admin/AdminDashboard";
+import SupervisorRegister from './components/admin/SupervisorRegister';
 
 function App() {
   return (
-    <>
+    <RecoilRoot>
       <NavBar />
-        <Routes>
-          <Route path="/employee/login" element={<Login />} />
-          <Route path="/employee/facelogin" element={<FaceLogin />} />
-          <Route path="/admin/register" element={<EmployeeRegister />} />
-          <Route path="/admin/adminregister" element={<AdminRegister />} />
+      <Routes>
+        <Route path="/employee/login" element={<Login />} />
+        <Route path="/employee/facelogin" element={<FaceLogin />} />
+        <Route path="/admin/register_employee" element={<EmployeeRegister />} />
+        <Route path="/admin/register_supervisor" element={<SupervisorRegister />} />
+        <Route path="/admin/register_admin" element={<AdminRegister />} />
 
-          <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
-          <Route path="/employee/player" element={<Player />} />
-          <Route path="/employee/breathingexercise" element={<BreathingExercise />} />
-          <Route path="/employee/livecam" element={<LiveCam />} />
-
-          <Route path="/admin/edit" element={<EditEmployee />} />
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/allemployees" element={<AllEmployees />} />
-        </Routes>
-    </>
+        <Route path="/admin/adminregister" element={<AdminRegister />} />
+        <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
+        <Route path="/employee/player" element={<Player />} />
+        <Route path="/employee/breathingexercise" element={<BreathingExercise />} />
+        <Route path="/employee/livecam" element={<LiveCam />} />
+        <Route path="/admin/edit" element={<EditEmployee />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/allemployees" element={<AllEmployees />} />
+        <Route path="/admin/addteam" element={<AddTeam />} />
+      </Routes>
+    </RecoilRoot>
   );
 }
 

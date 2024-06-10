@@ -2,11 +2,31 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Navigate } from "react-router-dom";
 import DoughnutChart from "./charts/DoughnutChart";
-import { useRecoilState } from "recoil";
+//import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+/*import {
+  userIdAtom,
+  userFirstNameAtom,
+  userLastNameAtom,
+  userEmailAtom,
+  userIsStaffAtom,
+  userIsSuperuserAtom,
+  userProfilePictureAtom,
+  mediaRootAtom,
+} from "../atoms";*/
 
 const pfp = "http://127.0.0.1:8000/media/profilePictures/default.jpg";
 
+
 export const EmployeeDashboard = () => {
+  /*const userId = useRecoilValue(userIdAtom);
+  const userFirstName = useRecoilValue(userFirstNameAtom);
+  const userLastName = useRecoilValue(userLastNameAtom);
+  const userEmail = useRecoilValue(userEmailAtom);
+  const userIsStaff = useRecoilValue(userIsStaffAtom);
+  const userIsSuperuser = useRecoilValue(userIsSuperuserAtom);
+  const userProfilePicture = useRecoilValue(userProfilePictureAtom);
+  const mediaRoot = useRecoilValue(mediaRootAtom);*/
+
   const [emotions, setEmotions] = useState({
     angry: 0,
     disgust: 0,
@@ -17,7 +37,6 @@ export const EmployeeDashboard = () => {
     neutral: 0,
   })
   const [navigate, setNavigate] = useState(false);
-  const [message, setMessage] = useState("You are not authenticated");
   const [userData, setUserData] = useState({});
   const [chartError, setChartError] = useState(null);
   const [highestEmotion, setHighestEmotion] = useState({ key: "", value: 0 });
@@ -30,7 +49,6 @@ export const EmployeeDashboard = () => {
       });
       const user = response.data;
       setUserData(user);
-      setMessage(`Hi ${user.first_name} ${user.last_name}`);
     } catch (e) {
       console.error(e);
       setNavigate(true);
@@ -93,11 +111,13 @@ export const EmployeeDashboard = () => {
               <div className="mt-4 items-center pb-10 flex flex-col">
               <img
                   className="scale-[0.4] rounded-full border-2 border-sky-500 shadow-blue-600/50"
-                  src={userData.profile_picture ? userData.profile_picture: "http://127.0.0.1:8000/media/profilePictures/default.jpg"}
+                  //src={userData.profile_picture ? userData.profile_picture: "http://127.0.0.1:8000/media/profilePictures/default.jpg"}
+                  src={userData.profile_picture}
                   alt="Profile"/>
 
                 <h1 className="text-xl text-sky-900 font-google font-semibold">
-                  Welcome, {userData.first_name} {userData.last_name}! 
+                 Welcome, {userData.first_name} {userData.last_name}!
+                 userID: {userData.id} email: {userData.email}
                 </h1>
                 <div>
                 </div>
