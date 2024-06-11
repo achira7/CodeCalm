@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import axios from "axios";
 import AudioPlayer from "react-h5-audio-player";
 import "react-h5-audio-player/lib/styles.css";
 import tracks from "../Tracks";
@@ -14,10 +15,24 @@ const Player = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [dominantColor, setDominantColor] = useState("#000");
   const [progress, setProgress] = useState(0);
+  const [userID, setUserID] = useState("");
 
   const currentTrack = tracks[currentTrackIndex];
   const audioRef = useRef(null);
   const imageRef = useRef(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const response = await axios.get("http://localhost:8000/api/getuser/", {
+          withCredentials: true,
+        });
+        setUserID(response.data.id);
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+  }, []);
 
   const handleNext = () => {
     setCurrentTrackIndex((currentTrackIndex + 1) % tracks.length);
@@ -49,6 +64,43 @@ const Player = () => {
     }
   };
 
+  const logListeningData = async (duration) => {
+    try {
+      await axios.post('http://localhost:8000/api/track_listening/', {
+        user: userID,
+        track_name: currentTrack.name,
+        duration
+      });
+    } catch (error) {
+      console.error("Error posting data: ", error);
+    }
+  };
+
+  useEffect(() => {
+    let listeningStartTime = 0;
+
+    const handlePlaying = () => {
+      listeningStartTime = audioRef.current.audio.current.currentTime;
+    };
+
+    const handlePaused = async () => {
+      const listeningEndTime = audioRef.current.audio.current.currentTime;
+      const listeningDuration = listeningEndTime - listeningStartTime;
+      await logListeningData(listeningDuration);
+    };
+
+    const player = audioRef.current.audio.current;
+    player.addEventListener('playing', handlePlaying);
+    player.addEventListener('pause', handlePaused);
+    player.addEventListener('ended', handlePaused);
+
+    return () => {
+      player.removeEventListener('playing', handlePlaying);
+      player.removeEventListener('pause', handlePaused);
+      player.removeEventListener('ended', handlePaused);
+    };
+  }, [currentTrackIndex]);
+
   useEffect(() => {
     const interval = setInterval(() => {
       if (isPlaying) {
@@ -65,7 +117,7 @@ const Player = () => {
         <div className={`circle-content ${isPlaying ? "breathing" : ""} circle-border`} style={{ "--dominant-color": dominantColor }}>
           <div className="relative" style={{ width: "250px", height: "250px" }}>
             <CircularProgressbar
-            strokeWidth={2}
+              strokeWidth={2}
               value={progress}
               size={10}
               styles={buildStyles({

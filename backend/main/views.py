@@ -6,14 +6,14 @@ from django.contrib.auth import get_user_model
 from matplotlib.image import pil_to_array
 
 #from imp import load_module
-from .models import Employee_Emotion, Employee_Team, Employee_Focus
+from .models import Employee_Emotion, Employee_Team, Employee_Focus, BreathingExerciseUsage, TrackListening
 
 from django.http import JsonResponse, StreamingHttpResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework import permissions, status, generics
-from .serializers import UserSerializer, EmployeeTeamSerializer  
+from .serializers import UserSerializer, EmployeeTeamSerializer, BreathingExerciseUsageSerializer, TrackListeningSerializer  
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate
 from django.conf import settings
@@ -710,6 +710,43 @@ class EmployeeTeamView(APIView):
             return Response({"error": "Team does not exist"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+
+
+class BreathingExerciseUsageView(APIView):
+    def post(self, request):
+        id = request.data['user']
+        exercise_name = request.data['exercise_name']
+        duration = request.data['duration']
+
+        if not id or exercise_name or duration:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+        else:
+            BreathingExerciseUsage.objects.create(employee_id=id, exercise_name=exercise_name, duration=duration)
+            return Response(status=status.HTTP_201_CREATED)
+
+
+class TrackListeningView(APIView):
+    def post(self, request):
+        id = request.data['user']
+        track_name = request.data['track_name']
+        duration = request.data['duration']
+
+        if not id or track_name or duration:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+        else:
+            TrackListening.objects.create(employee_id=id, track_name=track_name, duration=duration)
+            return Response(status=status.HTTP_201_CREATED)
+
+class QTrackListeningView(APIView):
+    def post(self, request, *args, **kwargs):
+        serializer = TrackListeningSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
      
 
 

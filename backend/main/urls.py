@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include
 
-
 from main.views import (
     RegisterView,
     LoginAPIView,
@@ -17,10 +16,13 @@ from main.views import (
     EmployeeDetail,
     TeamList,
     DetectionView,
+    BreathingExerciseUsageView,
+    TrackListeningView
 )
 
 
 urlpatterns = [
+
     path('register/', RegisterView.as_view()),
     path('getuser/', GetUserView.as_view()),
     path('login/', LoginAPIView.as_view()),
@@ -35,6 +37,8 @@ urlpatterns = [
     path('teamlist/', TeamList.as_view()),
     path('employeelist/',EmployeeList.as_view()),
     path('employee/<int:pk>/',EmployeeDetail.as_view()),
+    path('api/breathing_exercise_usage/', BreathingExerciseUsageView.as_view()),
+    path('api/track_listening/', TrackListeningView.as_view())
 
     ]
 

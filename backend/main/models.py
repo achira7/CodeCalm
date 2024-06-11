@@ -109,7 +109,24 @@ class Employee_Focus(models.Model):
     time = models.DateTimeField(auto_now_add=True)
     focus_data = models.CharField(max_length=5)
 
+class BreathingExerciseUsage(models.Model):
+    employee = models.ForeignKey(UserAccount, on_delete=models.CASCADE)
+    exercise_name = models.CharField(max_length=255)
+    duration = models.IntegerField() 
+    timestamp = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return f"{self.employee.first_name} - {self.exercise_name} for {self.duration} seconds"
+    
+
+class TrackListening(models.Model):
+    employee = models.ForeignKey(UserAccount, on_delete=models.CASCADE)
+    track_name = models.CharField(max_length=255)
+    duration = models.FloatField()  
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.employee.first_name} listened to {self.track_name} for {self.duration} seconds"
 
 
 

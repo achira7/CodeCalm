@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 User = get_user_model()
-from .models import Employee_Emotion, Employee_Team
+from .models import Employee_Emotion, Employee_Team, BreathingExerciseUsage, TrackListening
 
 class RegistrationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -37,6 +37,18 @@ class EmployeeEmotionSerializer(serializers.ModelSerializer):
 class EmployeeTeamSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employee_Team
+        fields = '__all__'
+
+
+class BreathingExerciseUsageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BreathingExerciseUsage
+        fields = '__all__'
+
+
+class TrackListeningSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TrackListening
         fields = '__all__'
 
 
