@@ -16,6 +16,7 @@ import FaceLogin from "./components/FaceLogin";
 import AddTeam  from "./components/admin/AddTeam";
 import AdminDashboard from "./components/admin/AdminDashboard";
 import SupervisorRegister from './components/admin/SupervisorRegister';
+import SupervisorDashboard from './components/supervisor/SupervisorDashboard';
 
 function App() {
   return (
@@ -27,6 +28,8 @@ function App() {
         <Route path="/admin/register_employee" element={<EmployeeRegister />} />
         <Route path="/admin/register_supervisor" element={<SupervisorRegister />} />
         <Route path="/admin/register_admin" element={<AdminRegister />} />
+
+        <Route path="/supervisor/dashboard" element={<SupervisorDashboard />} />
 
         <Route path="/admin/adminregister" element={<AdminRegister />} />
         <Route path="/employee/dashboard" element={<EmployeeDashboard />} />

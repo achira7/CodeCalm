@@ -69,8 +69,9 @@ const Player = () => {
       await axios.post('http://localhost:8000/api/track_listening/', {
         user: userID,
         track_name: currentTrack.name,
-        duration
+        duration: duration
       });
+      console.log(userID, currentTrack.name, duration)
     } catch (error) {
       console.error("Error posting data: ", error);
     }

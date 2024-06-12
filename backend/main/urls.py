@@ -37,8 +37,8 @@ urlpatterns = [
     path('teamlist/', TeamList.as_view()),
     path('employeelist/',EmployeeList.as_view()),
     path('employee/<int:pk>/',EmployeeDetail.as_view()),
-    path('api/breathing_exercise_usage/', BreathingExerciseUsageView.as_view()),
-    path('api/track_listening/', TrackListeningView.as_view())
+    path('breathing_exercise_usage/', BreathingExerciseUsageView.as_view()),
+    path('track_listening/', TrackListeningView.as_view())
 
     ]
 

@@ -119,33 +119,19 @@ const BreathingExercise = () => {
       setIsHovering(false);
       setCircleColor(inhaleColor);
 
-      const formData = new FormData();
-        formData.append("user", userID);
-        formData.append("exercise_name", name);
-        formData.append("duration", elapsedTime);
-
-        /* const response = await axios.post(
-         
-            "http://127.0.0.1:8000/api/breathing_exercise_usage/",
-            formData,
+         await axios.post(
+            "http://127.0.0.1:8000/api/breathing_exercise_usage/",{
+              user: userID,
+              exercise_name: name,
+              duration: elapsedTime
+            },
             {
               headers: {
                 accept: "application/json",
                 "Accept-Language": "en-US,en;q=0.8",
               },
-            },
-            console.log("Runs!!!")
-          )*/
-
-      axios.post("http://127.0.0.1:8000/api/breathing_exercise_usage/", {
-        user: userID,
-        exercise_name: name,
-        duration: elapsedTime
-      }),console.log("Runs!!!").
-      
-
-      
-
+            }
+          )
 
     } else {
       setCountdown(3);
@@ -164,7 +150,7 @@ const BreathingExercise = () => {
       <div className="absolute top-10 left-10">
         <h1 className="text-3xl font-bold text-sky-500">CODECALM</h1>
         <p className="text-xl font-bold text-sky-500">Breathing Exercise</p>
-        <p className="text-sm text-gray-400">Apx: 10 Mins</p>
+        <p className="text-sm text-gray-400">Apx: 5 Mins</p>
       </div>
       <div className="absolute top-10 right-10">
         <select

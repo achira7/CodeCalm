@@ -48,6 +48,13 @@ from django.http import JsonResponse
 from django.core.exceptions import ObjectDoesNotExist
 import mediapipe as mp
 
+from datetime import datetime, timedelta
+from django.db.models import Sum
+from collections import defaultdict
+from django.db.models.functions import ExtractDay, ExtractWeekDay
+from rest_framework.views import APIView
+from django.utils.timezone import now
+from django.db.models import Sum
 
 User = get_user_model()
 
@@ -72,6 +79,10 @@ class RegisterView(APIView):
                 is_staff = False
 
             is_superuser = data.get('is_superuser')  
+            if is_superuser == 'True':
+                is_superuser = True
+            else:
+                is_superuser = False
 
             team = data.get('team')
             gender = data.get('gender')
@@ -79,11 +90,14 @@ class RegisterView(APIView):
             work_location = data.get('work_location')
             profile_picture = data.get('profile_picture')
              
-            if (is_staff == True):
+            if (is_superuser):
                 user = User.objects.create_superuser(email=email, first_name=first_name, last_name=last_name, password=password)
                 message = 'Admin account created successfully!'
+            elif (is_staff):
+                user = User.objects.create_user(email=email, first_name=first_name, last_name=last_name, password=password, team=team, gender=gender, employment_type=employment_type, work_location=work_location, profile_picture=profile_picture, is_superuser=is_superuser, is_staff=is_staff)
+                message = 'Supervisor account created successfully!'
             else:
-                user = User.objects.create_user(email=email, first_name=first_name, last_name=last_name, password=password, team=team, gender=gender, employment_type=employment_type, work_location=work_location, profile_picture=profile_picture, is_superuser=is_superuser)
+                user = User.objects.create_user(email=email, first_name=first_name, last_name=last_name, password=password, team=team, gender=gender, employment_type=employment_type, work_location=work_location, profile_picture=profile_picture, is_superuser=is_superuser, is_staff=is_staff)
                 message = 'Employee account created successfully!'
 
             return Response({'success': message}, status=status.HTTP_201_CREATED)
@@ -604,17 +618,35 @@ class EmotionDataView(APIView):
     def get(self, request):
         defaultEmotionValues = {'angry': 0, 'disgust': 0, 'fear': 0, 'happy': 0, 'sad': 0, 'surprise': 0, 'neutral': 0}
         userid = request.GET.get('user_id')
+        period = request.GET.get('period', 'all_time')  # Default to 'all_time' if not provided
 
         # Check if user_id is provided in the request
         if not userid:
             return JsonResponse({'error': 'User ID is required'}, status=400)
 
-        # Fetch emotion data for the specified user_id
-        emotion_counts_list = Employee_Emotion.objects.filter(employee_id=userid) \
-                                    .values('emotion_data') \
-                                    .annotate(count=Count('emotion_data')) \
-                                    .order_by('emotion_data') \
-                                    .values_list('emotion_data', 'count')
+        # Define the time filter based on the period
+        if period == 'daily':
+            time_threshold = datetime.now() - timedelta(days=1)
+        elif period == 'weekly':
+            time_threshold = datetime.now() - timedelta(weeks=1)
+        elif period == 'monthly':
+            time_threshold = datetime.now() - timedelta(days=30)
+        else:
+            time_threshold = None
+
+        # Fetch emotion data for the specified user_id and time period
+        if time_threshold:
+            emotion_counts_list = Employee_Emotion.objects.filter(employee_id=userid, time__gte=time_threshold) \
+                                        .values('emotion_data') \
+                                        .annotate(count=Count('emotion_data')) \
+                                        .order_by('emotion_data') \
+                                        .values_list('emotion_data', 'count')
+        else:
+            emotion_counts_list = Employee_Emotion.objects.filter(employee_id=userid) \
+                                        .values('emotion_data') \
+                                        .annotate(count=Count('emotion_data')) \
+                                        .order_by('emotion_data') \
+                                        .values_list('emotion_data', 'count')
 
         # Convert the queryset to a dictionary
         emotion_counts_dict = dict(emotion_counts_list)
@@ -627,6 +659,11 @@ class EmotionDataView(APIView):
         print(defaultEmotionValues)
 
         return Response(defaultEmotionValues)
+    
+
+
+
+
 
 class EmployeeEmotionDataView(APIView):
     def get(self, request):
@@ -719,34 +756,99 @@ class BreathingExerciseUsageView(APIView):
         exercise_name = request.data['exercise_name']
         duration = request.data['duration']
 
-        if not id or exercise_name or duration:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        
+        BreathingExerciseUsage.objects.create(employee_id=id, exercise_name=exercise_name, duration=duration)
+        return Response(status=status.HTTP_201_CREATED)
+
+    def get(self, request):
+        user_id = request.GET.get('user')
+        period = request.GET.get('period')
+        today = now().date()
+
+        if period == 'weekly':
+            start_date = today - timedelta(days=today.weekday())  # Start of the week (Monday)
+            end_date = start_date + timedelta(days=6)  # End of the week (Sunday)
+            days = {str(i): 0 for i in range(1, 8)}  # Initialize days 1-7 (Monday-Sunday)
+        elif period == 'monthly':
+            start_date = today.replace(day=1)  # Start of the month
+            end_date = (today.replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)  # End of the month
+            days_in_month = (end_date - start_date).days + 1
+            days = {str(i): 0 for i in range(1, days_in_month + 1)}  # Initialize days 1-31 (or the number of days in the month)
         else:
-            BreathingExerciseUsage.objects.create(employee_id=id, exercise_name=exercise_name, duration=duration)
-            return Response(status=status.HTTP_201_CREATED)
+            return Response({"error": "Invalid period specified"}, status=400)
+
+        usage_records = BreathingExerciseUsage.objects.filter(
+            employee_id=user_id,
+            timestamp__date__range=[start_date, end_date]
+        ).annotate(
+            day=ExtractDay('timestamp') if period == 'monthly' else ExtractWeekDay('timestamp')
+        ).values('day').annotate(total_duration=Sum('duration'))
+
+        for record in usage_records:
+            days[str(record['day'])] = record['total_duration']
+
+        most_used_exercise = BreathingExerciseUsage.objects.filter(
+            employee_id=user_id,
+            timestamp__date__range=[start_date, end_date]
+        ).values('exercise_name').annotate(total_duration=Sum('duration')).order_by('-total_duration').first()
+
+        return Response({
+            "days": days,
+            "most_used_exercise": most_used_exercise
+        })
+    
 
 
 class TrackListeningView(APIView):
     def post(self, request):
-        id = request.data['user']
+        user_id = request.data['user']
         track_name = request.data['track_name']
         duration = request.data['duration']
 
-        if not id or track_name or duration:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        
-        else:
-            TrackListening.objects.create(employee_id=id, track_name=track_name, duration=duration)
+        if duration > 10:
+            TrackListening.objects.create(employee_id=user_id, track_name=track_name, duration=duration)
             return Response(status=status.HTTP_201_CREATED)
+        return Response({"error": "Duration must be greater than 10"}, status=400)
 
-class QTrackListeningView(APIView):
-    def post(self, request, *args, **kwargs):
-        serializer = TrackListeningSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def get(self, request):
+        user_id = request.GET.get('user')
+        period = request.GET.get('period')
+        today = now().date()
+
+        if period == 'weekly':
+            start_date = today - timedelta(days=today.weekday())  # Start of the week (Monday)
+            end_date = start_date + timedelta(days=6)  # End of the week (Sunday)
+            days = {str(i): 0 for i in range(1, 8)}  # Initialize days 1-7 (Monday-Sunday)
+        elif period == 'monthly':
+            start_date = today.replace(day=1)  # Start of the month
+            end_date = (today.replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)  # End of the month
+            days_in_month = (end_date - start_date).days + 1
+            days = {str(i): 0 for i in range(1, days_in_month + 1)}  # Initialize days 1-31 (or the number of days in the month)
+        else:
+            return Response({"error": "Invalid period specified"}, status=400)
+
+        usage_records = TrackListening.objects.filter(
+            employee_id=user_id,
+            timestamp__date__range=[start_date, end_date]
+        ).annotate(
+            day=ExtractDay('timestamp') if period == 'monthly' else ExtractWeekDay('timestamp')
+        ).values('day').annotate(total_duration=Sum('duration'))
+
+        for record in usage_records:
+            days[str(record['day'])] = record['total_duration']
+
+        most_listened_track = TrackListening.objects.filter(
+            employee_id=user_id,
+            timestamp__date__range=[start_date, end_date]
+        ).values('track_name').annotate(total_duration=Sum('duration')).order_by('-total_duration').first()
+
+        return Response({
+            "days": days,
+            "most_listened_track": most_listened_track
+        })
+        
+
+        
+
      
 
 

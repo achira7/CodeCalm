@@ -5,7 +5,7 @@ import DoughnutChart from "../charts/DoughnutChart";
 
 const pfp = "http://127.0.0.1:8000/media/profilePictures/default.jpg";
 
-const EmployeeDashboard = () => {
+const SupervisorDashboard = () => {
   const [emotions, setEmotions] = useState({
     angry: 0,
     disgust: 0,
@@ -197,4 +197,5 @@ const EmployeeDashboard = () => {
   );
 };
 
-export default EmployeeDashboard;
+export default SupervisorDashboard
+
