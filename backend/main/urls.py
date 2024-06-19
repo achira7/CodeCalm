@@ -1,6 +1,4 @@
-from django.contrib import admin
-from django.urls import path, include
-
+from django.urls import path
 from main.views import (
     RegisterView,
     LoginAPIView,
@@ -17,12 +15,22 @@ from main.views import (
     TeamList,
     DetectionView,
     BreathingExerciseUsageView,
-    TrackListeningView
+    TrackListeningView,
+    TeamDetection,
+    #MessageListCreateView,
+    #MessageDetailView
+    StressQuestion,
+    StressQuestionListCreateView,
+    StressQuestionListCreateView,
+    StressQuestionRetrieveUpdateDestroyView,
+    SubmitStressFormView,
+    StressFormDetail,
+    GetUserWithIDView,
+    TeamBreathingExerciseUsageView,
+    TeamTrackListeningView
 )
 
-
 urlpatterns = [
-
     path('register/', RegisterView.as_view()),
     path('getuser/', GetUserView.as_view()),
     path('login/', LoginAPIView.as_view()),
@@ -31,14 +39,24 @@ urlpatterns = [
     path('emotion/', DetectionView.as_view()),
     path('writeimage/', WriteImage.as_view()),
     path('getemotions/', EmotionDataView.as_view()),
+
+    path('g/', GetUserWithIDView.as_view()),
     path('getallemotions/', EmployeeEmotionDataView.as_view()),
     path('getweeklyallemotions/', WeeklyEmployeeEmotionDataView.as_view()),
     path('team/', EmployeeTeamView.as_view()),
     path('teamlist/', TeamList.as_view()),
-    path('employeelist/',EmployeeList.as_view()),
-    path('employee/<int:pk>/',EmployeeDetail.as_view()),
+    path('employeelist/', EmployeeList.as_view()),
+    path('employee/<int:pk>/', EmployeeDetail.as_view()),
     path('breathing_exercise_usage/', BreathingExerciseUsageView.as_view()),
-    path('track_listening/', TrackListeningView.as_view())
-
-    ]
+    path('track_listening/', TrackListeningView.as_view()),
+    path('team_detections/', TeamDetection.as_view(), name='team_detections'),
+    #path('messages/', MessageListCreateView.as_view(), name='message-list-create'),
+    #path('messages/<int:pk>/', MessageDetailView.as_view(), name='message-detail'),
+    path('stress_questions/', StressQuestionListCreateView.as_view(), name='stress-question-list-create'),
+    path('stress_questions/<int:pk>/', StressQuestionRetrieveUpdateDestroyView.as_view(), name='stress-question-retrieve-update-destroy'),
+    path('stress_form/', SubmitStressFormView.as_view(), name='submit_stress_form'),
+    path('stress_form/<int:user_id>/', StressFormDetail.as_view(), name='stress-form-detail'),
+    path('team_breathing_exercise_usage/', TeamBreathingExerciseUsageView.as_view(), name='team_breathing_exercise_usage'),
+    path('team_track_listening/', TeamTrackListeningView.as_view(), name='team_track_listening'),
+]
 

@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+
 import DoughnutChart from "../charts/DoughnutChart";
 
 const pfp = "http://127.0.0.1:8000/media/profilePictures/default.jpg";
 
 const EmployeeDashboard = () => {
+  const navigate = useNavigate();
+
   const [emotions, setEmotions] = useState({
     angry: 0,
     disgust: 0,
@@ -24,7 +27,6 @@ const EmployeeDashboard = () => {
     surprise: 0,
     neutral: 0,
   });
-  const [navigate, setNavigate] = useState(false);
   const [message, setMessage] = useState("You are not authenticated");
   const [userData, setUserData] = useState({});
   const [chartError, setChartError] = useState(null);
@@ -102,8 +104,8 @@ const EmployeeDashboard = () => {
     }
   }, [userData]);
 
-  if (navigate) {
-    return <Navigate to="/employee/login/" />;
+  if (!navigate) {
+    navigate("/employee/login/")
   }
 
   return (
@@ -113,6 +115,8 @@ const EmployeeDashboard = () => {
           Employee Dashboard
         </h1>
       </div>
+
+      <a href="/admin/addquestion"> Add a question!</a>
 
       <div>
         <div className="flex items-center">
@@ -189,7 +193,7 @@ const EmployeeDashboard = () => {
                 )}
               </div>
             </div>
-          </div> {/*breathing_exercise_usage/*/ }
+          </div>
           
         </div>
       </div>

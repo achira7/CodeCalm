@@ -33,7 +33,7 @@ export const EmployeeDashboard = () => {
   const [mostListenedTrack, setMostListenedTrack] = useState(null);
   const [exerciseView, setExerciseView] = useState("daily");
   const [listeningView, setListeningView] = useState("daily");
-  const [emotionView, setEmotionView] = useState("daily");
+  const [emotionView, setEmotionView] = useState("daily"); // Start with daily view
   const [hourlyEmotion, setHourlyEmotion] = useState([]);
 
   const fetchUserData = async () => {
@@ -60,7 +60,7 @@ export const EmployeeDashboard = () => {
       const data = response.data.defaultEmotionValues;
       const hourlyEmotion = response.data.hourlyDominantEmotions;
       setEmotions(data);
-      setHourlyEmotion(hourlyEmotion); 
+      setHourlyEmotion(hourlyEmotion);
 
       const allZero = Object.values(data).every((value) => value === 0);
       if (allZero) {
@@ -86,7 +86,7 @@ export const EmployeeDashboard = () => {
         {
           params: { user: userId, period: period },
         }
-      ); console.log(response.data)
+      );
       const data = response.data.days || {};
       if (period === "weekly") {
         setWeeklyExerciseData(data);
@@ -228,37 +228,53 @@ export const EmployeeDashboard = () => {
             </div>
           </div>
 
-          <div className="max-w-sm w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
+          <div className="max-w-4xl w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
             <div className="text-center">
-              <h5 className="text-xl font-semibold text-sky-900">
-                Your Most Common Emotion
+              <h5 className="text-xl font-semibold text-sky-900 mb-5">
+                {emotionView === "daily"
+                  ? "Daily Emotions Timeline"
+                  : emotionView === "weekly"
+                  ? "Weekly Emotions Timeline"
+                  : emotionView === "monthly"
+                  ? "Monthly Emotions Timeline"
+                  : "Overall Emotions Timeline"}
               </h5>
               {chartError ? (
                 <h2 className="text-xl text-gray-700 mt-4">{chartError}</h2>
               ) : (
-                <div className="mt-4">
-                  <h2 className="text-xl text-sky-900 capitalize">
-                    {highestEmotion.key}
-                  </h2>
-                  <img
-                    className="w-20 h-20 mx-auto mt-4"
-                    src={`http://127.0.0.1:8000/media/emojis/${highestEmotion.key}.png`}
-                    alt={highestEmotion.key}
-                  />
-                  <p className="text-gray-700 mt-4">
-                    Detected {highestEmotion.value}{" "}
-                    {highestEmotion.value === 1 ? "time" : "times"}
-                  </p>
-                </div>
+                <LineChart data={hourlyEmotion} />
               )}
+              <div className="flex justify-center mt-4">
+                <button
+                  className={`text-sky-900 ${
+                    isEmotionLeftDisabled ? "text-gray-400" : ""
+                  }`}
+                  onClick={() =>
+                    handleViewChange(setEmotionView, emotionView, "prev", emotionViews)
+                  }
+                  disabled={isEmotionLeftDisabled}
+                >
+                  <FaArrowLeft />
+                </button>
+                <button
+                  className={`ml-4 text-sky-900 ${
+                    isEmotionRightDisabled ? "text-gray-400" : ""
+                  }`}
+                  onClick={() =>
+                    handleViewChange(setEmotionView, emotionView, "next", emotionViews)
+                  }
+                  disabled={isEmotionRightDisabled}
+                >
+                  <FaArrowRight />
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Exercise Data */}
-          <div className="max-w-sm w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
+          <div className="max-w-2xl w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
             <div className="text-center">
-              <h5 className="text-xl font-semibold text-sky-900 inline-flex">
-              {exerciseView === "daily"
+              <h5 className="text-xl font-semibold text-sky-900 mb-5">
+                {exerciseView === "daily"
                   ? "Daily Breathing Exercise Usage"
                   : exerciseView === "weekly"
                   ? "Weekly Breathing Exercise Usage"
@@ -296,26 +312,27 @@ export const EmployeeDashboard = () => {
                 </button>
               </div>
               {mostUsedExercise && (
-                <div className="mt-4">
-                  <h5 className="text-lg font-semibold text-sky-900 mb-5">
+                <div className="text-left mt-4">
+                  <h6 className="text-lg font-semibold text-sky-900">
                     Most Used Exercise:
-                  </h5>
-                  <p className="text-gray-700">
-                    {mostUsedExercise.exercise_name}
-                  </p>
-                  <p className="text-gray-700">
-                    Total Duration:{" "}
-                    {(mostUsedExercise.total_duration / 60.0).toFixed(2)}{" "}
-                    minutes
-                  </p>
+                  </h6>
+                  <div className="flex items-center mt-2">
+                    <img
+                      className="w-8 h-8"
+                      src={`${icons}/${mostUsedExercise.icon}`}
+                      alt="exercise icon"
+                    />
+                    <span className="ml-2 text-gray-700">
+                      {mostUsedExercise.name}
+                    </span>
+                  </div>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Listening Data */}
-          <div className="max-w-sm w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
-          <div className="text-center">
+          <div className="max-w-2xl w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
+            <div className="text-center">
               <h5 className="text-xl font-semibold text-sky-900 mb-5">
                 {listeningView === "daily"
                   ? "Daily Track Listening Usage"
@@ -355,46 +372,24 @@ export const EmployeeDashboard = () => {
                 </button>
               </div>
               {mostListenedTrack && (
-                <div className="mt-4">
-                  <h5 className="text-lg font-semibold text-sky-900 mb-5">
+                <div className="text-left mt-4">
+                  <h6 className="text-lg font-semibold text-sky-900">
                     Most Listened Track:
-                  </h5>
-                  <p className="text-gray-700">
-                    {mostListenedTrack.track_name}
-                  </p>
-                  <p className="text-gray-700">
-                    Total Duration:{" "}
-                    {(mostListenedTrack.total_duration / 60).toFixed(2)} minutes
-                  </p>
+                  </h6>
+                  <div className="flex items-center mt-2">
+                    <img
+                      className="w-8 h-8"
+                      src={`${icons}/${mostListenedTrack.icon}`}
+                      alt="track icon"
+                    />
+                    <span className="ml-2 text-gray-700">
+                      {mostListenedTrack.name}
+                    </span>
+                  </div>
                 </div>
               )}
             </div>
           </div>
-        </div>
-      </div>
-
-      <div className="max-w-xl w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
-        <h5 className="text-xl font-semibold text-sky-900">
-          Dominant Emotion by Hour
-        </h5>
-        <div className="flex justify-between mt-4 w-full">
-          {Object.keys(hourlyEmotion).map((hour, index) => (
-            <div key={index} className="text-center ml-4 mr-4 my-5">
-              {hourlyEmotion[hour] ? (
-                <div>
-                  <img
-                    className="w-8 mx-auto"
-                    src={`http://127.0.0.1:8000/media/emojis/${hourlyEmotion[hour]}.png`}
-                    alt={hourlyEmotion[hour]}
-                    title={hourlyEmotion[hour]} // Adding the title attribute for the tooltip
-                  />
-                </div>
-              ) : (
-                <span className="text-xl">-</span>
-              )}
-              <p className="text-sm text-gray-700">{hour.split(" ")[0]}</p>
-            </div>
-          ))}
         </div>
       </div>
     </div>

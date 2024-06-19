@@ -119,26 +119,23 @@ function EmployeeRegister() {
             />
           </div>
         </div>
-      )}
+      )} 
       <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-        <Link to="/admin/allemployees">
+      <Link to="/admin/allemployees">
           <div className="flex items-center mx-5 hover: transition-transform duration-300 cursor-pointer">
             <svg
+              className="fill-sky-500"
               xmlns="http://www.w3.org/2000/svg"
-              fill="none"
+              width="24"
+              height="24"
               viewBox="0 0 24 24"
-              strokeWidth="1.5"
-              stroke="currentColor"
-              className="w-6 h-6 text-sky-500"
+              id="back-arrow"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="m11.25 9-3 3m0 0 3 3m-3-3h7.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1-18 0Z"
-              />
+              <path fill="none" d="M0 0h24v24H0V0z" opacity=".87"></path>
+              <path d="M16.62 2.99c-.49-.49-1.28-.49-1.77 0L6.54 11.3c-.39.39-.39 1.02 0 1.41l8.31 8.31c.49.49 1.28.49 1.77 0s.49-1.28 0-1.77L9.38 12l7.25-7.25c.48-.48.48-1.28-.01-1.76z"></path>
             </svg>
             <p className="text-sky-500 font-semibold font google text-lg mx-3">
-              Back to All Employees
+              Go Back to All Employees
             </p>
           </div>
         </Link>
@@ -265,8 +262,10 @@ function EmployeeRegister() {
                   onChange={(e) => setEmployment_type(e.target.value)}
                 >
                   <option value="" selected disabled hidden>Select Employment Type</option>
-                  <option value="Permanent">Permanent</option>
-                  <option value="Contract">Contract</option>
+                  <option value="full_time">Full Time</option>
+                  <option value="part_time">Part Time</option>
+                  <option value="contract">Contract</option>
+                  <option value="intern">Intern</option>
                 </select>
               </div>
 

@@ -2,18 +2,20 @@ import io
 import os
 from django.contrib.auth import get_user_model
 
+import json
+
 #from distutils import dist, file_util
 from matplotlib.image import pil_to_array
 
 #from imp import load_module
-from .models import Employee_Emotion, Employee_Team, Employee_Focus, BreathingExerciseUsage, TrackListening
+from .models import Employee_Emotion, Employee_Team, Employee_Focus, BreathingExerciseUsage, TrackListening, StressQuestion, StressDetectionForm
 
 from django.http import JsonResponse, StreamingHttpResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework import permissions, status, generics
-from .serializers import UserSerializer, EmployeeTeamSerializer, BreathingExerciseUsageSerializer, TrackListeningSerializer  
+from .serializers import UserSerializer, EmployeeTeamSerializer, BreathingExerciseUsageSerializer, TrackListeningSerializer, StressQuestionSerializer, StressDetectionFormSerializer  
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate
 from django.conf import settings
@@ -26,6 +28,8 @@ from django.http import JsonResponse
 #ML segment
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework.decorators import api_view
+
 from rest_framework.views import APIView
 import cv2
 import numpy as np 
@@ -51,10 +55,23 @@ import mediapipe as mp
 from datetime import datetime, timedelta
 from django.db.models import Sum
 from collections import defaultdict
-from django.db.models.functions import ExtractDay, ExtractWeekDay
+from django.db.models.functions import ExtractHour, ExtractDay, ExtractWeekDay
 from rest_framework.views import APIView
 from django.utils.timezone import now
 from django.db.models import Sum
+
+from django.db.models import Q
+
+from rest_framework import viewsets, permissions
+from .models import Message
+from rest_framework.response import Response
+
+from rest_framework import viewsets, permissions
+from .models import Message
+from rest_framework.response import Response
+
+from django.shortcuts import get_object_or_404
+
 
 User = get_user_model()
 
@@ -120,67 +137,31 @@ class RetrieveUserView(APIView):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)      
         
-
 class GetUserView(APIView):
     def get(self, request):
-        user_id = request.COOKIES.get('user_id')
-
+        user_id = request.COOKIES.get('user_id')        
+            
         if user_id:
-            try:
-                user = User.objects.get(id=user_id)
-                user = {
-                    'id': user.id,
-                    'first_name': user.first_name,
-                    'last_name': user.last_name,
-                    'email': user.email,
-                    'is_staff': user.is_staff,
-                    'is_superuser': user.is_superuser,
-                    'profile_picture': request.build_absolute_uri(user.profile_picture.url) if user.profile_picture else None,
-
-                }
-                return Response(user)
-            except User.DoesNotExist:
-                return Response({'error': 'User not found'}, status=404)
+            user = get_object_or_404(User, id=user_id)
+            user_data = UserSerializer(user, context={'request': request}).data
+            return Response(user_data)
         else:
-            return Response({'error': 'User ID cookie not found'}, status=400)
+            return Response({'error': 'User ID not provided'}, status=status.HTTP_400_BAD_REQUEST)
+        
 
 
-class QLoginAPIView(APIView):
-    permission_classes = [AllowAny]
+class GetUserWithIDView(APIView):
+    def get(self, request):
+            user_id = request.query_params.get('user_id')
 
-    @csrf_exempt
-    def post(self, request):
-        email = request.data.get('email')
-        password = request.data.get('password')
+            if user_id:
+                user = get_object_or_404(User, id=user_id)
+                user_data = UserSerializer(user, context={'request': request}).data
+                return Response(user_data)
+            else:
+                return Response({'error': 'User ID not provided'}, status=status.HTTP_400_BAD_REQUEST)
+            
 
-        if not email or not password:
-            raise exceptions.AuthenticationFailed('Email and password are required')
-
-        user = authenticate(request, email=email, password=password)
-
-        if user is None:
-            raise exceptions.AuthenticationFailed('Invalid username or password')
-
-        # Prepare the user data to return
-        user_data = {
-            'user_id': user.id,
-            'first_name': user.first_name,
-            'last_name': user.last_name,
-            'email': user.email,
-            'is_staff': user.is_staff,
-            'is_superuser': user.is_superuser,
-            'profile_picture': request.build_absolute_uri(user.profile_picture.url) if user.profile_picture else None,
-        }
-
-        # Create response
-        response = Response({
-            'message': 'Login successful',
-            'user': user_data,
-        }, status=status.HTTP_200_OK)
-
-        response.set_cookie('user_id', user.id, httponly=True)
-
-        return response
 
 class LoginAPIView(APIView):
     @csrf_exempt
@@ -230,8 +211,18 @@ class LogoutAPIView(APIView):
 from . import serializers 
 
 class EmployeeList(generics.ListCreateAPIView):
-    queryset = User.objects.all()
     serializer_class = serializers.UserSerializer
+
+    def get_queryset(self):
+        search_query = self.request.query_params.get('search', '')
+
+        if search_query:
+            return User.objects.filter(
+                Q(first_name__icontains=search_query) | Q(last_name__icontains=search_query) |
+                Q(email__icontains=search_query)
+            )
+        else:
+            return User.objects.all()
 
 
 class EmployeeDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -289,8 +280,6 @@ class WriteImage(APIView):
             opencv_image = stringToRGB(imgstr)
 
             cv2.imwrite(rf'media/{userid}.jpg', opencv_image)
-           
-            print('image written') 
 
             return HttpResponse({'message': 'Success!!!'}, status=200)
         else:
@@ -656,14 +645,41 @@ class EmotionDataView(APIView):
             if key in emotion_counts_dict:
                 defaultEmotionValues[key] += emotion_counts_dict[key]
 
-        print(defaultEmotionValues)
+        # Initialize the hourly dominant emotion dictionary
+        hourly_dominant_emotions = {}
 
-        return Response(defaultEmotionValues)
+        # Get the current date and define the start and end hours
+        current_date = datetime.now().date()
+        start_hour = 7
+        end_hour = 18
+
+        # Loop through each hour from 7 AM to 6 PM
+        for hour in range(start_hour, end_hour + 1):
+            start_time = datetime.combine(current_date, datetime.min.time()) + timedelta(hours=hour)
+            end_time = start_time + timedelta(hours=1)
+
+            # Query to get the dominant emotion in the current hour
+            hourly_emotion = Employee_Emotion.objects.filter(employee_id=userid, time__gte=start_time, time__lt=end_time) \
+                                  .values('emotion_data') \
+                                  .annotate(count=Count('emotion_data')) \
+                                  .order_by('-count') \
+                                  .first()
+
+            if hourly_emotion:
+                dominant_emotion = hourly_emotion['emotion_data']
+            else:
+                dominant_emotion = ''  # Default if no data is found
+
+            # Add the dominant emotion for the current hour to the dictionary
+            hourly_dominant_emotions[f'{hour}:00 - {hour+1}:00'] = dominant_emotion
+        print(hourly_dominant_emotions)
+        response_data = {
+            'defaultEmotionValues': defaultEmotionValues,
+            'hourlyDominantEmotions': hourly_dominant_emotions
+        }
+
+        return Response(response_data)
     
-
-
-
-
 
 class EmployeeEmotionDataView(APIView):
     def get(self, request):
@@ -718,8 +734,6 @@ class WeeklyEmployeeEmotionDataView(APIView):
             if key in emotion_counts_dict:
                 defaultEmotionValues[key] += emotion_counts_dict[key]
 
-        print(defaultEmotionValues)
-
         return Response(defaultEmotionValues)
 
 
@@ -773,6 +787,10 @@ class BreathingExerciseUsageView(APIView):
             end_date = (today.replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)  # End of the month
             days_in_month = (end_date - start_date).days + 1
             days = {str(i): 0 for i in range(1, days_in_month + 1)}  # Initialize days 1-31 (or the number of days in the month)
+        elif period == 'daily':
+            start_date = today
+            end_date = today
+            days = {f'{hour}:00 - {hour+1}:00': 0 for hour in range(7, 19)}  # Initialize hours 7:00 - 18:00
         else:
             return Response({"error": "Invalid period specified"}, status=400)
 
@@ -780,23 +798,26 @@ class BreathingExerciseUsageView(APIView):
             employee_id=user_id,
             timestamp__date__range=[start_date, end_date]
         ).annotate(
-            day=ExtractDay('timestamp') if period == 'monthly' else ExtractWeekDay('timestamp')
+            day=ExtractHour('timestamp') if period == 'daily' else (ExtractDay('timestamp') if period == 'monthly' else ExtractWeekDay('timestamp'))
         ).values('day').annotate(total_duration=Sum('duration'))
 
         for record in usage_records:
-            days[str(record['day'])] = record['total_duration']
+            if period == 'daily':
+                hour_range = f"{record['day']}:00 - {record['day'] + 1}:00"
+                if hour_range in days:
+                    days[hour_range] = record['total_duration']
+            else:
+                days[str(record['day'])] = record['total_duration']
 
         most_used_exercise = BreathingExerciseUsage.objects.filter(
             employee_id=user_id,
             timestamp__date__range=[start_date, end_date]
         ).values('exercise_name').annotate(total_duration=Sum('duration')).order_by('-total_duration').first()
-
+        
         return Response({
             "days": days,
             "most_used_exercise": most_used_exercise
         })
-    
-
 
 class TrackListeningView(APIView):
     def post(self, request):
@@ -823,6 +844,11 @@ class TrackListeningView(APIView):
             end_date = (today.replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)  # End of the month
             days_in_month = (end_date - start_date).days + 1
             days = {str(i): 0 for i in range(1, days_in_month + 1)}  # Initialize days 1-31 (or the number of days in the month)
+        elif period == 'daily':
+            start_date = today
+            end_date = today
+            days = {f'{hour}:00 - {hour+1}:00': 0 for hour in range(7, 19)}  # Initialize hours 7:00 - 18:00
+
         else:
             return Response({"error": "Invalid period specified"}, status=400)
 
@@ -830,11 +856,16 @@ class TrackListeningView(APIView):
             employee_id=user_id,
             timestamp__date__range=[start_date, end_date]
         ).annotate(
-            day=ExtractDay('timestamp') if period == 'monthly' else ExtractWeekDay('timestamp')
+            day=ExtractHour('timestamp') if period == 'daily' else (ExtractDay('timestamp') if period == 'monthly' else ExtractWeekDay('timestamp'))
         ).values('day').annotate(total_duration=Sum('duration'))
 
         for record in usage_records:
-            days[str(record['day'])] = record['total_duration']
+            if period == 'daily':
+                hour_range = f"{record['day']}:00 - {record['day'] + 1}:00"
+                if hour_range in days:
+                    days[hour_range] = record['total_duration']
+            else:
+                days[str(record['day'])] = record['total_duration']
 
         most_listened_track = TrackListening.objects.filter(
             employee_id=user_id,
@@ -845,7 +876,295 @@ class TrackListeningView(APIView):
             "days": days,
             "most_listened_track": most_listened_track
         })
+
+
+
+
+class TeamBreathingExerciseUsageView(APIView):
+    def get(self, request):
+        team_id = request.GET.get('team_id')
+        period = request.GET.get('period')
+        today = now().date()
+
+        if period == 'weekly':
+            start_date = today - timedelta(days=today.weekday())
+            end_date = start_date + timedelta(days=6)
+            days = {str(i): 0 for i in range(1, 8)}
+        elif period == 'monthly':
+            start_date = today.replace(day=1)
+            end_date = (today.replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+            days_in_month = (end_date - start_date).days + 1
+            days = {str(i): 0 for i in range(1, days_in_month + 1)}
+        elif period == 'daily':
+            start_date = today
+            end_date = today
+            days = {f'{hour}:00 - {hour+1}:00': 0 for hour in range(7, 19)}
+        else:
+            return Response({"error": "Invalid period specified"}, status=400)
+
+        users = User.objects.filter(team=team_id)
+        user_ids = users.values_list('id', flat=True)
+
+        usage_records = BreathingExerciseUsage.objects.filter(
+            employee_id__in=user_ids,
+            timestamp__date__range=[start_date, end_date]
+        ).annotate(
+            day=ExtractHour('timestamp') if period == 'daily' else (ExtractDay('timestamp') if period == 'monthly' else ExtractWeekDay('timestamp'))
+        ).values('day').annotate(total_duration=Sum('duration'))
+
+        for record in usage_records:
+            if period == 'daily':
+                hour_range = f"{record['day']}:00 - {record['day'] + 1}:00"
+                if hour_range in days:
+                    days[hour_range] = record['total_duration']
+            else:
+                days[str(record['day'])] = record['total_duration']
+
+        most_used_exercise = BreathingExerciseUsage.objects.filter(
+            employee_id__in=user_ids,
+            timestamp__date__range=[start_date, end_date]
+        ).values('exercise_name').annotate(total_duration=Sum('duration')).order_by('-total_duration').first()
+
+        return Response({
+            "days": days,
+            "most_used_exercise": most_used_exercise
+        })
+
+class TeamTrackListeningView(APIView):
+    def get(self, request):
+        team_id = request.GET.get('team_id')
+        period = request.GET.get('period')
+        today = now().date()
+
+        if period == 'weekly':
+            start_date = today - timedelta(days=today.weekday())
+            end_date = start_date + timedelta(days=6)
+            days = {str(i): 0 for i in range(1, 8)}
+        elif period == 'monthly':
+            start_date = today.replace(day=1)
+            end_date = (today.replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+            days_in_month = (end_date - start_date).days + 1
+            days = {str(i): 0 for i in range(1, days_in_month + 1)}
+        elif period == 'daily':
+            start_date = today
+            end_date = today
+            days = {f'{hour}:00 - {hour+1}:00': 0 for hour in range(7, 19)}
+        else:
+            return Response({"error": "Invalid period specified"}, status=400)
+
+        users = User.objects.filter(team=team_id)
+        user_ids = users.values_list('id', flat=True)
+
+        usage_records = TrackListening.objects.filter(
+            employee_id__in=user_ids,
+            timestamp__date__range=[start_date, end_date]
+        ).annotate(
+            day=ExtractHour('timestamp') if period == 'daily' else (ExtractDay('timestamp') if period == 'monthly' else ExtractWeekDay('timestamp'))
+        ).values('day').annotate(total_duration=Sum('duration'))
+
+        for record in usage_records:
+            if period == 'daily':
+                hour_range = f"{record['day']}:00 - {record['day'] + 1}:00"
+                if hour_range in days:
+                    days[hour_range] = record['total_duration']
+            else:
+                days[str(record['day'])] = record['total_duration']
+
+        most_listened_track = TrackListening.objects.filter(
+            employee_id__in=user_ids,
+            timestamp__date__range=[start_date, end_date]
+        ).values('track_name').annotate(total_duration=Sum('duration')).order_by('-total_duration').first()
+
+        return Response({
+            "days": days,
+            "most_listened_track": most_listened_track
+        })
+    
+class TeamDetection(APIView):
+    @staticmethod
+    def get_stress_score(user):
+        try:
+            # Get the latest form submitted by the user
+            latest_form = StressDetectionForm.objects.filter(user=user).order_by('-submitted_at').first()
+            
+            if latest_form:
+                submission_date = latest_form.submitted_at.strftime('%d-%m-%Y')  # Format the date as day-month
+                return {'score': latest_form.score, 'submitted_on': submission_date}
+            else:
+                return {'score': None, 'submitted_on': None}
+        except Exception as e:
+            return {'score': None, 'submitted_on': None}
         
+    def get(self, request):
+        team = request.GET.get('team')
+        if not team:
+            return Response({'error': 'Team is required'}, status=400)
+
+        # Retrieve team members
+        team_members = list(User.objects.filter(team=team).values('id', 'first_name', 'last_name', 'email', 'profile_picture', 'is_staff'))
+        
+        if not team_members:
+            return Response({'team_members': 'No Team Members Yet'})
+
+        # Iterate over each team member
+        for member in team_members:
+            stress_info = self.get_stress_score(member['id'])
+
+            # Add additional info to each team member's dictionary
+            member.update({
+                'emotion': 'happy',
+                'stress': 'low',
+                'breathing': 'white noise',
+                'audio': 'rain',
+                'stress_score': stress_info['score'],
+                'submitted_on': stress_info['submitted_on']
+            })
+        
+        return Response({'team_members': team_members})
+    
+
+    
+class StressFormDetail(APIView):
+    def get(self, request, user_id):
+        try:
+            # Assuming we fetch the most recent form
+            form = StressDetectionForm.objects.filter(user_id=user_id).latest('submitted_at')
+            data = {
+                'answers': form.answers,
+                'additional_comments': form.additional_comments,
+                'submitted_at': form.submitted_at.strftime('%d-%m-%Y'),
+            }
+            return Response(data, status=status.HTTP_200_OK)
+        except StressDetectionForm.DoesNotExist:
+            return Response({'error': 'No stress detection form found for this user'}, status=status.HTTP_404_NOT_FOUND)
+
+
+
+def employee_list(request):
+    search_query = request.GET.get('search', '')
+
+    if search_query:
+        employees = User.objects.filter(
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query) |
+            Q(email__icontains=search_query)
+        )
+    else:
+        employees = User.objects.all()
+
+    employee_data = [
+        {
+            'id': emp.id,
+            'first_name': emp.first_name,
+            'last_name': emp.last_name,
+            'email': emp.email,
+            'team': emp.team,
+            'employment_type': emp.employment_type,
+            'work_location': emp.work_location,
+            'is_superuser': emp.is_superuser,
+            'is_staff': emp.is_staff,
+        }
+        for emp in employees
+    ]
+    return JsonResponse(employee_data, safe=False)
+
+
+class StressQuestionListCreateView(generics.ListCreateAPIView):
+    queryset = StressQuestion.objects.all()
+    serializer_class = StressQuestionSerializer
+
+class StressQuestionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = StressQuestion.objects.all()
+    serializer_class = StressQuestionSerializer
+
+
+
+class SaveSettingsView(APIView):
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        dark_mode = request.data.get('dark_mode', False)
+        notifications = request.data.get('notifications', False)
+
+        user.dark_mode = dark_mode
+        user.notifications = notifications
+        user.save()
+
+        return Response({"message": "Settings updated successfully."}, status=200)
+
+
+class SubmitStressFormView(APIView):
+    serializer_class = StressDetectionFormSerializer
+
+    def post(self, request):
+        user = User.objects.get(id=request.data['user'])
+        answers = request.data['answers']
+        score = request.data['score']
+        additional_comments = request.data['additional_comments']
+
+        StressDetectionForm.objects.create(user=user, answers=answers, score=score, additional_comments=additional_comments)
+        return Response(status=status.HTTP_201_CREATED)
+
+"""
+class MessageListCreateView(APIView):
+    #permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        if user.is_superuser:
+            messages = Message.objects.filter(receiver__is_staff=True)
+        elif user.is_staff:
+            messages = Message.objects.filter(receiver=user) | Message.objects.filter(sender=user)
+        else:
+            messages = Message.objects.filter(sender=user, receiver__is_staff=True) | Message.objects.filter(receiver=user, sender__is_staff=True)
+        
+        serializer = MessageSerializer(messages, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        sender = request.user
+        serializer = MessageSerializer(data=request.data)
+        if serializer.is_valid():
+            receiver = serializer.validated_data['receiver']
+            if (sender.is_superuser and receiver.is_staff) or \
+               (sender.is_staff and (receiver.is_staff or receiver == sender)) or \
+               (not sender.is_staff and receiver.is_staff):
+                serializer.save(sender=sender)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                return Response('You do not have permission to send this message.', status=status.HTTP_403_FORBIDDEN)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class MessageDetailView(APIView):
+    #permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self, pk):
+        return get_object_or_404(Message, pk=pk)
+
+    def get(self, request, pk, *args, **kwargs):
+        message = self.get_object(pk)
+        if request.user == message.sender or request.user == message.receiver or request.user.is_superuser:
+            serializer = MessageSerializer(message)
+            return Response(serializer.data)
+        return Response('You do not have permission to view this message.', status=status.HTTP_403_FORBIDDEN)
+
+    def delete(self, request, pk, *args, **kwargs):
+        message = self.get_object(pk)
+        if request.user == message.sender or request.user == message.receiver:
+            message.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response('You do not have permission to delete this message.', status=status.HTTP_403_FORBIDDEN)"""
+    
+
+'''class StressDetectionResponseView(APIView):
+
+    def post(self, request):
+        serializer = StressDetectionResponseSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)'''
+
 
         
 

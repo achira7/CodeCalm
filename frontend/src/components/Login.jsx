@@ -48,7 +48,7 @@ const Login = () => {
 
         setFormError(false);
         if (response.data.is_staff) {
-          navigate("/admin/dashboard");
+          navigate("/employee/dashboard");
         } else if (response.data.is_superuser) {
           navigate("/admin/dashboard");
         }else{

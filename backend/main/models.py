@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.utils.deconstruct import deconstructible
 import os
+from django.utils import timezone
+from datetime import timedelta
 
 class UserAccountManager(BaseUserManager):
     def create_user(self, email, first_name, last_name, password=None, **extra_fields):
@@ -129,6 +131,31 @@ class TrackListening(models.Model):
         return f"{self.employee.first_name} listened to {self.track_name} for {self.duration} seconds"
 
 
+class Message(models.Model):
+    sender = models.ForeignKey(UserAccount, related_name='sent_messages', on_delete=models.CASCADE)
+    receiver = models.ForeignKey(UserAccount, related_name='received_messages', on_delete=models.CASCADE)
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return f'Message from {self.sender} to {self.receiver} at {self.timestamp}'
+    
 
+class StressQuestion(models.Model):
+    question = models.CharField(max_length=500)
+    affect = models.CharField(max_length=3)
+    type = models.CharField(max_length=3)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+class StressDetectionForm(models.Model):
+    user = models.ForeignKey(UserAccount, on_delete=models.CASCADE)
+    answers = models.JSONField() 
+    score = models.IntegerField()
+    additional_comments = models.TextField(null=True, blank=True)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Stress Detection Form by {self.employee.first_name} {self.employee.last_name}  Submitted on {self.submitted_at}"
+
+   
 

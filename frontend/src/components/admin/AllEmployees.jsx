@@ -6,20 +6,29 @@ import { useNavigate } from 'react-router-dom';
 const AllEmployees = () => {
     const [employees, setEmployees] = useState([]);
     const [activeTab, setActiveTab] = useState('Employees');
+    const [searchQuery, setSearchQuery] = useState('');
     const navigate = useNavigate();
 
     useEffect(() => {
         fetchEmployees();
-    }, []);
+    }, [searchQuery, activeTab]); // Fetch employees whenever searchQuery or activeTab changes
 
     const fetchEmployees = () => {
-        axios.get('http://127.0.0.1:8000/api/employeelist')
-            .then(response => {
-                setEmployees(response.data);
-            })
-            .catch(error => {
-                console.error('Error fetching employees:', error);
-            });
+        axios.get('http://127.0.0.1:8000/api/employeelist', {
+            params: {
+                search: searchQuery
+            }
+        })
+        .then(response => {
+            setEmployees(response.data);
+        })
+        .catch(error => {
+            console.error('Error fetching employees:', error);
+        });
+    };
+
+    const handleSearchChange = (e) => {
+        setSearchQuery(e.target.value);
     };
 
     const addUser = () => {
@@ -118,7 +127,13 @@ const AllEmployees = () => {
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
                         </svg>
-                        <input className="bg-gray-50 outline-none ml-1 block" type="text" name="" id="" placeholder="search..." />
+                        <input 
+                            className="bg-gray-50 outline-none ml-1 block" 
+                            type="text" 
+                            placeholder="search..." 
+                            value={searchQuery} 
+                            onChange={handleSearchChange} 
+                        />
                     </div>
                 </div>
             </div>

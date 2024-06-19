@@ -16,30 +16,55 @@ import FaceLogin from "./components/FaceLogin";
 import AddTeam  from "./components/admin/AddTeam";
 import AdminDashboard from "./components/admin/AdminDashboard";
 import SupervisorRegister from './components/admin/SupervisorRegister';
-import SupervisorDashboard from './components/supervisor/SupervisorDashboard';
+import TeamDashboard from './components/supervisor/TeamDashboard';
+import StressDetectionForm from './components/StressDetectionForm';
+import AddQuestionForm from './components/admin/AddQuestionForm';
+import EmployeeDashboardOverlay from './components/EmployeeDashboardOverlay';
+import AllTeamsDashboard from './components/admin/AllTeamsDashboard';
+import Test from './components/Test';
+import Dashboard from './components/Dashboard';
+import TeamIndividualView from './components/supervisor/TeamIndividualView';
+
 
 function App() {
   return (
     <RecoilRoot>
       <NavBar />
       <Routes>
+
+        {/*EMPLOYEE URLs */}
         <Route path="/employee/login" element={<Login />} />
         <Route path="/employee/facelogin" element={<FaceLogin />} />
-        <Route path="/admin/register_employee" element={<EmployeeRegister />} />
-        <Route path="/admin/register_supervisor" element={<SupervisorRegister />} />
-        <Route path="/admin/register_admin" element={<AdminRegister />} />
-
-        <Route path="/supervisor/dashboard" element={<SupervisorDashboard />} />
-
-        <Route path="/admin/adminregister" element={<AdminRegister />} />
-        <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
+        {<Route path="/employee/dashboard" element={<EmployeeDashboard />} />}
         <Route path="/employee/player" element={<Player />} />
         <Route path="/employee/breathingexercise" element={<BreathingExercise />} />
         <Route path="/employee/livecam" element={<LiveCam />} />
+        <Route path="/employee/self_stress" element={<StressDetectionForm />}/>
+        
+        <Route path="/employee/test" element={<Test />}/>
+        <Route path={`/employee/dashboard/:id`} element={<Dashboard />}/>
+
+
+        
+        {/*SUPERVISOR URLs */}
+        {/*<Route path="/supervisor/dashboard" element={<SupervisorDashboard />} />*/}
+        <Route path="/supervisor/teamdashboard" element={<TeamDashboard />} />
+        <Route path="/supervisor/team_individual_view" element={<TeamIndividualView />} />
+
+
+        {/*ADMIN URLs */}
+        <Route path="/admin/register_employee" element={<EmployeeRegister />} />
+        <Route path="/admin/register_supervisor" element={<SupervisorRegister />} />
+        <Route path="/admin/register_admin" element={<AdminRegister />} />
+        <Route path="/admin/adminregister" element={<AdminRegister />} />
         <Route path="/admin/edit" element={<EditEmployee />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/admin/allemployees" element={<AllEmployees />} />
         <Route path="/admin/addteam" element={<AddTeam />} />
+        <Route path="/admin/addquestion" element={<AddQuestionForm />} />
+        <Route path="/admin/employee_dashboard_view" element={<EmployeeDashboardOverlay/>} />
+        <Route path="/admin/team_dashboard" element={<AllTeamsDashboard/>} />
+      
       </Routes>
     </RecoilRoot>
   );

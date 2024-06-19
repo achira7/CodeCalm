@@ -1,15 +1,18 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Navigate } from "react-router-dom";
+import { Navigate, Link } from "react-router-dom";
 import DoughnutChart from "./charts/DoughnutChart";
 import LineChart from "./charts/LineChart";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import "../index.css";
+import { useParams } from "react-router-dom";
 
 const pfp = "http://127.0.0.1:8000/media/profilePictures/default.jpg";
 const icons = "http://127.0.0.1:8000/media/icons";
 
-export const EmployeeDashboard = () => {
+const Dashboard = () => {
+  const params = useParams();
+
   const [emotions, setEmotions] = useState({
     angry: 0,
     disgust: 0,
@@ -21,6 +24,7 @@ export const EmployeeDashboard = () => {
   });
   const [navigate, setNavigate] = useState(false);
   const [userData, setUserData] = useState({});
+
   const [chartError, setChartError] = useState(null);
   const [highestEmotion, setHighestEmotion] = useState({ key: "", value: 0 });
   const [weeklyExerciseData, setWeeklyExerciseData] = useState({});
@@ -34,22 +38,47 @@ export const EmployeeDashboard = () => {
   const [exerciseView, setExerciseView] = useState("daily");
   const [listeningView, setListeningView] = useState("daily");
   const [emotionView, setEmotionView] = useState("daily");
+  
   const [hourlyEmotion, setHourlyEmotion] = useState([]);
 
-  const fetchUserData = async () => {
+  const [goBackText, setGoBackText] = useState("");
+
+  const fetchUserDataWithID = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/api/getuser/", {
-        withCredentials: true,
+      const response = await axios.get("http://localhost:8000/api/g/", {
+        params: {
+          user_id: params.id,
+        }, 
       });
-      const user = response.data;
-      setUserData(user);
+      console.log(response.data);
+      setUserData(response.data);
     } catch (e) {
       console.error(e);
       setNavigate(true);
     }
   };
 
-  const fetchEmotionData = async (userId, period) => {
+  const fetchUserData = async () => {
+    try {
+    const response = await axios.get("http://localhost:8000/api/getuser/", {
+    withCredentials: true,
+    });
+    
+      if (response.data.is_superuser == true){
+        setGoBackText("/admin/team_dashboard") 
+      }else{
+        setGoBackText("/supervisor/team_individual_view")
+      }
+    
+    
+    } catch (e) {
+      console.log(e)
+    }
+    
+    };
+
+
+  const fetchEmotionData = async (userId = params.id, period) => {
     try {
       const response = await axios.get(
         "http://localhost:8000/api/getemotions/",
@@ -60,7 +89,7 @@ export const EmployeeDashboard = () => {
       const data = response.data.defaultEmotionValues;
       const hourlyEmotion = response.data.hourlyDominantEmotions;
       setEmotions(data);
-      setHourlyEmotion(hourlyEmotion); 
+      setHourlyEmotion(hourlyEmotion);
 
       const allZero = Object.values(data).every((value) => value === 0);
       if (allZero) {
@@ -79,14 +108,14 @@ export const EmployeeDashboard = () => {
     }
   };
 
-  const fetchExerciseData = async (userId, period) => {
+  const fetchExerciseData = async (userId = params.id, period) => {
     try {
       const response = await axios.get(
         "http://localhost:8000/api/breathing_exercise_usage/",
         {
           params: { user: userId, period: period },
         }
-      ); console.log(response.data)
+      );
       const data = response.data.days || {};
       if (period === "weekly") {
         setWeeklyExerciseData(data);
@@ -101,12 +130,12 @@ export const EmployeeDashboard = () => {
     }
   };
 
-  const fetchListeningData = async (userId, period) => {
+  const fetchListeningData = async (userId = params.id, period) => {
     try {
       const response = await axios.get(
         "http://localhost:8000/api/track_listening/",
         {
-          params: { user: userId, period: period },
+          params: { user: params.id, period: period },
         }
       );
       const data = response.data.days || {};
@@ -125,6 +154,7 @@ export const EmployeeDashboard = () => {
 
   useEffect(() => {
     fetchUserData();
+    fetchUserDataWithID()
   }, []);
 
   useEffect(() => {
@@ -156,18 +186,27 @@ export const EmployeeDashboard = () => {
   const isListeningLeftDisabled = listeningView === "daily";
   const isListeningRightDisabled = listeningView === "monthly";
 
-  if (navigate) {
-    return <Navigate to="/employee/login/" />;
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto py-6">
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-semibold text-sky-700">
-            Employee Dashboard
-          </h1>
-        </div>
+        <Link to={goBackText}>
+          <div className="flex items-center mx-5 hover: transition-transform duration-300 cursor-pointer">
+            <svg
+              className="fill-sky-500"
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              id="back-arrow"
+            >
+              <path fill="none" d="M0 0h24v24H0V0z" opacity=".87"></path>
+              <path d="M16.62 2.99c-.49-.49-1.28-.49-1.77 0L6.54 11.3c-.39.39-.39 1.02 0 1.41l8.31 8.31c.49.49 1.28.49 1.77 0s.49-1.28 0-1.77L9.38 12l7.25-7.25c.48-.48.48-1.28-.01-1.76z"></path>
+            </svg>
+            <p className="text-sky-500 font-semibold font google text-lg mx-3">
+              Go Back
+            </p>
+          </div>
+        </Link>
 
         <div className="flex flex-wrap justify-center">
           <div className="max-w-sm w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
@@ -177,10 +216,11 @@ export const EmployeeDashboard = () => {
                 src={userData.profile_picture || pfp}
                 alt="Profile"
               />
-              <h2 className="mt-4 text-2xl font-semibold text-sky-900">
-                Welcome, {userData.first_name} &nbsp; {userData.last_name}!
+              Detailed view of:
+              <h2 className="mt-4 text-2xl font-semibold text-sky-700">
+                {userData.first_name}&nbsp;{userData.last_name}
               </h2>
-              <p className="text-gray-600 mt-2">UserID: {userData.id}</p>
+              <p className="text-gray-600 mt-2">UserID: {params.id}</p>
               <p className="text-gray-600">Email: {userData.email}</p>
             </div>
           </div>
@@ -231,7 +271,7 @@ export const EmployeeDashboard = () => {
           <div className="max-w-sm w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
             <div className="text-center">
               <h5 className="text-xl font-semibold text-sky-900">
-                Your Most Common Emotion
+                {userData.first_name}'s Most Common Emotion
               </h5>
               {chartError ? (
                 <h2 className="text-xl text-gray-700 mt-4">{chartError}</h2>
@@ -298,7 +338,7 @@ export const EmployeeDashboard = () => {
               {mostUsedExercise && (
                 <div className="mt-4">
                   <h5 className="text-lg font-semibold text-sky-900 mb-5">
-                    Most Used Exercise:
+                    {userData.first_name}'s Most Used Exercise:
                   </h5>
                   <p className="text-gray-700">
                     {mostUsedExercise.exercise_name}
@@ -315,8 +355,8 @@ export const EmployeeDashboard = () => {
 
           {/* Listening Data */}
           <div className="max-w-sm w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
-          <div className="text-center">
-              <h5 className="text-xl font-semibold text-sky-900 mb-5">
+            <div className="text-center">
+            <h5 className="text-xl font-semibold text-sky-900 mb-5">
                 {listeningView === "daily"
                   ? "Daily Track Listening Usage"
                   : listeningView === "weekly"
@@ -357,7 +397,7 @@ export const EmployeeDashboard = () => {
               {mostListenedTrack && (
                 <div className="mt-4">
                   <h5 className="text-lg font-semibold text-sky-900 mb-5">
-                    Most Listened Track:
+                    {userData.first_name}'s Most Listened Track:
                   </h5>
                   <p className="text-gray-700">
                     {mostListenedTrack.track_name}
@@ -375,11 +415,11 @@ export const EmployeeDashboard = () => {
 
       <div className="max-w-xl w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
         <h5 className="text-xl font-semibold text-sky-900">
-          Dominant Emotion by Hour
+          {userData.first_name}'s Dominant Emotion by Hour
         </h5>
         <div className="flex justify-between mt-4 w-full">
           {Object.keys(hourlyEmotion).map((hour, index) => (
-            <div key={index} className="text-center ml-4 mr-4 my-5">
+            <div key={index} className="text-center ml-4 mr-4">
               {hourlyEmotion[hour] ? (
                 <div>
                   <img
@@ -401,4 +441,4 @@ export const EmployeeDashboard = () => {
   );
 };
 
-export default EmployeeDashboard;
+export default Dashboard;
