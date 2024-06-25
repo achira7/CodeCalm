@@ -8,7 +8,7 @@ import json
 from matplotlib.image import pil_to_array
 
 #from imp import load_module
-from .models import Employee_Emotion, Employee_Team, Employee_Focus, BreathingExerciseUsage, TrackListening, StressQuestion, StressDetectionForm
+from .models import Employee_Emotion, Employee_Team, Employee_Focus, BreathingExerciseUsage, TrackListening, StressQuestion, StressDetectionForm, ReportGeneration
 
 from django.http import JsonResponse, StreamingHttpResponse
 from rest_framework.views import APIView
@@ -531,7 +531,7 @@ class FaceLoginView(APIView):
         return JsonResponse({'message': 'Face not recognized'}, status=401)
         
 
-class DetectionView(APIView):
+class EmotionDataView(APIView):
     @csrf_exempt
     def post(self, request):
         image_data = request.data.get('frame')
@@ -591,27 +591,15 @@ class DetectionView(APIView):
         except Exception as e:
             return JsonResponse({'emo': 'Error occurred', 'frq': 'none', 'gaze': 'Error'})
         
-
-
-
-"""===================================================================================================="""
-"""===================================================================================================="""
-"""===================================================================================================="""
-"""===================================================================================================="""
-"""===================================================================================================="""
-
-
-
-
-class EmotionDataView(APIView):
     def get(self, request):
         defaultEmotionValues = {'angry': 0, 'disgust': 0, 'fear': 0, 'happy': 0, 'sad': 0, 'surprise': 0, 'neutral': 0}
-        userid = request.GET.get('user_id')
+        user_id = request.GET.get('user_id')
+        team_id = request.GET.get('team_id')
         period = request.GET.get('period', 'all_time')  # Default to 'all_time' if not provided
 
-        # Check if user_id is provided in the request
-        if not userid:
-            return JsonResponse({'error': 'User ID is required'}, status=400)
+        # Check if user_id or team_id is provided in the request
+        if not user_id and not team_id:
+            return JsonResponse({'error': 'User ID or Team ID is required'}, status=400)
 
         # Define the time filter based on the period
         if period == 'daily':
@@ -623,15 +611,23 @@ class EmotionDataView(APIView):
         else:
             time_threshold = None
 
-        # Fetch emotion data for the specified user_id and time period
+        # Initialize filter parameters
+        filter_params = {}
+        if user_id and user_id != 'none':
+            filter_params['employee_id'] = user_id
+        elif team_id and team_id != 'none':
+            users = User.objects.filter(team=team_id)
+            user_ids = users.values_list('id', flat=True)
+            filter_params['employee_id__in'] = user_ids
+
         if time_threshold:
-            emotion_counts_list = Employee_Emotion.objects.filter(employee_id=userid, time__gte=time_threshold) \
+            emotion_counts_list = Employee_Emotion.objects.filter(**filter_params, time__gte=time_threshold) \
                                         .values('emotion_data') \
                                         .annotate(count=Count('emotion_data')) \
                                         .order_by('emotion_data') \
                                         .values_list('emotion_data', 'count')
         else:
-            emotion_counts_list = Employee_Emotion.objects.filter(employee_id=userid) \
+            emotion_counts_list = Employee_Emotion.objects.filter(**filter_params) \
                                         .values('emotion_data') \
                                         .annotate(count=Count('emotion_data')) \
                                         .order_by('emotion_data') \
@@ -659,7 +655,7 @@ class EmotionDataView(APIView):
             end_time = start_time + timedelta(hours=1)
 
             # Query to get the dominant emotion in the current hour
-            hourly_emotion = Employee_Emotion.objects.filter(employee_id=userid, time__gte=start_time, time__lt=end_time) \
+            hourly_emotion = Employee_Emotion.objects.filter(**filter_params, time__gte=start_time, time__lt=end_time) \
                                   .values('emotion_data') \
                                   .annotate(count=Count('emotion_data')) \
                                   .order_by('-count') \
@@ -672,7 +668,7 @@ class EmotionDataView(APIView):
 
             # Add the dominant emotion for the current hour to the dictionary
             hourly_dominant_emotions[f'{hour}:00 - {hour+1}:00'] = dominant_emotion
-        print(hourly_dominant_emotions)
+
         response_data = {
             'defaultEmotionValues': defaultEmotionValues,
             'hourlyDominantEmotions': hourly_dominant_emotions
@@ -765,6 +761,7 @@ class EmployeeTeamView(APIView):
 
 
 class BreathingExerciseUsageView(APIView):
+    @csrf_exempt
     def post(self, request):
         id = request.data['user']
         exercise_name = request.data['exercise_name']
@@ -773,8 +770,10 @@ class BreathingExerciseUsageView(APIView):
         BreathingExerciseUsage.objects.create(employee_id=id, exercise_name=exercise_name, duration=duration)
         return Response(status=status.HTTP_201_CREATED)
 
+
     def get(self, request):
         user_id = request.GET.get('user')
+        team_id = request.GET.get('team_id')
         period = request.GET.get('period')
         today = now().date()
 
@@ -794,8 +793,16 @@ class BreathingExerciseUsageView(APIView):
         else:
             return Response({"error": "Invalid period specified"}, status=400)
 
+        filter_params = {}
+        if user_id and user_id != 'none':
+            filter_params['employee_id'] = user_id
+        elif team_id and team_id != 'none':
+            users = User.objects.filter(team=team_id)
+            user_ids = users.values_list('id', flat=True)
+            filter_params['employee_id__in'] = user_ids
+
         usage_records = BreathingExerciseUsage.objects.filter(
-            employee_id=user_id,
+            **filter_params,
             timestamp__date__range=[start_date, end_date]
         ).annotate(
             day=ExtractHour('timestamp') if period == 'daily' else (ExtractDay('timestamp') if period == 'monthly' else ExtractWeekDay('timestamp'))
@@ -810,28 +817,47 @@ class BreathingExerciseUsageView(APIView):
                 days[str(record['day'])] = record['total_duration']
 
         most_used_exercise = BreathingExerciseUsage.objects.filter(
-            employee_id=user_id,
+            **filter_params,
             timestamp__date__range=[start_date, end_date]
         ).values('exercise_name').annotate(total_duration=Sum('duration')).order_by('-total_duration').first()
-        
+        print("Breathing", days, most_used_exercise)
         return Response({
             "days": days,
             "most_used_exercise": most_used_exercise
         })
 
 class TrackListeningView(APIView):
+    @csrf_exempt
     def post(self, request):
-        user_id = request.data['user']
-        track_name = request.data['track_name']
-        duration = request.data['duration']
+        try:
+            # Extract and validate request data
+            user_id = request.data.get('user')
+            track_name = request.data.get('track_name')
+            duration = request.data.get('duration')
 
-        if duration > 10:
-            TrackListening.objects.create(employee_id=user_id, track_name=track_name, duration=duration)
-            return Response(status=status.HTTP_201_CREATED)
-        return Response({"error": "Duration must be greater than 10"}, status=400)
+            print(user_id)
 
+            # Validate required fields
+            if user_id is None or track_name is None or duration is None:
+                return Response({"error": "User, track name, and duration are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Validate duration value
+            if duration <= 10:
+                return Response({"error": "Duration must be greater than 10"}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                # Create the TrackListening object
+                TrackListening.objects.create(employee_id=user_id, track_name=track_name, duration=duration)
+                return Response({"message": "Track listening recorded successfully"}, status=status.HTTP_201_CREATED)
+
+        except KeyError as e:
+            return Response({"error": f"Missing key: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
     def get(self, request):
         user_id = request.GET.get('user')
+        team_id = request.GET.get('team_id')
         period = request.GET.get('period')
         today = now().date()
 
@@ -848,12 +874,19 @@ class TrackListeningView(APIView):
             start_date = today
             end_date = today
             days = {f'{hour}:00 - {hour+1}:00': 0 for hour in range(7, 19)}  # Initialize hours 7:00 - 18:00
-
         else:
             return Response({"error": "Invalid period specified"}, status=400)
 
+        filter_params = {}
+        if user_id and user_id != 'none':
+            filter_params['employee_id'] = user_id
+        elif team_id and team_id != 'none':
+            users = User.objects.filter(team=team_id)
+            user_ids = users.values_list('id', flat=True)
+            filter_params['employee_id__in'] = user_ids
+
         usage_records = TrackListening.objects.filter(
-            employee_id=user_id,
+            **filter_params,
             timestamp__date__range=[start_date, end_date]
         ).annotate(
             day=ExtractHour('timestamp') if period == 'daily' else (ExtractDay('timestamp') if period == 'monthly' else ExtractWeekDay('timestamp'))
@@ -868,118 +901,100 @@ class TrackListeningView(APIView):
                 days[str(record['day'])] = record['total_duration']
 
         most_listened_track = TrackListening.objects.filter(
-            employee_id=user_id,
+            **filter_params,
             timestamp__date__range=[start_date, end_date]
         ).values('track_name').annotate(total_duration=Sum('duration')).order_by('-total_duration').first()
-
+        print("Track Listening", days, most_listened_track)
         return Response({
             "days": days,
             "most_listened_track": most_listened_track
         })
 
 
-
-
-class TeamBreathingExerciseUsageView(APIView):
+class EmotionTeamDataView(APIView):
     def get(self, request):
+        defaultEmotionValues = {'angry': 0, 'disgust': 0, 'fear': 0, 'happy': 0, 'sad': 0, 'surprise': 0, 'neutral': 0}
         team_id = request.GET.get('team_id')
-        period = request.GET.get('period')
-        today = now().date()
+        period = request.GET.get('period', 'all_time')  # Default to 'all_time' if not provided
 
-        if period == 'weekly':
-            start_date = today - timedelta(days=today.weekday())
-            end_date = start_date + timedelta(days=6)
-            days = {str(i): 0 for i in range(1, 8)}
+        # Check if team_id is provided in the request
+        if not team_id:
+            return JsonResponse({'error': 'Team ID is required'}, status=400)
+
+        # Define the time filter based on the period
+        if period == 'daily':
+            time_threshold = datetime.now() - timedelta(days=1)
+        elif period == 'weekly':
+            time_threshold = datetime.now() - timedelta(weeks=1)
         elif period == 'monthly':
-            start_date = today.replace(day=1)
-            end_date = (today.replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)
-            days_in_month = (end_date - start_date).days + 1
-            days = {str(i): 0 for i in range(1, days_in_month + 1)}
-        elif period == 'daily':
-            start_date = today
-            end_date = today
-            days = {f'{hour}:00 - {hour+1}:00': 0 for hour in range(7, 19)}
+            time_threshold = datetime.now() - timedelta(days=30)
         else:
-            return Response({"error": "Invalid period specified"}, status=400)
+            time_threshold = None
 
+        # Initialize filter parameters
         users = User.objects.filter(team=team_id)
         user_ids = users.values_list('id', flat=True)
+        filter_params = {'employee_id__in': user_ids}
 
-        usage_records = BreathingExerciseUsage.objects.filter(
-            employee_id__in=user_ids,
-            timestamp__date__range=[start_date, end_date]
-        ).annotate(
-            day=ExtractHour('timestamp') if period == 'daily' else (ExtractDay('timestamp') if period == 'monthly' else ExtractWeekDay('timestamp'))
-        ).values('day').annotate(total_duration=Sum('duration'))
-
-        for record in usage_records:
-            if period == 'daily':
-                hour_range = f"{record['day']}:00 - {record['day'] + 1}:00"
-                if hour_range in days:
-                    days[hour_range] = record['total_duration']
-            else:
-                days[str(record['day'])] = record['total_duration']
-
-        most_used_exercise = BreathingExerciseUsage.objects.filter(
-            employee_id__in=user_ids,
-            timestamp__date__range=[start_date, end_date]
-        ).values('exercise_name').annotate(total_duration=Sum('duration')).order_by('-total_duration').first()
-
-        return Response({
-            "days": days,
-            "most_used_exercise": most_used_exercise
-        })
-
-class TeamTrackListeningView(APIView):
-    def get(self, request):
-        team_id = request.GET.get('team_id')
-        period = request.GET.get('period')
-        today = now().date()
-
-        if period == 'weekly':
-            start_date = today - timedelta(days=today.weekday())
-            end_date = start_date + timedelta(days=6)
-            days = {str(i): 0 for i in range(1, 8)}
-        elif period == 'monthly':
-            start_date = today.replace(day=1)
-            end_date = (today.replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)
-            days_in_month = (end_date - start_date).days + 1
-            days = {str(i): 0 for i in range(1, days_in_month + 1)}
-        elif period == 'daily':
-            start_date = today
-            end_date = today
-            days = {f'{hour}:00 - {hour+1}:00': 0 for hour in range(7, 19)}
+        if time_threshold:
+            emotion_counts_list = Employee_Emotion.objects.filter(**filter_params, time__gte=time_threshold) \
+                                        .values('emotion_data') \
+                                        .annotate(count=Count('emotion_data')) \
+                                        .order_by('emotion_data') \
+                                        .values_list('emotion_data', 'count')
         else:
-            return Response({"error": "Invalid period specified"}, status=400)
+            emotion_counts_list = Employee_Emotion.objects.filter(**filter_params) \
+                                        .values('emotion_data') \
+                                        .annotate(count=Count('emotion_data')) \
+                                        .order_by('emotion_data') \
+                                        .values_list('emotion_data', 'count')
 
-        users = User.objects.filter(team=team_id)
-        user_ids = users.values_list('id', flat=True)
+        # Convert the queryset to a dictionary
+        emotion_counts_dict = dict(emotion_counts_list)
 
-        usage_records = TrackListening.objects.filter(
-            employee_id__in=user_ids,
-            timestamp__date__range=[start_date, end_date]
-        ).annotate(
-            day=ExtractHour('timestamp') if period == 'daily' else (ExtractDay('timestamp') if period == 'monthly' else ExtractWeekDay('timestamp'))
-        ).values('day').annotate(total_duration=Sum('duration'))
+        # Update defaultEmotionValues with the fetched emotion counts
+        for key in defaultEmotionValues:
+            if key in emotion_counts_dict:
+                defaultEmotionValues[key] += emotion_counts_dict[key]
 
-        for record in usage_records:
-            if period == 'daily':
-                hour_range = f"{record['day']}:00 - {record['day'] + 1}:00"
-                if hour_range in days:
-                    days[hour_range] = record['total_duration']
+        # Initialize the hourly dominant emotion dictionary
+        hourly_dominant_emotions = {}
+
+        # Get the current date and define the start and end hours
+        current_date = datetime.now().date()
+        start_hour = 7
+        end_hour = 18
+
+        # Loop through each hour from 7 AM to 6 PM
+        for hour in range(start_hour, end_hour + 1):
+            start_time = datetime.combine(current_date, datetime.min.time()) + timedelta(hours=hour)
+            end_time = start_time + timedelta(hours=1)
+
+            # Query to get the dominant emotion in the current hour
+            hourly_emotion = Employee_Emotion.objects.filter(**filter_params, time__gte=start_time, time__lt=end_time) \
+                                  .values('emotion_data') \
+                                  .annotate(count=Count('emotion_data')) \
+                                  .order_by('-count') \
+                                  .first()
+
+            if hourly_emotion:
+                dominant_emotion = hourly_emotion['emotion_data']
             else:
-                days[str(record['day'])] = record['total_duration']
+                dominant_emotion = ''  # Default if no data is found
 
-        most_listened_track = TrackListening.objects.filter(
-            employee_id__in=user_ids,
-            timestamp__date__range=[start_date, end_date]
-        ).values('track_name').annotate(total_duration=Sum('duration')).order_by('-total_duration').first()
+            # Add the dominant emotion for the current hour to the dictionary
+            hourly_dominant_emotions[f'{hour}:00 - {hour+1}:00'] = dominant_emotion
+        
+        print('emotions', defaultEmotionValues)
+        response_data = {
+            'defaultEmotionValues': defaultEmotionValues,
+            'hourlyDominantEmotions': hourly_dominant_emotions
+        }
 
-        return Response({
-            "days": days,
-            "most_listened_track": most_listened_track
-        })
-    
+        return Response(response_data)
+
+
+
 class TeamDetection(APIView):
     @staticmethod
     def get_stress_score(user):
@@ -1080,7 +1095,6 @@ class StressQuestionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIV
 
 
 class SaveSettingsView(APIView):
-
     def post(self, request, *args, **kwargs):
         user = request.user
         dark_mode = request.data.get('dark_mode', False)
@@ -1105,70 +1119,29 @@ class SubmitStressFormView(APIView):
         StressDetectionForm.objects.create(user=user, answers=answers, score=score, additional_comments=additional_comments)
         return Response(status=status.HTTP_201_CREATED)
 
-"""
-class MessageListCreateView(APIView):
-    #permission_classes = [permissions.IsAuthenticated]
 
+class ReportGeneratedView(APIView):
     def get(self, request):
-        user = request.user
-        if user.is_superuser:
-            messages = Message.objects.filter(receiver__is_staff=True)
-        elif user.is_staff:
-            messages = Message.objects.filter(receiver=user) | Message.objects.filter(sender=user)
-        else:
-            messages = Message.objects.filter(sender=user, receiver__is_staff=True) | Message.objects.filter(receiver=user, sender__is_staff=True)
-        
-        serializer = MessageSerializer(messages, many=True)
-        return Response(serializer.data)
+        pass
 
     def post(self, request):
-        sender = request.user
-        serializer = MessageSerializer(data=request.data)
-        if serializer.is_valid():
-            receiver = serializer.validated_data['receiver']
-            if (sender.is_superuser and receiver.is_staff) or \
-               (sender.is_staff and (receiver.is_staff or receiver == sender)) or \
-               (not sender.is_staff and receiver.is_staff):
-                serializer.save(sender=sender)
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            else:
-                return Response('You do not have permission to send this message.', status=status.HTTP_403_FORBIDDEN)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            downloaded_by = User.objects.get(id=request.data['downloaded_by'])
+            role = request.data['role']
+            timestamp = request.data['timestamp']
 
-class MessageDetailView(APIView):
-    #permission_classes = [permissions.IsAuthenticated]
-
-    def get_object(self, pk):
-        return get_object_or_404(Message, pk=pk)
-
-    def get(self, request, pk, *args, **kwargs):
-        message = self.get_object(pk)
-        if request.user == message.sender or request.user == message.receiver or request.user.is_superuser:
-            serializer = MessageSerializer(message)
-            return Response(serializer.data)
-        return Response('You do not have permission to view this message.', status=status.HTTP_403_FORBIDDEN)
-
-    def delete(self, request, pk, *args, **kwargs):
-        message = self.get_object(pk)
-        if request.user == message.sender or request.user == message.receiver:
-            message.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response('You do not have permission to delete this message.', status=status.HTTP_403_FORBIDDEN)"""
-    
-
-'''class StressDetectionResponseView(APIView):
-
-    def post(self, request):
-        serializer = StressDetectionResponseSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(user=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)'''
-
-
-        
-
-     
-
-
-
+            report = ReportGeneration.objects.create(downloaded_by=downloaded_by, role=role, timestamp=timestamp)
+            
+            return Response(
+                status=status.HTTP_201_CREATED
+            )
+        except User.DoesNotExist:
+            return Response(
+                {'error': 'User not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )

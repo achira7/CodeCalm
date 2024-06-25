@@ -6,11 +6,44 @@ import LineChart from "./charts/LineChart";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import "../index.css";
 import { useParams } from "react-router-dom";
+import TestComponent from "./TestComponent";
+import TeamComponent from "./TeamComponent";
 
 const pfp = "http://127.0.0.1:8000/media/profilePictures/default.jpg";
 const icons = "http://127.0.0.1:8000/media/icons";
 
-const Dashboard = (props) => {
+//<TestDashboard data={userData}/>
+
+const TestDashboard = () => {
+
+
+  return (
+    <>
+        {/*<TestComponent id={ 18 } />*/}
+        <TeamComponent team={ 'Test' }/>
+    </>
+   
+  );
+};
+
+export default TestDashboard;
+
+
+{/*import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { Navigate, Link } from "react-router-dom";
+import DoughnutChart from "./charts/DoughnutChart";
+import LineChart from "./charts/LineChart";
+import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
+import "../index.css";
+import { useParams } from "react-router-dom";
+
+const pfp = "http://127.0.0.1:8000/media/profilePictures/default.jpg";
+const icons = "http://127.0.0.1:8000/media/icons";
+
+//<TestDashboard data={userData}/>
+
+const TestDashboard = ( {data} ) => {
   const params = useParams();
 
   const [emotions, setEmotions] = useState({
@@ -47,7 +80,7 @@ const Dashboard = (props) => {
     try {
       const response = await axios.get("http://localhost:8000/api/g/", {
         params: {
-          user_id: params.id,
+          user_id: data.id,
         },
       });
       console.log(response.data);
@@ -60,15 +93,8 @@ const Dashboard = (props) => {
 
   const fetchUserData = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/api/getuser/", {
-        withCredentials: true,
-      });
+        
 
-      if (response.data.is_superuser == true) {
-        setGoBackText("/admin/team_dashboard");
-      } else {
-        setGoBackText("/supervisor/team_individual_view");
-      }
     } catch (e) {
       console.log(e);
     }
@@ -132,13 +158,13 @@ const Dashboard = (props) => {
 
   const fetchListeningData = async (
     userId = params.id,
-    period /*team_id="none"*/
+    period
   ) => {
     try {
       const response = await axios.get(
         "http://localhost:8000/api/listening/",
         {
-          params: { user: userId, period: period /*team_id*/ },
+          params: { user: userId, period: period},
         }
       );
       const data = response.data.days || {};
@@ -307,7 +333,7 @@ const Dashboard = (props) => {
             </div>
           </div>
 
-          {/* Exercise Data */}
+
           <div className="max-w-sm w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
             <div className="text-center">
               <h5 className="text-xl font-semibold text-sky-900 inline-flex">
@@ -378,7 +404,7 @@ const Dashboard = (props) => {
             </div>
           </div>
 
-          {/* Listening Data */}
+          
           <div className="max-w-sm w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
             <div className="text-center">
               <h5 className="text-xl font-semibold text-sky-900 mb-5">
@@ -478,4 +504,6 @@ const Dashboard = (props) => {
   );
 };
 
-export default Dashboard;
+export default TestDashboard;
+*/} 
+

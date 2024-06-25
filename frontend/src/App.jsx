@@ -24,6 +24,7 @@ import AllTeamsDashboard from './components/admin/AllTeamsDashboard';
 import Test from './components/Test';
 import Dashboard from './components/Dashboard';
 import TeamIndividualView from './components/supervisor/TeamIndividualView';
+import TestDashboard from './components/TestDashboard';
 
 
 function App() {
@@ -64,7 +65,8 @@ function App() {
         <Route path="/admin/addquestion" element={<AddQuestionForm />} />
         <Route path="/admin/employee_dashboard_view" element={<EmployeeDashboardOverlay/>} />
         <Route path="/admin/team_dashboard" element={<AllTeamsDashboard/>} />
-      
+        <Route path="/admin/test" element={<TestDashboard/>} />
+
       </Routes>
     </RecoilRoot>
   );

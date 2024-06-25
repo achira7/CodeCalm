@@ -89,6 +89,7 @@ const NavBar = () => {
     { id: 2, title: 'team dashboard', link: './admin/team_dashboard'},
     { id: 3, title: 'generate reports', link: './employee/breathingexercise' },
     { id: 4, title: 'user management', link: './admin/allemployees' },
+    { id: 5, title: 'admin test', link: './admin/test' },
   ];
 
   return (

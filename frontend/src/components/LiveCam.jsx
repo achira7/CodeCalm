@@ -40,7 +40,7 @@ const LiveCam = () => {
         formData.append("user_id", userData.id);
 
         const response = await axios.post(
-            "http://127.0.0.1:8000/api/emotion/",
+            "http://127.0.0.1:8000/api/emotions/",
             formData,
             {
               headers: {

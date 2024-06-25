@@ -5,6 +5,7 @@ import DoughnutChart from "./charts/DoughnutChart";
 import LineChart from "./charts/LineChart";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import "../index.css";
+import Dashboard from "./Dashboard";
 
 const pfp = "http://127.0.0.1:8000/media/profilePictures/default.jpg";
 const icons = "http://127.0.0.1:8000/media/icons";
@@ -52,7 +53,7 @@ export const EmployeeDashboard = () => {
   const fetchEmotionData = async (userId, period) => {
     try {
       const response = await axios.get(
-        "http://localhost:8000/api/getemotions/",
+        "http://localhost:8000/api/emotions/",
         {
           params: { user_id: userId, period: period },
         }
@@ -60,7 +61,7 @@ export const EmployeeDashboard = () => {
       const data = response.data.defaultEmotionValues;
       const hourlyEmotion = response.data.hourlyDominantEmotions;
       setEmotions(data);
-      setHourlyEmotion(hourlyEmotion); 
+      setHourlyEmotion(hourlyEmotion);
 
       const allZero = Object.values(data).every((value) => value === 0);
       if (allZero) {
@@ -82,11 +83,12 @@ export const EmployeeDashboard = () => {
   const fetchExerciseData = async (userId, period) => {
     try {
       const response = await axios.get(
-        "http://localhost:8000/api/breathing_exercise_usage/",
+        "http://localhost:8000/api/breathing/",
         {
           params: { user: userId, period: period },
         }
-      ); console.log(response.data)
+      );
+      console.log(response.data);
       const data = response.data.days || {};
       if (period === "weekly") {
         setWeeklyExerciseData(data);
@@ -104,7 +106,7 @@ export const EmployeeDashboard = () => {
   const fetchListeningData = async (userId, period) => {
     try {
       const response = await axios.get(
-        "http://localhost:8000/api/track_listening/",
+        "http://localhost:8000/api/listening/",
         {
           params: { user: userId, period: period },
         }
@@ -207,7 +209,12 @@ export const EmployeeDashboard = () => {
                     isEmotionLeftDisabled ? "text-gray-400" : ""
                   }`}
                   onClick={() =>
-                    handleViewChange(setEmotionView, emotionView, "prev", emotionViews)
+                    handleViewChange(
+                      setEmotionView,
+                      emotionView,
+                      "prev",
+                      emotionViews
+                    )
                   }
                   disabled={isEmotionLeftDisabled}
                 >
@@ -218,7 +225,12 @@ export const EmployeeDashboard = () => {
                     isEmotionRightDisabled ? "text-gray-400" : ""
                   }`}
                   onClick={() =>
-                    handleViewChange(setEmotionView, emotionView, "next", emotionViews)
+                    handleViewChange(
+                      setEmotionView,
+                      emotionView,
+                      "next",
+                      emotionViews
+                    )
                   }
                   disabled={isEmotionRightDisabled}
                 >
@@ -258,18 +270,20 @@ export const EmployeeDashboard = () => {
           <div className="max-w-sm w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
             <div className="text-center">
               <h5 className="text-xl font-semibold text-sky-900 inline-flex">
-              {exerciseView === "daily"
+                {exerciseView === "daily"
                   ? "Daily Breathing Exercise Usage"
                   : exerciseView === "weekly"
                   ? "Weekly Breathing Exercise Usage"
                   : "Monthly Breathing Exercise Usage"}
               </h5>
               <LineChart
-                data={{
-                  daily: dailyExerciseData,
-                  weekly: weeklyExerciseData,
-                  monthly: monthlyExerciseData,
-                }[exerciseView]}
+                data={
+                  {
+                    daily: dailyExerciseData,
+                    weekly: weeklyExerciseData,
+                    monthly: monthlyExerciseData,
+                  }[exerciseView]
+                }
               />
               <div className="flex justify-center mt-4">
                 <button
@@ -277,7 +291,12 @@ export const EmployeeDashboard = () => {
                     isExerciseLeftDisabled ? "text-gray-400" : ""
                   }`}
                   onClick={() =>
-                    handleViewChange(setExerciseView, exerciseView, "prev", exerciseViews)
+                    handleViewChange(
+                      setExerciseView,
+                      exerciseView,
+                      "prev",
+                      exerciseViews
+                    )
                   }
                   disabled={isExerciseLeftDisabled}
                 >
@@ -288,7 +307,12 @@ export const EmployeeDashboard = () => {
                     isExerciseRightDisabled ? "text-gray-400" : ""
                   }`}
                   onClick={() =>
-                    handleViewChange(setExerciseView, exerciseView, "next", exerciseViews)
+                    handleViewChange(
+                      setExerciseView,
+                      exerciseView,
+                      "next",
+                      exerciseViews
+                    )
                   }
                   disabled={isExerciseRightDisabled}
                 >
@@ -315,7 +339,7 @@ export const EmployeeDashboard = () => {
 
           {/* Listening Data */}
           <div className="max-w-sm w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
-          <div className="text-center">
+            <div className="text-center">
               <h5 className="text-xl font-semibold text-sky-900 mb-5">
                 {listeningView === "daily"
                   ? "Daily Track Listening Usage"
@@ -324,11 +348,13 @@ export const EmployeeDashboard = () => {
                   : "Monthly Track Listening Usage"}
               </h5>
               <LineChart
-                data={{
-                  daily: dailyListeningData,
-                  weekly: weeklyListeningData,
-                  monthly: monthlyListeningData,
-                }[listeningView]}
+                data={
+                  {
+                    daily: dailyListeningData,
+                    weekly: weeklyListeningData,
+                    monthly: monthlyListeningData,
+                  }[listeningView]
+                }
               />
               <div className="flex justify-center mt-4">
                 <button
@@ -336,7 +362,12 @@ export const EmployeeDashboard = () => {
                     isListeningLeftDisabled ? "text-gray-400" : ""
                   }`}
                   onClick={() =>
-                    handleViewChange(setListeningView, listeningView, "prev", listeningViews)
+                    handleViewChange(
+                      setListeningView,
+                      listeningView,
+                      "prev",
+                      listeningViews
+                    )
                   }
                   disabled={isListeningLeftDisabled}
                 >
@@ -347,7 +378,12 @@ export const EmployeeDashboard = () => {
                     isListeningRightDisabled ? "text-gray-400" : ""
                   }`}
                   onClick={() =>
-                    handleViewChange(setListeningView, listeningView, "next", listeningViews)
+                    handleViewChange(
+                      setListeningView,
+                      listeningView,
+                      "next",
+                      listeningViews
+                    )
                   }
                   disabled={isListeningRightDisabled}
                 >

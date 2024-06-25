@@ -22,8 +22,8 @@ function SingleTeamMember(props) {
   const [listeningView, setListeningView] = useState("weekly");
   const [emotionView, setEmotionView] = useState("daily"); // Start with daily view
   const [hourlyEmotion, setHourlyEmotion] = useState([]);
-  
-  const [maxValue, setmaxValue] = useState('')
+
+  const [maxValue, setmaxValue] = useState("");
   const toggleOverlay = () => {
     setIsOpen(!isOpen);
   };
@@ -42,62 +42,59 @@ function SingleTeamMember(props) {
     }
   };
 
-  const fetchEmotionData = async (userId = props.employee.id, period = 'weekly') => {
+  const fetchEmotionData = async (
+    userId = props.employee.id,
+    period = "weekly"
+  ) => {
     try {
-      const response = await axios.get(
-        "http://localhost:8000/api/getemotions/",
-        {
-          params: { user_id: userId, period: period },
-        }
-      );
+      const response = await axios.get("http://localhost:8000/api/emotions/", {
+        params: { user_id: userId, period },
+      });
       console.log(response.data);
-  
+
       const data = response.data.defaultEmotionValues;
       const hourlyEmotion = response.data.hourlyDominantEmotions;
-      setHourlyEmotion(hourlyEmotion); 
+      setHourlyEmotion(hourlyEmotion);
 
       const allZero = Object.values(data).every((value) => value === 0);
       if (allZero) {
-        
       } else {
-        
       }
-        const values = Object.values(data);
-        const keys = Object.keys(data);
-        const maxValue = Math.max(...values);
-        const maxKey = keys[values.indexOf(maxValue)];
+      const values = Object.values(data);
+      const keys = Object.keys(data);
+      const maxValue = Math.max(...values);
+      const maxKey = keys[values.indexOf(maxValue)];
       setHighestEmotion({ key: maxKey, value: maxValue });
     } catch (error) {
-        console.error("Error fetching data:", error);
-        
+      console.error("Error fetching data:", error);
     }
   };
 
-  const fetchExerciseData = async (userId = props.employee.id, period = 'weekly') => {
+  const fetchExerciseData = async (
+    userId = props.employee.id,
+    period = "weekly"
+  ) => {
     try {
-      const response = await axios.get(
-        "http://localhost:8000/api/breathing_exercise_usage/",
-        {
-          params: { user: userId, period: period },
-        }
-      );
-        setWeeklyExerciseData(response.data.days);
-        setMostUsedExercise(response.data.most_used_exercise);
+      const response = await axios.get("http://localhost:8000/api/breathing/", {
+        params: { user: userId, period },
+      });
+      setWeeklyExerciseData(response.data.days);
+      setMostUsedExercise(response.data.most_used_exercise);
     } catch (error) {
       console.error("Error fetching exercise data:", error);
     }
   };
 
-  const fetchListeningData = async (userId = props.employee.id, period = 'weekly') => {
+  const fetchListeningData = async (
+    userId = props.employee.id,
+    period = "weekly"
+  ) => {
     try {
-      const response = await axios.get(
-        "http://localhost:8000/api/track_listening/",
-        {
-          params: { user: userId, period: period },
-        }
-      );
-        setWeeklyListeningData(response.data.days);
-        setMostListenedTrack(response.data.most_listened_track);
+      const response = await axios.get("http://localhost:8000/api/listening/", {
+        params: { user: userId, period },
+      });
+      setWeeklyListeningData(response.data.days);
+      setMostListenedTrack(response.data.most_listened_track);
     } catch (error) {
       console.error("Error fetching listening data:", error);
     }
@@ -115,12 +112,6 @@ function SingleTeamMember(props) {
     (sum, value) => sum + value,
     0
   );
-
-  /*useEffect(() => {
-    fetchExerciseData();
-    fetchListeningData();
-    fetchEmotionData();
-  }, []);*/
 
   useEffect(() => {
     fetchExerciseData(props.employee.id, exerciseView);
@@ -167,11 +158,10 @@ function SingleTeamMember(props) {
         </td>
 
         <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-  <p className="text-gray-900 whitespace-no-wrap capitalize">
-    {highestEmotion.value !== 0 ? `${highestEmotion.key}` : ' - '}
-  </p>
-</td>
-
+          <p className="text-gray-900 whitespace-no-wrap capitalize">
+            {highestEmotion.value !== 0 ? `${highestEmotion.key}` : " - "}
+          </p>
+        </td>
 
         <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
           <p className="text-gray-900 whitespace-no-wrap">
@@ -179,23 +169,30 @@ function SingleTeamMember(props) {
           </p>
         </td>
 
-        <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm" title="Time">
+        <td
+          className="px-5 py-5 border-b border-gray-200 bg-white text-sm"
+          title="Time"
+        >
           <p className="text-gray-900 whitespace-no-wrap">
-            {mostUsedExercise ? `${mostUsedExercise.exercise_name}` : ' - '}
+            {mostUsedExercise ? `${mostUsedExercise.exercise_name}` : " - "}
           </p>
 
           <p className="text-gray-900 whitespace-no-wrap">
-            {weeklyExerciseData ? `${(totalWeeklyExercise / 60.0).toFixed(2)} Minutes` : ' - '}
+            {weeklyExerciseData
+              ? `${(totalWeeklyExercise / 60.0).toFixed(2)} Minutes`
+              : " - "}
           </p>
         </td>
 
         <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
           <p className="text-gray-900 whitespace-no-wrap">
-            {mostListenedTrack ? `${mostListenedTrack.track_name}` : ' - '}
+            {mostListenedTrack ? `${mostListenedTrack.track_name}` : " - "}
           </p>
 
           <p className="text-gray-900 whitespace-no-wrap">
-            {weeklyListeningData ? `${(weeklyListeningData / 60.0).toFixed(2)} Minutes` : ' - '}
+            {weeklyListeningData
+              ? `${(weeklyListeningData / 60.0).toFixed(2)} Minutes`
+              : " - "}
           </p>
         </td>
 

@@ -10,7 +10,7 @@ import { useParams } from "react-router-dom";
 const pfp = "http://127.0.0.1:8000/media/profilePictures/default.jpg";
 const icons = "http://127.0.0.1:8000/media/icons";
 
-const Dashboard = (props) => {
+const TestComponent = ({ id, team }) => {
   const params = useParams();
 
   const [emotions, setEmotions] = useState({
@@ -47,7 +47,7 @@ const Dashboard = (props) => {
     try {
       const response = await axios.get("http://localhost:8000/api/g/", {
         params: {
-          user_id: params.id,
+          user_id: id,
         },
       });
       console.log(response.data);
@@ -74,12 +74,12 @@ const Dashboard = (props) => {
     }
   };
 
-  const fetchEmotionData = async (userId = params.id, period) => {
+  const fetchEmotionData = async (period) => {
     try {
       const response = await axios.get(
-        "http://localhost:8000/api/getemotions/",
+        "http://localhost:8000/api/emotions/",
         {
-          params: { user_id: userId, period: period },
+          params: { user_id: id || undefined, team_id: team || undefined, period: period },
         }
       );
       const data = response.data.defaultEmotionValues;
@@ -104,16 +104,12 @@ const Dashboard = (props) => {
     }
   };
 
-  const fetchExerciseData = async (
-    userId = params.id,
-    period,
-    team_id = "none"
-  ) => {
+  const fetchExerciseData = async (period) => {
     try {
       const response = await axios.get(
         "http://localhost:8000/api/breathing/",
         {
-          params: { user: userId, period: period, team_id: team_id },
+          params: { user_id: id || undefined, team_id: team || undefined, period: period },
         }
       );
       const data = response.data.days || {};
@@ -130,15 +126,12 @@ const Dashboard = (props) => {
     }
   };
 
-  const fetchListeningData = async (
-    userId = params.id,
-    period /*team_id="none"*/
-  ) => {
+  const fetchListeningData = async (period) => {
     try {
       const response = await axios.get(
         "http://localhost:8000/api/listening/",
         {
-          params: { user: userId, period: period /*team_id*/ },
+          params: { user_id: id || undefined, team_id: team || undefined, period: period },
         }
       );
       const data = response.data.days || {};
@@ -162,9 +155,9 @@ const Dashboard = (props) => {
 
   useEffect(() => {
     if (userData.id) {
-      fetchEmotionData(userData.id, emotionView);
-      fetchExerciseData(userData.id, exerciseView);
-      fetchListeningData(userData.id, listeningView);
+      fetchEmotionData(emotionView);
+      fetchExerciseData(exerciseView);
+      fetchListeningData(listeningView);
     }
   }, [userData, exerciseView, listeningView, emotionView]);
 
@@ -219,7 +212,7 @@ const Dashboard = (props) => {
                 src={userData.profile_picture || pfp}
                 alt="Profile"
               />
-              Detailed view of:
+              Detailed view of: {id}
               <h2 className="mt-4 text-2xl font-semibold text-sky-700">
                 {userData.first_name}&nbsp;{userData.last_name}
               </h2>
@@ -478,4 +471,4 @@ const Dashboard = (props) => {
   );
 };
 
-export default Dashboard;
+export default TestComponent;

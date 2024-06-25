@@ -120,7 +120,7 @@ const BreathingExercise = () => {
       setCircleColor(inhaleColor);
 
          await axios.post(
-            "http://127.0.0.1:8000/api/breathing_exercise_usage/",{
+            "http://127.0.0.1:8000/api/breathing/",{
               user: userID,
               exercise_name: name,
               duration: elapsedTime

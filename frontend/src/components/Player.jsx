@@ -15,7 +15,7 @@ const Player = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [dominantColor, setDominantColor] = useState("#000");
   const [progress, setProgress] = useState(0);
-  const [userID, setUserID] = useState("");
+  const [userID, setUserID] = useState('');
 
   const currentTrack = tracks[currentTrackIndex];
   const audioRef = useRef(null);
@@ -27,7 +27,9 @@ const Player = () => {
         const response = await axios.get("http://localhost:8000/api/getuser/", {
           withCredentials: true,
         });
+        console.log("User ID fetched: ", response.data.id);
         setUserID(response.data.id);
+        
       } catch (e) {
         console.error(e);
       }
@@ -64,16 +66,15 @@ const Player = () => {
     }
   };
 
-  const logListeningData = async (duration) => {
+  const logListeningData = async (user_id, duration) => {
     try {
-      await axios.post('http://localhost:8000/api/track_listening/', {
-        user: userID,
+      await axios.post('http://localhost:8000/api/listening/', {
+        user: user_id,
         track_name: currentTrack.name,
         duration: duration
       });
-      console.log(userID, currentTrack.name, duration)
     } catch (error) {
-      console.error("Error posting data: ", error);
+      console.error("Error posting data: ", error.response ? error.response.data : error.message);
     }
   };
 
@@ -87,7 +88,9 @@ const Player = () => {
     const handlePaused = async () => {
       const listeningEndTime = audioRef.current.audio.current.currentTime;
       const listeningDuration = listeningEndTime - listeningStartTime;
-      await logListeningData(listeningDuration);
+      if (listeningDuration > 0) {
+        await logListeningData(userID, listeningDuration);
+      }
     };
 
     const player = audioRef.current.audio.current;
@@ -100,7 +103,7 @@ const Player = () => {
       player.removeEventListener('pause', handlePaused);
       player.removeEventListener('ended', handlePaused);
     };
-  }, [currentTrackIndex]);
+  }, [currentTrackIndex, userID]);
 
   useEffect(() => {
     const interval = setInterval(() => {

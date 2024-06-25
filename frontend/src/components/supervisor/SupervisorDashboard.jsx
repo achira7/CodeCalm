@@ -189,7 +189,7 @@ const SupervisorDashboard = () => {
                 )}
               </div>
             </div>
-          </div> {/*breathing_exercise_usage/*/ }
+          </div> 
           
         </div>
       </div>

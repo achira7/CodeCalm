@@ -157,5 +157,8 @@ class StressDetectionForm(models.Model):
     def __str__(self):
         return f"Stress Detection Form by {self.employee.first_name} {self.employee.last_name}  Submitted on {self.submitted_at}"
 
-   
+class ReportGeneration(models.Model):
+    downloaded_by = models.ForeignKey(UserAccount, on_delete=models.CASCADE)
+    role = models.CharField(max_length=10)
+    downloaded_on = models.DateTimeField(auto_now_add=False)
 
