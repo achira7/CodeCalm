@@ -3,7 +3,11 @@ import axios from "axios";
 import { Navigate, Link } from "react-router-dom";
 import DoughnutChart from "./charts/DoughnutChart";
 import LineChart from "./charts/LineChart";
+import BarChart from "./charts/BarChart";
+
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
+import { LuFileDown } from "react-icons/lu";
+
 import "../index.css";
 import { useParams } from "react-router-dom";
 
@@ -27,6 +31,10 @@ const TeamComponent = ({ team }) => {
   });
   const [navigate, setNavigate] = useState(false);
   const [componenetUserData, setComponenetUserData] = useState({});
+  const [emotionChartError, setEmotionChartError] = useState(null)
+  const [stressChartError, setStressChartError] = useState(null)
+  const [breathingChartError, setBreathingChartError] = useState(null)
+  const [listeningChartError, setListeningChartError] = useState(null)
 
   const [chartError, setChartError] = useState(null);
   const [highestEmotion, setHighestEmotion] = useState({ key: "", value: 0 });
@@ -41,6 +49,11 @@ const TeamComponent = ({ team }) => {
   const [exerciseView, setExerciseView] = useState("daily");
   const [listeningView, setListeningView] = useState("daily");
   const [emotionView, setEmotionView] = useState("daily");
+
+  const [dailyStressData, setDailyStressData] = useState({});
+  const [weeklyStressData, setWeeklyStressData] = useState({});
+  const [monthlyStressData, setMonthlyStressData] = useState({});
+  const [stressView, setStressView] = useState("daily");
 
   const [hourlyEmotion, setHourlyEmotion] = useState([]);
   const [userRole, setUserRole] = useState("");
@@ -74,9 +87,9 @@ const TeamComponent = ({ team }) => {
 
       const allZero = Object.values(data).every((value) => value === 0);
       if (allZero) {
-        setChartError("No Data Recorded ⚠");
+        setEmotionChartError("No Emotion Data Recorded ⚠" );
       } else {
-        setChartError(null);
+        setEmotionChartError(null);
       }
       const values = Object.values(data);
       const keys = Object.keys(data);
@@ -89,12 +102,44 @@ const TeamComponent = ({ team }) => {
     }
   };
 
+  const fetchStressData = async (team, period) => {
+    try {
+      const response = await axios.get("http://localhost:8000/api/stress", {
+        params: { team_id: team, period: period },
+      });
+      const data = response.data.days || {};
+      const allZero = Object.values(data).every((value) => value === 0);
+      if (allZero) {
+        setStressChartError("No Data Stress Recorded ⚠" );
+      } else {
+        setStressChartError(null);
+      }
+      if (period === "weekly") {
+        setWeeklyStressData(data);
+      } else if (period === "monthly") {
+        setMonthlyStressData(data);
+      } else if (period === "daily") {
+        setDailyStressData(data);
+      }
+    } catch (error) {
+      console.error("Error fetching stress data:", error);
+    }
+  };
+
+
+
   const fetchExerciseData = async (team, period) => {
     try {
       const response = await axios.get("http://localhost:8000/api/breathing/", {
         params: { team_id: team, period },
       });
       const data = response.data.days || {};
+      const allZero = Object.values(data).every((value) => value === 0);
+      if (allZero) {
+        setBreathingChartError("No Data Recorded ⚠" );
+      } else {
+        setBreathingChartError(null);
+      }
       if (period === "weekly") {
         setWeeklyExerciseData(data);
       } else if (period === "monthly") {
@@ -114,6 +159,12 @@ const TeamComponent = ({ team }) => {
         params: { team_id: team, period },
       });
       const data = response.data.days || {};
+      const allZero = Object.values(data).every((value) => value === 0);
+      if (allZero) {
+        setListeningChartError("No Data Recorded ⚠" );
+      } else {
+        setListeningChartError(null);
+      }
       if (period === "weekly") {
         setWeeklyListeningData(data);
       } else if (period === "monthly") {
@@ -130,11 +181,12 @@ const TeamComponent = ({ team }) => {
   useEffect(() => {
     if (team) {
       fetchUserData();
+      fetchStressData(team, stressView)
       fetchEmotionData(team, emotionView);
       fetchExerciseData(team, exerciseView);
       fetchListeningData(team, listeningView);
     }
-  }, [exerciseView, listeningView, emotionView]);
+  }, [exerciseView, listeningView, emotionView, stressView]);
 
   const handleViewChange = (viewSetter, view, direction, viewsArray) => {
     const currentIndex = viewsArray.indexOf(view);
@@ -156,6 +208,10 @@ const TeamComponent = ({ team }) => {
   const listeningViews = ["daily", "weekly", "monthly"];
   const isListeningLeftDisabled = listeningView === "daily";
   const isListeningRightDisabled = listeningView === "monthly";
+
+  const stressViews = ["daily", "weekly", "monthly"];
+  const isStressLeftDisabled = stressView === "daily";
+  const isStressRightDisabled = stressView === "monthly";
 
   const downloadPDF = async () => {
     /*await axios.post("http://localhost:8000/api/report/", {
@@ -179,12 +235,10 @@ const TeamComponent = ({ team }) => {
         pdf.setFontSize(10); // Set font size to 16
         pdf.setTextColor(0, 0, 255);
 
-        pdf
-          .text(`Team ${componenetUserData.team} Report`, 10, 10)
+        pdf.text(`Team ${componenetUserData.team} Report`, 10, 10)
           .setTextColor(0, 0, 0);
         pdf.text(`Generated on: ${timestamp}`, 10, 15);
-        pdf.text(
-          `Generated By: ${userRole} - ${componenetUserData.first_name} ${componenetUserData.last_name}`,
+        pdf.text(`Generated By: ${userRole} - ${componenetUserData.first_name} ${componenetUserData.last_name}`,
           10,
           20
         );
@@ -198,12 +252,12 @@ const TeamComponent = ({ team }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto py-6">
+      <div className="container mx-auto py-6" >
         <button
           className="bg-sky-500 text-white px-4 py-2 rounded-md mb-5"
-          onClick={downloadPDF}
+          onClick={downloadPDF} title="in PDF format"
         >
-          Download Report as PDF
+          <LuFileDown /> Download Report 
         </button>
 
         <div className="flex flex-wrap justify-center" id="report-content">
@@ -218,10 +272,25 @@ const TeamComponent = ({ team }) => {
                   ? "Monthly Emotions"
                   : "Overall Emotions"}
               </h5>
-              {chartError ? (
-                <h2 className="text-xl text-gray-700 mt-4">{chartError}</h2>
+              {emotionChartError ? (
+                <h2 className="text-xl text-gray-700 mt-4 flex-initial">
+                  {emotionChartError}   
+                  </h2>
               ) : (
-                <DoughnutChart {...emotions} />
+                <div>
+                  <div className="flex items-center justify-center">
+                    <DoughnutChart {...emotions} />
+
+                    <div className="w-1/2 mb-28" id="highestEmotion">
+                      <img
+                        className="w-15 h-15 mx-auto mt-4"
+                        src={`http://127.0.0.1:8000/media/emojis/${highestEmotion.key}.png`}
+                        alt={highestEmotion.key}
+                        title={`Highest emotion is: ${highestEmotion.key}`}
+                      />
+                    </div>
+                  </div>
+                </div>
               )}
               <div className="flex justify-center mt-4">
                 <button
@@ -256,35 +325,72 @@ const TeamComponent = ({ team }) => {
                 >
                   <FaArrowRight />
                 </button>
-              </div>
+                </div>
             </div>
           </div>
 
+          {/* Stress Data */}
           <div className="max-w-sm w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
             <div className="text-center">
-              <h5 className="text-xl font-semibold text-sky-900">
-                Most Common Emotion Team {team}
+              <h5 className="text-xl font-semibold text-sky-900 inline-flex">
+                {stressView === "daily"
+                  ? "Daily Stress Levels"
+                  : stressView === "weekly"
+                  ? "Weekly Stress Levels"
+                  : "Monthly Stress Levels"}
               </h5>
-              {chartError ? (
-                <h2 className="text-xl text-gray-700 mt-4">{chartError}</h2>
+              {stressChartError ? (
+                <h2 className="text-xl text-gray-700 mt-4 flex-initial">
+                  {stressChartError}
+                </h2>
               ) : (
-                <div className="mt-4">
-                  <h2 className="text-xl text-sky-900 capitalize">
-                    {highestEmotion.key}
-                  </h2>
-                  <img
-                    className="w-20 h-20 mx-auto mt-4"
-                    src={`http://127.0.0.1:8000/media/emojis/${highestEmotion.key}.png`}
-                    alt={highestEmotion.key}
-                  />
-                  <p className="text-gray-700 mt-4">
-                    Detected {highestEmotion.value}{" "}
-                    {highestEmotion.value === 1 ? "time" : "times"}
-                  </p>
-                </div>
+                <BarChart
+                  data={
+                    {
+                      daily: dailyStressData,
+                      weekly: weeklyStressData,
+                      monthly: monthlyStressData,
+                    }[stressView]
+                  }
+                  period={stressView}
+                />
               )}
+              <div className="flex justify-center mt-4">
+                <button
+                  className={`text-sky-900 ${
+                    isStressLeftDisabled ? "text-gray-400" : ""
+                  }`}
+                  onClick={() =>
+                    handleViewChange(
+                      setStressView,
+                      stressView,
+                      "prev",
+                      stressViews
+                    )
+                  }
+                  disabled={isStressLeftDisabled}
+                >
+                  <FaArrowLeft />
+                </button>
+                <button
+                  className={`ml-4 text-sky-900 ${
+                    isStressRightDisabled ? "text-gray-400" : ""
+                  }`}
+                  onClick={() =>
+                    handleViewChange(
+                      setStressView,
+                      stressView,
+                      "next",
+                      stressViews
+                    )
+                  }
+                  disabled={isStressRightDisabled}
+                >
+                  <FaArrowRight />
+                </button>
+                </div>
             </div>
-          </div>
+              </div>
 
           {/* Exercise Data */}
           <div className="max-w-sm w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
@@ -296,6 +402,11 @@ const TeamComponent = ({ team }) => {
                   ? "Weekly Breathing Exercise Usage"
                   : "Monthly Breathing Exercise Usage"}
               </h5>
+              {breathingChartError ? (
+                <h2 className="text-xl text-gray-700 mt-4 flex-initial">
+                  {breathingChartError }
+                </h2>
+              ) : (              
               <LineChart
                 data={
                   {
@@ -305,6 +416,7 @@ const TeamComponent = ({ team }) => {
                   }[exerciseView]
                 }
               />
+            )}
               <div className="flex justify-center mt-4">
                 <button
                   className={`text-sky-900 ${
@@ -367,6 +479,11 @@ const TeamComponent = ({ team }) => {
                   ? "Weekly Track Listening Usage"
                   : "Monthly Track Listening Usage"}
               </h5>
+              {listeningChartError ? (
+                <h2 className="text-xl text-gray-700 mt-4 flex-initial">
+                  {listeningChartError}
+                </h2>
+              ) : (
               <LineChart
                 data={
                   {
@@ -376,7 +493,8 @@ const TeamComponent = ({ team }) => {
                   }[listeningView]
                 }
               />
-              <div className="flex justify-center mt-4">
+            )}              
+            <div className="flex justify-center mt-4">
                 <button
                   className={`text-sky-900 ${
                     isListeningLeftDisabled ? "text-gray-400" : ""
@@ -446,7 +564,7 @@ const TeamComponent = ({ team }) => {
                   />
                 </div>
               ) : (
-                <span className="text-xl">-</span>
+                <span className="text-xl"> - </span>
               )}
               <p className="text-sm text-gray-700">{hour.split(" ")[0]}</p>
             </div>

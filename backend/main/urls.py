@@ -24,7 +24,9 @@ from main.views import (
     StressFormDetail,
     GetUserWithIDView,
     EmotionTeamDataView,
-    ReportGeneratedView
+    ReportGeneratedView,
+    XXXEmotionDataView,
+    StressDataView
 )
 
 urlpatterns = [
@@ -35,6 +37,7 @@ urlpatterns = [
     path('logout/', LogoutAPIView.as_view()),
     path('writeimage/', WriteImage.as_view()),
     path('emotions/', EmotionDataView.as_view()),
+    path('stress/', StressDataView.as_view()),
 
     path('g/', GetUserWithIDView.as_view()),
     path('getallemotions/', EmployeeEmotionDataView.as_view()),

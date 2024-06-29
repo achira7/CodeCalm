@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useParams } from "react-router-dom";
 import { RecoilRoot } from 'recoil';
 
 import Login from "./components/Login";
@@ -25,6 +25,8 @@ import Test from './components/Test';
 import Dashboard from './components/Dashboard';
 import TeamIndividualView from './components/supervisor/TeamIndividualView';
 import TestDashboard from './components/TestDashboard';
+import AdminTeamIndividualView from './components/admin/AdminTeamIndividualView';
+import EmployeeComponent from './components/EmployeeComponent';
 
 
 function App() {
@@ -66,7 +68,7 @@ function App() {
         <Route path="/admin/employee_dashboard_view" element={<EmployeeDashboardOverlay/>} />
         <Route path="/admin/team_dashboard" element={<AllTeamsDashboard/>} />
         <Route path="/admin/test" element={<TestDashboard/>} />
-
+        <Route path="/admin/team_individual_view/:selectedTeam" element={<AdminTeamIndividualView />} />
       </Routes>
     </RecoilRoot>
   );

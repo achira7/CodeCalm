@@ -1,61 +1,59 @@
 import React from 'react';
 import { Bar } from 'react-chartjs-2';
-import { Chart as ChartJS, BarElement, Tooltip, Legend, CategoryScale, LinearScale } from 'chart.js';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 
-ChartJS.register(BarElement, Tooltip, Legend, CategoryScale, LinearScale);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-const BarChart = ({ data }) => {
+function BarChart({ data, period }) {
+  const labels = period === 'weekly'
+    ? ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    : Object.keys(data).map(day => period === 'daily' ? day : `Day ${day}`);
+
   const chartData = {
-    labels: Object.keys(data),
-    datasets: [{
-      label: 'Dominant Emotion',
-      data: Object.values(data).map(emotion => ({
-        angry: 1,
-        disgust: 2,
-        fear: 3,
-        happy: 4,
-        sad: 5,
-        surprise: 6,
-        neutral: 7
-      }[emotion])),
-      backgroundColor: ['#fb7185', '#fbbf24', '#a78bfa', '#4ade80', '#3b82f6', '#f472b6', '#38bdf8'],
-      borderColor: ['#fb7185', '#fbbf24', '#a78bfa', '#4ade80', '#3b82f6', '#f472b6', '#38bdf8'],
-      borderWidth: 1
-    }]
+    labels: labels,
+    datasets: [
+      {
+        label: 'Stress Levels',
+        data: Object.values(data),
+        backgroundColor: Object.values(data).map(value => value < 0 ? '#4ade80' : '#f87171'),
+        borderColor: Object.values(data).map(value => value < 0 ? '#4ade80' : '#f87171'),
+        borderWidth: 1,
+      },
+    ],
   };
 
   const options = {
     plugins: {
       legend: {
-        display: true,
-        position: 'bottom'
+        display: false,
+        position: 'bottom',
       },
       tooltip: {
         callbacks: {
           label: function (tooltipItem) {
             const label = chartData.labels[tooltipItem.dataIndex] || '';
-            const value = Object.values(data)[tooltipItem.dataIndex];
-            return `${label}: ${value}`;
-          }
-        }
-      }
+            const value = chartData.datasets[0].data[tooltipItem.dataIndex];
+            return `${label}: ${value} stress units`;
+          },
+        },
+      },
     },
     responsive: true,
     scales: {
       x: {
-        beginAtZero: true
+        title: {
+          display: true,
+          text: 'Day/Hour',
+        },
       },
       y: {
+        title: {
+          display: true,
+          text: 'Stress Level',
+        },
         beginAtZero: true,
-        max: 7,
-        ticks: {
-          callback: function(value) {
-            const emotions = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral'];
-            return emotions[value - 1];
-          }
-        }
-      }
-    }
+      },
+    },
   };
 
   return (
@@ -63,6 +61,6 @@ const BarChart = ({ data }) => {
       <Bar data={chartData} options={options} />
     </div>
   );
-};
+}
 
 export default BarChart;

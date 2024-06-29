@@ -239,15 +239,19 @@ function SingleTeamMember(props) {
       {isOpen && formDetails && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-800 bg-opacity-75">
           <div className="relative p-8 bg-white w-full max-w-md m-auto flex-col flex rounded-lg">
+            
             <h2 className="text-2xl font-bold mb-4">
               Self Stress Detection Details
             </h2>
+
             <h2 className="font-semibold mt-4">
               of {props.employee.first_name} {props.employee.last_name}
             </h2>
+
             <h2 className="font-semibold mt-4">
               Submitted on: {props.employee.submitted_on}
             </h2>
+
             <div>
               <h3 className="font-semibold">Answers:</h3>
               <ol className="list-decimal list-inside">

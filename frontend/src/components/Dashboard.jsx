@@ -6,6 +6,8 @@ import LineChart from "./charts/LineChart";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import "../index.css";
 import { useParams } from "react-router-dom";
+import TestComponent from "./EmployeeComponent";
+import TestDashboard from "./TestDashboard";
 
 const pfp = "http://127.0.0.1:8000/media/profilePictures/default.jpg";
 const icons = "http://127.0.0.1:8000/media/icons";
@@ -65,9 +67,14 @@ const Dashboard = (props) => {
       });
 
       if (response.data.is_superuser == true) {
+        setReportGeneration(true)
         setGoBackText("/admin/team_dashboard");
-      } else {
+      } else if (response.data.is_staff == true){
         setGoBackText("/supervisor/team_individual_view");
+        setReportGeneration(true)
+      }else{
+        setReportGeneration(false)
+
       }
     } catch (e) {
       console.log(e);
@@ -229,249 +236,9 @@ const Dashboard = (props) => {
           </div>
 
           <div className="max-w-sm w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
-            <div className="text-center">
-              <h5 className="text-xl font-semibold text-sky-900 mb-5">
-                {emotionView === "daily"
-                  ? "Daily Emotions"
-                  : emotionView === "weekly"
-                  ? "Weekly Emotions"
-                  : emotionView === "monthly"
-                  ? "Monthly Emotions"
-                  : "Overall Emotions"}
-              </h5>
-              {chartError ? (
-                <h2 className="text-xl text-gray-700 mt-4">{chartError}</h2>
-              ) : (
-                <DoughnutChart {...emotions} />
-              )}
-              <div className="flex justify-center mt-4">
-                <button
-                  className={`text-sky-900 ${
-                    isEmotionLeftDisabled ? "text-gray-400" : ""
-                  }`}
-                  onClick={() =>
-                    handleViewChange(
-                      setEmotionView,
-                      emotionView,
-                      "prev",
-                      emotionViews
-                    )
-                  }
-                  disabled={isEmotionLeftDisabled}
-                >
-                  <FaArrowLeft />
-                </button>
-                <button
-                  className={`ml-4 text-sky-900 ${
-                    isEmotionRightDisabled ? "text-gray-400" : ""
-                  }`}
-                  onClick={() =>
-                    handleViewChange(
-                      setEmotionView,
-                      emotionView,
-                      "next",
-                      emotionViews
-                    )
-                  }
-                  disabled={isEmotionRightDisabled}
-                >
-                  <FaArrowRight />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="max-w-sm w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
-            <div className="text-center">
-              <h5 className="text-xl font-semibold text-sky-900">
-                {userData.first_name}'s Most Common Emotion
-              </h5>
-              {chartError ? (
-                <h2 className="text-xl text-gray-700 mt-4">{chartError}</h2>
-              ) : (
-                <div className="mt-4">
-                  <h2 className="text-xl text-sky-900 capitalize">
-                    {highestEmotion.key}
-                  </h2>
-                  <img
-                    className="w-20 h-20 mx-auto mt-4"
-                    src={`http://127.0.0.1:8000/media/emojis/${highestEmotion.key}.png`}
-                    alt={highestEmotion.key}
-                  />
-                  <p className="text-gray-700 mt-4">
-                    Detected {highestEmotion.value}{" "}
-                    {highestEmotion.value === 1 ? "time" : "times"}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Exercise Data */}
-          <div className="max-w-sm w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
-            <div className="text-center">
-              <h5 className="text-xl font-semibold text-sky-900 inline-flex">
-                {exerciseView === "daily"
-                  ? "Daily Breathing Exercise Usage"
-                  : exerciseView === "weekly"
-                  ? "Weekly Breathing Exercise Usage"
-                  : "Monthly Breathing Exercise Usage"}
-              </h5>
-              <LineChart
-                data={
-                  {
-                    daily: dailyExerciseData,
-                    weekly: weeklyExerciseData,
-                    monthly: monthlyExerciseData,
-                  }[exerciseView]
-                }
-              />
-              <div className="flex justify-center mt-4">
-                <button
-                  className={`text-sky-900 ${
-                    isExerciseLeftDisabled ? "text-gray-400" : ""
-                  }`}
-                  onClick={() =>
-                    handleViewChange(
-                      setExerciseView,
-                      exerciseView,
-                      "prev",
-                      exerciseViews
-                    )
-                  }
-                  disabled={isExerciseLeftDisabled}
-                >
-                  <FaArrowLeft />
-                </button>
-                <button
-                  className={`ml-4 text-sky-900 ${
-                    isExerciseRightDisabled ? "text-gray-400" : ""
-                  }`}
-                  onClick={() =>
-                    handleViewChange(
-                      setExerciseView,
-                      exerciseView,
-                      "next",
-                      exerciseViews
-                    )
-                  }
-                  disabled={isExerciseRightDisabled}
-                >
-                  <FaArrowRight />
-                </button>
-              </div>
-              {mostUsedExercise && (
-                <div className="mt-4">
-                  <h5 className="text-lg font-semibold text-sky-900 mb-5">
-                    {userData.first_name}'s Most Used Exercise:
-                  </h5>
-                  <p className="text-gray-700">
-                    {mostUsedExercise.exercise_name}
-                  </p>
-                  <p className="text-gray-700">
-                    Total Duration:{" "}
-                    {(mostUsedExercise.total_duration / 60.0).toFixed(2)}{" "}
-                    minutes
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Listening Data */}
-          <div className="max-w-sm w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
-            <div className="text-center">
-              <h5 className="text-xl font-semibold text-sky-900 mb-5">
-                {listeningView === "daily"
-                  ? "Daily Track Listening Usage"
-                  : listeningView === "weekly"
-                  ? "Weekly Track Listening Usage"
-                  : "Monthly Track Listening Usage"}
-              </h5>
-              <LineChart
-                data={
-                  {
-                    daily: dailyListeningData,
-                    weekly: weeklyListeningData,
-                    monthly: monthlyListeningData,
-                  }[listeningView]
-                }
-              />
-              <div className="flex justify-center mt-4">
-                <button
-                  className={`text-sky-900 ${
-                    isListeningLeftDisabled ? "text-gray-400" : ""
-                  }`}
-                  onClick={() =>
-                    handleViewChange(
-                      setListeningView,
-                      listeningView,
-                      "prev",
-                      listeningViews
-                    )
-                  }
-                  disabled={isListeningLeftDisabled}
-                >
-                  <FaArrowLeft />
-                </button>
-                <button
-                  className={`ml-4 text-sky-900 ${
-                    isListeningRightDisabled ? "text-gray-400" : ""
-                  }`}
-                  onClick={() =>
-                    handleViewChange(
-                      setListeningView,
-                      listeningView,
-                      "next",
-                      listeningViews
-                    )
-                  }
-                  disabled={isListeningRightDisabled}
-                >
-                  <FaArrowRight />
-                </button>
-              </div>
-              {mostListenedTrack && (
-                <div className="mt-4">
-                  <h5 className="text-lg font-semibold text-sky-900 mb-5">
-                    {userData.first_name}'s Most Listened Track:
-                  </h5>
-                  <p className="text-gray-700">
-                    {mostListenedTrack.track_name}
-                  </p>
-                  <p className="text-gray-700">
-                    Total Duration:{" "}
-                    {(mostListenedTrack.total_duration / 60).toFixed(2)} minutes
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
+            
+              <TestComponent id={params.id}/>
         </div>
-      </div>
-
-      <div className="max-w-xl w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
-        <h5 className="text-xl font-semibold text-sky-900">
-          {userData.first_name}'s Dominant Emotion by Hour
-        </h5>
-        <div className="flex justify-between mt-4 w-full">
-          {Object.keys(hourlyEmotion).map((hour, index) => (
-            <div key={index} className="text-center ml-4 mr-4">
-              {hourlyEmotion[hour] ? (
-                <div>
-                  <img
-                    className="w-8 mx-auto"
-                    src={`http://127.0.0.1:8000/media/emojis/${hourlyEmotion[hour]}.png`}
-                    alt={hourlyEmotion[hour]}
-                    title={hourlyEmotion[hour]} // Adding the title attribute for the tooltip
-                  />
-                </div>
-              ) : (
-                <span className="text-xl">-</span>
-              )}
-              <p className="text-sm text-gray-700">{hour.split(" ")[0]}</p>
-            </div>
-          ))}
         </div>
       </div>
     </div>

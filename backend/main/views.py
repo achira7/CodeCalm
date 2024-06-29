@@ -8,7 +8,7 @@ import json
 from matplotlib.image import pil_to_array
 
 #from imp import load_module
-from .models import Employee_Emotion, Employee_Team, Employee_Focus, BreathingExerciseUsage, TrackListening, StressQuestion, StressDetectionForm, ReportGeneration
+from .models import Employee_Emotion, Employee_Team, Employee_Focus, BreathingExerciseUsage, TrackListening, StressQuestion, StressDetectionForm, ReportGeneration, Employee_Stress
 
 from django.http import JsonResponse, StreamingHttpResponse
 from rest_framework.views import APIView
@@ -562,10 +562,26 @@ class EmotionDataView(APIView):
             # Perform emotion detection
             emotion = detectEmotion(opencv_image, sharpened_image)
 
+            stress_weights = {
+                'angry': 4,
+                'disgust': 3,
+                'fear': 4,
+                'happy': -4,
+                'sad': 3,
+                'surprise': 1,
+                'neutral': 0
+            }
+
             allowed_emotions = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
             if emotion in allowed_emotions:
                 # Create a new record in the Employee_Emotion model
                 Employee_Emotion.objects.create(employee_id=userid, emotion_data=emotion)
+
+                    # Get the stress weight for the detected emotion
+                stress_weight = stress_weights.get(emotion, 0)
+    
+                # Create a new record in the Employee_Stress model
+                Employee_Stress.objects.create(employee_id=userid, stress_data=stress_weight)
 
                 # Calculate the timestamp for one minute ago
                 one_minute_ago = timezone.now() - timedelta(minutes=1)
@@ -615,8 +631,11 @@ class EmotionDataView(APIView):
         filter_params = {}
         if user_id and user_id != 'none':
             filter_params['employee_id'] = user_id
-        elif team_id and team_id != 'none':
-            users = User.objects.filter(team=team_id)
+        elif team_id:
+            if team_id == 'all':
+                users = User.objects.all()
+            else:
+                users = User.objects.filter(team=team_id)
             user_ids = users.values_list('id', flat=True)
             filter_params['employee_id__in'] = user_ids
 
@@ -656,10 +675,10 @@ class EmotionDataView(APIView):
 
             # Query to get the dominant emotion in the current hour
             hourly_emotion = Employee_Emotion.objects.filter(**filter_params, time__gte=start_time, time__lt=end_time) \
-                                  .values('emotion_data') \
-                                  .annotate(count=Count('emotion_data')) \
-                                  .order_by('-count') \
-                                  .first()
+                                .values('emotion_data') \
+                                .annotate(count=Count('emotion_data')) \
+                                .order_by('-count') \
+                                .first()
 
             if hourly_emotion:
                 dominant_emotion = hourly_emotion['emotion_data']
@@ -675,6 +694,61 @@ class EmotionDataView(APIView):
         }
 
         return Response(response_data)
+
+
+class StressDataView(APIView):
+    def get(self, request):
+        user_id = request.GET.get('user')
+        team_id = request.GET.get('team_id')
+        period = request.GET.get('period')
+        today = now().date()
+
+        if period == 'weekly':
+            start_date = today - timedelta(days=today.weekday())  # Start of the week (Monday)
+            end_date = start_date + timedelta(days=6)  # End of the week (Sunday)
+            days = {str(i): 0 for i in range(1, 8)}  # Initialize days 1-7 (Monday-Sunday)
+        elif period == 'monthly':
+            start_date = today.replace(day=1)  # Start of the month
+            end_date = (today.replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)  # End of the month
+            days_in_month = (end_date - start_date).days + 1
+            days = {str(i): 0 for i in range(1, days_in_month + 1)}  # Initialize days 1-31 (or the number of days in the month)
+        elif period == 'daily':
+            start_date = today
+            end_date = today
+            days = {f'{hour}:00 - {hour+1}:00': 0 for hour in range(7, 19)}  # Initialize hours 7:00 - 18:00
+        else:
+            return Response({"error": "Invalid period specified"}, status=400)
+
+        filter_params = {}
+        if user_id and user_id != 'none':
+            filter_params['employee_id'] = user_id
+        elif team_id:
+            if team_id == 'all':
+                users = User.objects.all()
+            else:
+                users = User.objects.filter(team=team_id)
+            user_ids = users.values_list('id', flat=True)
+            filter_params['employee_id__in'] = user_ids
+
+        stress_records = Employee_Stress.objects.filter(
+            **filter_params,
+            timestamp__date__range=[start_date, end_date]
+        ).annotate(
+            day=ExtractHour('timestamp') if period == 'daily' else (ExtractDay('timestamp') if period == 'monthly' else ExtractWeekDay('timestamp'))
+        ).values('day').annotate(total_stress=Sum('stress_data'))
+
+        for record in stress_records:
+            if period == 'daily':
+                hour_range = f"{record['day']}:00 - {record['day'] + 1}:00"
+                if hour_range in days:
+                    days[hour_range] = record['total_stress']
+            else:
+                days[str(record['day'])] = record['total_stress']
+
+        return Response({
+            "days": days,
+        })
+
     
 
 class EmployeeEmotionDataView(APIView):
@@ -796,8 +870,11 @@ class BreathingExerciseUsageView(APIView):
         filter_params = {}
         if user_id and user_id != 'none':
             filter_params['employee_id'] = user_id
-        elif team_id and team_id != 'none':
-            users = User.objects.filter(team=team_id)
+        elif team_id:
+            if team_id == 'all':
+                users = User.objects.all()
+            else:
+                users = User.objects.filter(team=team_id)
             user_ids = users.values_list('id', flat=True)
             filter_params['employee_id__in'] = user_ids
 
@@ -820,11 +897,12 @@ class BreathingExerciseUsageView(APIView):
             **filter_params,
             timestamp__date__range=[start_date, end_date]
         ).values('exercise_name').annotate(total_duration=Sum('duration')).order_by('-total_duration').first()
-        print("Breathing", days, most_used_exercise)
+
         return Response({
             "days": days,
             "most_used_exercise": most_used_exercise
         })
+
 
 class TrackListeningView(APIView):
     @csrf_exempt
@@ -834,8 +912,6 @@ class TrackListeningView(APIView):
             user_id = request.data.get('user')
             track_name = request.data.get('track_name')
             duration = request.data.get('duration')
-
-            print(user_id)
 
             # Validate required fields
             if user_id is None or track_name is None or duration is None:
@@ -880,8 +956,11 @@ class TrackListeningView(APIView):
         filter_params = {}
         if user_id and user_id != 'none':
             filter_params['employee_id'] = user_id
-        elif team_id and team_id != 'none':
-            users = User.objects.filter(team=team_id)
+        elif team_id:
+            if team_id == 'all':
+                users = User.objects.all()
+            else:
+                users = User.objects.filter(team=team_id)
             user_ids = users.values_list('id', flat=True)
             filter_params['employee_id__in'] = user_ids
 
@@ -904,7 +983,7 @@ class TrackListeningView(APIView):
             **filter_params,
             timestamp__date__range=[start_date, end_date]
         ).values('track_name').annotate(total_duration=Sum('duration')).order_by('-total_duration').first()
-        print("Track Listening", days, most_listened_track)
+
         return Response({
             "days": days,
             "most_listened_track": most_listened_track
@@ -985,7 +1064,6 @@ class EmotionTeamDataView(APIView):
             # Add the dominant emotion for the current hour to the dictionary
             hourly_dominant_emotions[f'{hour}:00 - {hour+1}:00'] = dominant_emotion
         
-        print('emotions', defaultEmotionValues)
         response_data = {
             'defaultEmotionValues': defaultEmotionValues,
             'hourlyDominantEmotions': hourly_dominant_emotions
@@ -1145,3 +1223,129 @@ class ReportGeneratedView(APIView):
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+
+
+
+
+
+
+
+
+
+
+
+
+class XXXEmotionDataView(APIView):
+    def get(self, request):
+        defaultEmotionValues = {'angry': 0, 'disgust': 0, 'fear': 0, 'happy': 0, 'sad': 0, 'surprise': 0, 'neutral': 0}
+        user_id = request.GET.get('user_id')
+        team_id = request.GET.get('team_id')
+        period = request.GET.get('period', 'all_time')  # Default to 'all_time' if not provided
+        specific_period = request.GET.get('specific_period')  # This can be a date, week, or month
+
+        # Check if user_id or team_id is provided in the request
+        if not user_id and not team_id:
+            return JsonResponse({'error': 'User ID or Team ID is required'}, status=400)
+
+        # Define the time filter based on the period and specific_period
+        time_threshold = None
+        time_threshold_start = None
+        time_threshold_end = None
+        
+        if specific_period:
+            try:
+                if period == 'daily':
+                    date_obj = datetime.strptime(specific_period, '%Y-%m-%d')
+                    time_threshold_start = datetime.combine(date_obj, datetime.min.time())
+                    time_threshold_end = datetime.combine(date_obj, datetime.max.time())
+                elif period == 'weekly':
+                    date_obj = datetime.strptime(specific_period + '-1', "%Y-W%W-%w")  # Assuming week starts on Monday
+                    time_threshold_start = datetime.combine(date_obj, datetime.min.time())
+                    time_threshold_end = time_threshold_start + timedelta(days=7) - timedelta(seconds=1)
+                elif period == 'monthly':
+                    date_obj = datetime.strptime(specific_period, '%Y-%m')
+                    time_threshold_start = datetime.combine(date_obj, datetime.min.time())
+                    next_month = (date_obj.replace(day=28) + timedelta(days=4)).replace(day=1)
+                    time_threshold_end = datetime.combine(next_month, datetime.min.time()) - timedelta(seconds=1)
+            except ValueError:
+                return JsonResponse({'error': 'Invalid format for specific_period.'}, status=400)
+        else:
+            if period == 'daily':
+                time_threshold = datetime.now() - timedelta(days=1)
+            elif period == 'weekly':
+                time_threshold = datetime.now() - timedelta(weeks=1)
+            elif period == 'monthly':
+                time_threshold = datetime.now() - timedelta(days=30)
+
+        # Initialize filter parameters
+        filter_params = {}
+        if user_id and user_id != 'none':
+            filter_params['employee_id'] = user_id
+        elif team_id and team_id != 'none':
+            users = User.objects.filter(team=team_id)
+            user_ids = users.values_list('id', flat=True)
+            filter_params['employee_id__in'] = user_ids
+
+        # Apply the time filter based on the specific or calculated period
+        if time_threshold_start and time_threshold_end:
+            emotion_counts_list = Employee_Emotion.objects.filter(**filter_params, time__gte=time_threshold_start, time__lte=time_threshold_end) \
+                                        .values('emotion_data') \
+                                        .annotate(count=Count('emotion_data')) \
+                                        .order_by('emotion_data') \
+                                        .values_list('emotion_data', 'count')
+        elif time_threshold:
+            emotion_counts_list = Employee_Emotion.objects.filter(**filter_params, time__gte=time_threshold) \
+                                        .values('emotion_data') \
+                                        .annotate(count=Count('emotion_data')) \
+                                        .order_by('emotion_data') \
+                                        .values_list('emotion_data', 'count')
+        else:
+            emotion_counts_list = Employee_Emotion.objects.filter(**filter_params) \
+                                        .values('emotion_data') \
+                                        .annotate(count=Count('emotion_data')) \
+                                        .order_by('emotion_data') \
+                                        .values_list('emotion_data', 'count')
+
+        # Convert the queryset to a dictionary
+        emotion_counts_dict = dict(emotion_counts_list)
+
+        # Update defaultEmotionValues with the fetched emotion counts
+        for key in defaultEmotionValues:
+            if key in emotion_counts_dict:
+                defaultEmotionValues[key] += emotion_counts_dict[key]
+
+        # Initialize the hourly dominant emotion dictionary
+        hourly_dominant_emotions = {}
+
+        # Get the current date and define the start and end hours
+        current_date = datetime.now().date()
+        start_hour = 7
+        end_hour = 18
+
+        # Loop through each hour from 7 AM to 6 PM
+        for hour in range(start_hour, end_hour + 1):
+            start_time = datetime.combine(current_date, datetime.min.time()) + timedelta(hours=hour)
+            end_time = start_time + timedelta(hours=1)
+
+            # Query to get the dominant emotion in the current hour
+            hourly_emotion = Employee_Emotion.objects.filter(**filter_params, time__gte=start_time, time__lt=end_time) \
+                                  .values('emotion_data') \
+                                  .annotate(count=Count('emotion_data')) \
+                                  .order_by('-count') \
+                                  .first()
+
+            if hourly_emotion:
+                dominant_emotion = hourly_emotion['emotion_data']
+            else:
+                dominant_emotion = ''  # Default if no data is found
+
+            # Add the dominant emotion for the current hour to the dictionary
+            hourly_dominant_emotions[f'{hour}:00 - {hour+1}:00'] = dominant_emotion
+
+        response_data = {
+            'defaultEmotionValues': defaultEmotionValues,
+            'hourlyDominantEmotions': hourly_dominant_emotions
+        }
+
+        return Response(response_data)

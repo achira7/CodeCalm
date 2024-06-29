@@ -5,6 +5,7 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 function DoughnutChart({angry, disgust, fear, happy, sad, surprise, neutral}) {
+  const total = angry + disgust + fear + happy + sad + surprise + neutral;
   const data = {
     labels: ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral'],
     datasets: [{
@@ -26,12 +27,14 @@ function DoughnutChart({angry, disgust, fear, happy, sad, surprise, neutral}) {
           label: function (tooltipItem) {
             const label = data.labels[tooltipItem.dataIndex] || '';
             const value = data.datasets[0].data[tooltipItem.dataIndex];
-            return `${label}: ${value}%`;
+            const percentage = ((value / total) * 100).toFixed(2);
+            return `${label}: ${percentage}%`;
           }
         }
       }
     },
-    responsive: true
+    responsive: true,
+    cutoutPercentage: 50,
   };
 
   return (

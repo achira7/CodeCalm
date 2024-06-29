@@ -6,9 +6,7 @@ import AddTeam from "./AddTeam";
 const AllTeamsDashboard = () => {
   const [teams, setTeams] = useState([]);
   const [selectedTeam, setSelectedTeam] = useState("");
-
   const [isOverlayOpen, setIsOverlayOpen] = useState(false); // State to manage overlay visibility
-
 
   useEffect(() => {
     axios
@@ -28,8 +26,6 @@ const AllTeamsDashboard = () => {
   const handleCloseOverlay = () => {
     setIsOverlayOpen(false); // Close the overlay
   };
-
-
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -53,24 +49,25 @@ const AllTeamsDashboard = () => {
             ))}
           </select>
           <div>
-          <button
-                    className="ml-3 px-3 py-2 bg-sky-500 text-white rounded"
-                    type="button"
-                    onClick={handleAddTeam}
-                  >
-                    Add Team
-                  </button>
+            <a href={`/admin/team_individual_view/${selectedTeam}`} className="text-sky-600">
+              Detailed View of Team {selectedTeam}
+            </a>
+            <button
+              className="ml-3 px-3 py-2 bg-sky-500 text-white rounded"
+              type="button"
+              onClick={handleAddTeam}
+            >
+              Add Team
+            </button>
           </div>
         </div>
         
         {selectedTeam && (
-        <div className="container mx-auto py-6">
-        <TeamComponent team={selectedTeam} />
-        </div>
-      )}
-        </div>
-
-        
+          <div className="container mx-auto py-6">
+            <TeamComponent team={selectedTeam} />
+          </div>
+        )}
+      </div>
     </div>
   );
 };

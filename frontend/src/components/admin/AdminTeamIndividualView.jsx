@@ -1,17 +1,19 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import SingleTeamMember from "./SingleTeamMember";
-import { Navigate, Link } from "react-router-dom";
+import SingleTeamMember from "../supervisor/SingleTeamMember";
+import { Navigate, Link, useParams, } from "react-router-dom";
 import TeamIndividualViewComponenet from "../TeamIndividualViewComponenet";
 
 
 
-const TeamIndividualView = () => {
+const AdminTeamIndividualView = () => {
   const [navigate, setNavigate] = useState(false);
   const [message, setMessage] = useState("You are not authenticated");
   const [userData, setUserData] = useState([]);
   const [teamMembers, setTeamMembers] = useState([]);
   const [teamLeaders, setTeamLeaders] = useState([]);
+
+  let { selectedTeam } = useParams();
 
   const fetchUserData = async () => {
     try {
@@ -52,10 +54,10 @@ const TeamIndividualView = () => {
   return (
     <div>
         <div className="text-center">
-        <TeamIndividualViewComponenet team={userData.team} role={"Supervisor"} />
+        <TeamIndividualViewComponenet team={selectedTeam} role={"Admin"} />
       </div>  
     </div>
   );
 };
 
-export default TeamIndividualView;
+export default AdminTeamIndividualView;

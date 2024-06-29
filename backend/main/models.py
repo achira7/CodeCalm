@@ -98,8 +98,8 @@ class Employee_Team(models.Model):
 
 class Employee_Stress(models.Model):  
     employee = models.ForeignKey(UserAccount, on_delete=models.CASCADE)
-    time = models.DateTimeField(auto_now_add=True)
-    stress_data = models.CharField(max_length=10)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    stress_data = models.IntegerField()
 
 class Employee_Emotion(models.Model):  
     employee = models.ForeignKey(UserAccount, on_delete=models.CASCADE)
