@@ -1236,76 +1236,56 @@ class ReportGeneratedView(APIView):
 
 
 
-class XXXEmotionDataView(APIView):
+class XXXEmotionDataView(APIView):    
     def get(self, request):
         defaultEmotionValues = {'angry': 0, 'disgust': 0, 'fear': 0, 'happy': 0, 'sad': 0, 'surprise': 0, 'neutral': 0}
         user_id = request.GET.get('user_id')
         team_id = request.GET.get('team_id')
-        period = request.GET.get('period', 'all_time')  # Default to 'all_time' if not provided
-        specific_period = request.GET.get('specific_period')  # This can be a date, week, or month
+        period = request.GET.get('period', datetime.now().strftime('%Y-%m-%d'))  # Default to today's date if not provided
 
         # Check if user_id or team_id is provided in the request
         if not user_id and not team_id:
             return JsonResponse({'error': 'User ID or Team ID is required'}, status=400)
 
-        # Define the time filter based on the period and specific_period
-        time_threshold = None
-        time_threshold_start = None
-        time_threshold_end = None
-        
-        if specific_period:
-            try:
-                if period == 'daily':
-                    date_obj = datetime.strptime(specific_period, '%Y-%m-%d')
-                    time_threshold_start = datetime.combine(date_obj, datetime.min.time())
-                    time_threshold_end = datetime.combine(date_obj, datetime.max.time())
-                elif period == 'weekly':
-                    date_obj = datetime.strptime(specific_period + '-1', "%Y-W%W-%w")  # Assuming week starts on Monday
-                    time_threshold_start = datetime.combine(date_obj, datetime.min.time())
-                    time_threshold_end = time_threshold_start + timedelta(days=7) - timedelta(seconds=1)
-                elif period == 'monthly':
-                    date_obj = datetime.strptime(specific_period, '%Y-%m')
-                    time_threshold_start = datetime.combine(date_obj, datetime.min.time())
-                    next_month = (date_obj.replace(day=28) + timedelta(days=4)).replace(day=1)
-                    time_threshold_end = datetime.combine(next_month, datetime.min.time()) - timedelta(seconds=1)
-            except ValueError:
-                return JsonResponse({'error': 'Invalid format for specific_period.'}, status=400)
-        else:
-            if period == 'daily':
-                time_threshold = datetime.now() - timedelta(days=1)
-            elif period == 'weekly':
-                time_threshold = datetime.now() - timedelta(weeks=1)
-            elif period == 'monthly':
-                time_threshold = datetime.now() - timedelta(days=30)
+        # Determine the time filter based on the period format
+        try:
+            if '-' in period:
+                if len(period) == 10:  # Exact date
+                    time_threshold_start = datetime.strptime(period, '%Y-%m-%d')
+                    time_threshold_end = time_threshold_start + timedelta(days=1)
+                elif len(period) == 7:  # Exact month
+                    time_threshold_start = datetime.strptime(period, '%Y-%m')
+                    next_month = time_threshold_start.replace(day=28) + timedelta(days=4)  # Ensure we go to the next month
+                    time_threshold_end = next_month - timedelta(days=next_month.day - 1)
+                elif 'W' in period:  # Exact week
+                    year, week = map(int, period.split('-W'))
+                    time_threshold_start = datetime.strptime(f'{year}-W{week}-1', '%Y-W%W-%w')
+                    time_threshold_end = time_threshold_start + timedelta(days=7)
+                else:
+                    raise ValueError("Invalid period format")
+            else:
+                raise ValueError("Invalid period format")
+        except ValueError:
+            return JsonResponse({'error': 'Invalid period format'}, status=400)
 
         # Initialize filter parameters
         filter_params = {}
         if user_id and user_id != 'none':
             filter_params['employee_id'] = user_id
-        elif team_id and team_id != 'none':
-            users = User.objects.filter(team=team_id)
+        elif team_id:
+            if team_id == 'all':
+                users = User.objects.all()
+            else:
+                users = User.objects.filter(team=team_id)
             user_ids = users.values_list('id', flat=True)
             filter_params['employee_id__in'] = user_ids
 
-        # Apply the time filter based on the specific or calculated period
-        if time_threshold_start and time_threshold_end:
-            emotion_counts_list = Employee_Emotion.objects.filter(**filter_params, time__gte=time_threshold_start, time__lte=time_threshold_end) \
-                                        .values('emotion_data') \
-                                        .annotate(count=Count('emotion_data')) \
-                                        .order_by('emotion_data') \
-                                        .values_list('emotion_data', 'count')
-        elif time_threshold:
-            emotion_counts_list = Employee_Emotion.objects.filter(**filter_params, time__gte=time_threshold) \
-                                        .values('emotion_data') \
-                                        .annotate(count=Count('emotion_data')) \
-                                        .order_by('emotion_data') \
-                                        .values_list('emotion_data', 'count')
-        else:
-            emotion_counts_list = Employee_Emotion.objects.filter(**filter_params) \
-                                        .values('emotion_data') \
-                                        .annotate(count=Count('emotion_data')) \
-                                        .order_by('emotion_data') \
-                                        .values_list('emotion_data', 'count')
+        # Apply the time threshold to the query
+        emotion_counts_list = Employee_Emotion.objects.filter(**filter_params, time__gte=time_threshold_start, time__lt=time_threshold_end) \
+                                    .values('emotion_data') \
+                                    .annotate(count=Count('emotion_data')) \
+                                    .order_by('emotion_data') \
+                                    .values_list('emotion_data', 'count')
 
         # Convert the queryset to a dictionary
         emotion_counts_dict = dict(emotion_counts_list)
@@ -1319,7 +1299,7 @@ class XXXEmotionDataView(APIView):
         hourly_dominant_emotions = {}
 
         # Get the current date and define the start and end hours
-        current_date = datetime.now().date()
+        current_date = time_threshold_start.date()
         start_hour = 7
         end_hour = 18
 
@@ -1330,10 +1310,10 @@ class XXXEmotionDataView(APIView):
 
             # Query to get the dominant emotion in the current hour
             hourly_emotion = Employee_Emotion.objects.filter(**filter_params, time__gte=start_time, time__lt=end_time) \
-                                  .values('emotion_data') \
-                                  .annotate(count=Count('emotion_data')) \
-                                  .order_by('-count') \
-                                  .first()
+                                .values('emotion_data') \
+                                .annotate(count=Count('emotion_data')) \
+                                .order_by('-count') \
+                                .first()
 
             if hourly_emotion:
                 dominant_emotion = hourly_emotion['emotion_data']
@@ -1349,3 +1329,196 @@ class XXXEmotionDataView(APIView):
         }
 
         return Response(response_data)
+    
+
+class XXXTrackListeningView(APIView):    
+        def get(self, request):
+            user_id = request.GET.get('user')
+            team_id = request.GET.get('team_id')
+            period = request.GET.get('period', datetime.now().strftime('%Y-%m-%d'))  # Default to today's date if not provided
+
+            try:
+                if '-' in period:
+                    if len(period) == 10:  # Exact date
+                        start_date = datetime.strptime(period, '%Y-%m-%d').date()
+                        end_date = start_date
+                        days = {f'{hour}:00 - {hour+1}:00': 0 for hour in range(7, 19)}  # Initialize hours 7:00 - 18:00
+                    elif len(period) == 7:  # Exact month
+                        start_date = datetime.strptime(period, '%Y-%m').date()
+                        next_month = start_date.replace(day=28) + timedelta(days=4)  # Ensure we go to the next month
+                        end_date = (next_month - timedelta(days=next_month.day)).replace(day=1)
+                        days_in_month = (end_date - start_date).days + 1
+                        days = {str(i): 0 for i in range(1, days_in_month + 1)}  # Initialize days 1-31 (or the number of days in the month)
+                    elif 'W' in period:  # Exact week
+                        year, week = map(int, period.split('-W'))
+                        start_date = datetime.strptime(f'{year}-W{week}-1', '%Y-W%W-%w').date()
+                        end_date = start_date + timedelta(days=6)
+                        days = {str(i): 0 for i in range(1, 8)}  # Initialize days 1-7 (Monday-Sunday)
+                    else:
+                        raise ValueError("Invalid period format")
+                else:
+                    raise ValueError("Invalid period format")
+            except ValueError:
+                return JsonResponse({'error': 'Invalid period format'}, status=400)
+
+            filter_params = {}
+            if user_id and user_id != 'none':
+                filter_params['employee_id'] = user_id
+            elif team_id:
+                if team_id == 'all':
+                    users = User.objects.all()
+                else:
+                    users = User.objects.filter(team=team_id)
+                user_ids = users.values_list('id', flat=True)
+                filter_params['employee_id__in'] = user_ids
+
+            usage_records = TrackListening.objects.filter(
+                **filter_params,
+                timestamp__date__range=[start_date, end_date]
+            ).annotate(
+                day=ExtractHour('timestamp') if len(period) == 10 else (ExtractDay('timestamp') if len(period) == 7 else ExtractWeekDay('timestamp'))
+            ).values('day').annotate(total_duration=Sum('duration'))
+
+            for record in usage_records:
+                if len(period) == 10:
+                    hour_range = f"{record['day']}:00 - {record['day'] + 1}:00"
+                    if hour_range in days:
+                        days[hour_range] = record['total_duration']
+                else:
+                    days[str(record['day'])] = record['total_duration']
+
+            most_listened_track = TrackListening.objects.filter(
+                **filter_params,
+                timestamp__date__range=[start_date, end_date]
+            ).values('track_name').annotate(total_duration=Sum('duration')).order_by('-total_duration').first()
+
+            return Response({
+                "days": days,
+                "most_listened_track": most_listened_track
+            })
+
+class XXXBreathingExerciseUsageView(APIView):
+    def get(self, request):
+        user_id = request.GET.get('user')
+        team_id = request.GET.get('team_id')
+        period = request.GET.get('period', datetime.now().strftime('%Y-%m-%d'))  # Default to today's date if not provided
+
+        try:
+            if '-' in period:
+                if len(period) == 10:  # Exact date
+                    start_date = datetime.strptime(period, '%Y-%m-%d').date()
+                    end_date = start_date
+                    days = {f'{hour}:00 - {hour+1}:00': 0 for hour in range(7, 19)}  # Initialize hours 7:00 - 18:00
+                elif len(period) == 7:  # Exact month
+                    start_date = datetime.strptime(period, '%Y-%m').date()
+                    next_month = start_date.replace(day=28) + timedelta(days=4)  # Ensure we go to the next month
+                    end_date = (next_month - timedelta(days=next_month.day)).replace(day=1)
+                    days_in_month = (end_date - start_date).days + 1
+                    days = {str(i): 0 for i in range(1, days_in_month + 1)}  # Initialize days 1-31 (or the number of days in the month)
+                elif 'W' in period:  # Exact week
+                    year, week = map(int, period.split('-W'))
+                    start_date = datetime.strptime(f'{year}-W{week}-1', '%Y-W%W-%w').date()
+                    end_date = start_date + timedelta(days=6)
+                    days = {str(i): 0 for i in range(1, 8)}  # Initialize days 1-7 (Monday-Sunday)
+                else:
+                    raise ValueError("Invalid period format")
+            else:
+                raise ValueError("Invalid period format")
+        except ValueError:
+            return JsonResponse({'error': 'Invalid period format'}, status=400)
+
+        filter_params = {}
+        if user_id and user_id != 'none':
+            filter_params['employee_id'] = user_id
+        elif team_id:
+            if team_id == 'all':
+                users = User.objects.all()
+            else:
+                users = User.objects.filter(team=team_id)
+            user_ids = users.values_list('id', flat=True)
+            filter_params['employee_id__in'] = user_ids
+
+        usage_records = BreathingExerciseUsage.objects.filter(
+            **filter_params,
+            timestamp__date__range=[start_date, end_date]
+        ).annotate(
+            day=ExtractHour('timestamp') if len(period) == 10 else (ExtractDay('timestamp') if len(period) == 7 else ExtractWeekDay('timestamp'))
+        ).values('day').annotate(total_duration=Sum('duration'))
+
+        for record in usage_records:
+            if len(period) == 10:
+                hour_range = f"{record['day']}:00 - {record['day'] + 1}:00"
+                if hour_range in days:
+                    days[hour_range] = record['total_duration']
+            else:
+                days[str(record['day'])] = record['total_duration']
+
+        most_used_exercise = BreathingExerciseUsage.objects.filter(
+            **filter_params,
+            timestamp__date__range=[start_date, end_date]
+        ).values('exercise_name').annotate(total_duration=Sum('duration')).order_by('-total_duration').first()
+
+        return Response({
+            "days": days,
+            "most_used_exercise": most_used_exercise
+        })
+
+class XXXStressDataView(APIView):
+    def get(self, request):
+        user_id = request.GET.get('user')
+        team_id = request.GET.get('team_id')
+        period = request.GET.get('period', datetime.now().strftime('%Y-%m-%d'))  # Default to today's date if not provided
+
+        try:
+            if '-' in period:
+                if len(period) == 10:  # Exact date
+                    start_date = datetime.strptime(period, '%Y-%m-%d').date()
+                    end_date = start_date
+                    days = {f'{hour}:00 - {hour+1}:00': 0 for hour in range(7, 19)}  # Initialize hours 7:00 - 18:00
+                elif len(period) == 7:  # Exact month
+                    start_date = datetime.strptime(period, '%Y-%m').date()
+                    next_month = start_date.replace(day=28) + timedelta(days=4)  # Ensure we go to the next month
+                    end_date = (next_month - timedelta(days=next_month.day)).replace(day=1)
+                    days_in_month = (end_date - start_date).days + 1
+                    days = {str(i): 0 for i in range(1, days_in_month + 1)}  # Initialize days 1-31 (or the number of days in the month)
+                elif 'W' in period:  # Exact week
+                    year, week = map(int, period.split('-W'))
+                    start_date = datetime.strptime(f'{year}-W{week}-1', '%Y-W%W-%w').date()
+                    end_date = start_date + timedelta(days=6)
+                    days = {str(i): 0 for i in range(1, 8)}  # Initialize days 1-7 (Monday-Sunday)
+                else:
+                    raise ValueError("Invalid period format")
+            else:
+                raise ValueError("Invalid period format")
+        except ValueError:
+            return JsonResponse({'error': 'Invalid period format'}, status=400)
+
+        filter_params = {}
+        if user_id and user_id != 'none':
+            filter_params['employee_id'] = user_id
+        elif team_id:
+            if team_id == 'all':
+                users = User.objects.all()
+            else:
+                users = User.objects.filter(team=team_id)
+            user_ids = users.values_list('id', flat=True)
+            filter_params['employee_id__in'] = user_ids
+
+        stress_records = Employee_Stress.objects.filter(
+            **filter_params,
+            timestamp__date__range=[start_date, end_date]
+        ).annotate(
+            day=ExtractHour('timestamp') if len(period) == 10 else (ExtractDay('timestamp') if len(period) == 7 else ExtractWeekDay('timestamp'))
+        ).values('day').annotate(total_stress=Sum('stress_data'))
+
+        for record in stress_records:
+            if len(period) == 10:
+                hour_range = f"{record['day']}:00 - {record['day'] + 1}:00"
+                if hour_range in days:
+                    days[hour_range] = record['total_stress']
+            else:
+                days[str(record['day'])] = record['total_stress']
+
+        return Response({
+            "days": days,
+        })

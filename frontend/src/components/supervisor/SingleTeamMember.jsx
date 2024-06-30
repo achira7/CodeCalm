@@ -13,6 +13,8 @@ function SingleTeamMember(props) {
   const [weeklyExerciseData, setWeeklyExerciseData] = useState({});
   const [highestEmotion, setHighestEmotion] = useState({ key: "", value: 0 });
 
+  const[weeklyStressData, setWeeklyStressData] = useState(null);
+
   const [monthlyExerciseData, setMonthlyExerciseData] = useState({});
   const [weeklyListeningData, setWeeklyListeningData] = useState({});
   const [monthlyListeningData, setMonthlyListeningData] = useState({});
@@ -70,6 +72,24 @@ function SingleTeamMember(props) {
     }
   };
 
+  const fetchStressData = async (
+    userId = props.employee.id,
+    period = "weekly"
+  ) => {
+    try {
+      const response = await axios.get("http://localhost:8000/api/stress/", {
+        params: { user: userId, period },
+      });
+      const weeklyStressData = Object.values(response.data.days).reduce(
+        (sum, value) => sum + value,
+        0
+      );
+      setWeeklyStressData(weeklyStressData);
+    } catch (error) {
+      console.error("Error fetching exercise data:", error);
+    }
+  };
+
   const fetchExerciseData = async (
     userId = props.employee.id,
     period = "weekly"
@@ -117,6 +137,8 @@ function SingleTeamMember(props) {
     fetchExerciseData(props.employee.id, exerciseView);
     fetchListeningData(props.employee.id, listeningView);
     fetchEmotionData(props.employee.id, emotionView);
+    fetchStressData(props.employee.id, "weekly");
+
   }, [props.employee.id, exerciseView, listeningView, emotionView]);
 
   return (
@@ -164,9 +186,19 @@ function SingleTeamMember(props) {
         </td>
 
         <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-          <p className="text-gray-900 whitespace-no-wrap">
-            {props.employee.stress}
-          </p>
+        <p
+    className="text-gray-900 whitespace-no-wrap font-bold"
+    style={{
+      color:
+        weeklyStressData > 0
+          ? "red"
+          : weeklyStressData < 0
+          ? "green"
+          : "black",
+    }}
+  >
+    {weeklyStressData}
+  </p>
         </td>
 
         <td

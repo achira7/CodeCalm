@@ -27,6 +27,7 @@ import TeamIndividualView from './components/supervisor/TeamIndividualView';
 import TestDashboard from './components/TestDashboard';
 import AdminTeamIndividualView from './components/admin/AdminTeamIndividualView';
 import EmployeeComponent from './components/EmployeeComponent';
+import AdminSettings from './components/admin/AdminSettings';
 
 
 function App() {
@@ -69,6 +70,7 @@ function App() {
         <Route path="/admin/team_dashboard" element={<AllTeamsDashboard/>} />
         <Route path="/admin/test" element={<TestDashboard/>} />
         <Route path="/admin/team_individual_view/:selectedTeam" element={<AdminTeamIndividualView />} />
+        <Route path="/admin/settings" element={<AdminSettings />} />
       </Routes>
     </RecoilRoot>
   );

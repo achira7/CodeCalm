@@ -5,7 +5,8 @@ import DoughnutChart from "./charts/DoughnutChart";
 import LineChart from "./charts/LineChart";
 import BarChart from "./charts/BarChart";
 
-import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
+import { FaArrowLeft, FaArrowRight, FaCalendarAlt} from "react-icons/fa";
+
 import { LuFileDown } from "react-icons/lu";
 
 import "../index.css";
@@ -250,9 +251,37 @@ const TeamComponent = ({ team }) => {
       });
   };
 
+  const handlePeriodChange = (period) => {
+    setEmotionView(period);
+    setStressView(period);
+    setExerciseView(period);
+    setListeningView(period);
+
+    fetchEmotionData(period);
+    fetchStressData(period);
+    fetchExerciseData(period);
+    fetchListeningData(period);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto py-6" >
+        {/*Period Selection Buttons */}
+      <div className="flex justify-center my-4">
+        {["daily", "weekly", "monthly"].map((period) => (
+          <button
+            key={period}
+            className={`mx-2 px-4 py-2 rounded ${
+              emotionView === period
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200 text-gray-800"
+            } hover:bg-blue-700 hover:text-white`}
+            onClick={() => handlePeriodChange(period)}
+          >
+            {period.charAt(0).toUpperCase() + period.slice(1)}
+          </button>
+        ))}
+      </div>
         <button
           className="bg-sky-500 text-white px-4 py-2 rounded-md mb-5"
           onClick={downloadPDF} title="in PDF format"

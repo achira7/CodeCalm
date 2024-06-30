@@ -58,6 +58,9 @@ const TeamComponent = ({ team }) => {
   const [hourlyEmotion, setHourlyEmotion] = useState([]);
   const [userRole, setUserRole] = useState("");
 
+  const [teams, setTeams] = useState([]);
+  const [selectedTeam, setSelectedTeam] = useState('all');
+
   const fetchUserData = async () => {
     try {
       const response = await axios.get("http://localhost:8000/api/getuser/", {
@@ -75,10 +78,20 @@ const TeamComponent = ({ team }) => {
     }
   };
 
-  const fetchEmotionData = async (period) => {
+
+const fetchTeams = async () => {
+  try {
+    const response = await axios.get("http://127.0.0.1:8000/api/teamlist/");
+    setTeams(response.data);
+  } catch (error) {
+    console.error("Error fetching teams:", error);
+  }
+};
+
+  const fetchEmotionData = async (selectedTeam, period) => {
     try {
       const response = await axios.get("http://localhost:8000/api/emotions/", {
-        params: { team_id: 'all', period },
+        params: { team_id: selectedTeam, period },
       });
       const data = response.data.defaultEmotionValues;
       const hourlyEmotion = response.data.hourlyDominantEmotions;
@@ -102,10 +115,10 @@ const TeamComponent = ({ team }) => {
     }
   };
 
-  const fetchStressData = async (period) => {
+  const fetchStressData = async (selectedTeam, period) => {
     try {
       const response = await axios.get("http://localhost:8000/api/stress", {
-        params: { team_id: 'all', period: period },
+        params: { team_id: selectedTeam, period: period },
       });
       const data = response.data.days || {};
       const allZero = Object.values(data).every((value) => value === 0);
@@ -128,10 +141,10 @@ const TeamComponent = ({ team }) => {
 
 
 
-  const fetchExerciseData = async (period) => {
+  const fetchExerciseData = async (selectedTeam, period) => {
     try {
       const response = await axios.get("http://localhost:8000/api/breathing/", {
-        params: { team_id: 'all', period },
+        params: { team_id: selectedTeam, period },
       });
       const data = response.data.days || {};
       const allZero = Object.values(data).every((value) => value === 0);
@@ -153,10 +166,10 @@ const TeamComponent = ({ team }) => {
     }
   };
 
-  const fetchListeningData = async (period) => {
+  const fetchListeningData = async (selectedTeam, period) => {
     try {
       const response = await axios.get("http://localhost:8000/api/listening/", {
-        params: { team_id: 'all', period },
+        params: { team_id: selectedTeam, period },
       });
       const data = response.data.days || {};
       const allZero = Object.values(data).every((value) => value === 0);
@@ -179,13 +192,16 @@ const TeamComponent = ({ team }) => {
   };
 
   useEffect(() => {
-      fetchUserData();
-      fetchStressData(stressView)
-      fetchEmotionData(emotionView);
-      fetchExerciseData(exerciseView);
-      fetchListeningData(listeningView);
-
-  }, [exerciseView, listeningView,  stressView, emotionView]);
+    fetchUserData();
+    fetchTeams();
+  }, []);
+  
+  useEffect(() => {
+    fetchStressData(selectedTeam, stressView);
+    fetchEmotionData(selectedTeam, emotionView);
+    fetchExerciseData(selectedTeam, exerciseView);
+    fetchListeningData(selectedTeam, listeningView);
+  }, [exerciseView, listeningView, stressView, emotionView, selectedTeam]);
 
   const handleViewChange = (viewSetter, view, direction, viewsArray) => {
     const currentIndex = viewsArray.indexOf(view);
@@ -260,7 +276,33 @@ const TeamComponent = ({ team }) => {
         </button>
 
         <div className="flex flex-wrap justify-center" id="report-content">
+        <select
+            id="teamSelect"
+            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm rounded-md"
+            value={selectedTeam}
+            onChange={(e) => setSelectedTeam(e.target.value)}
+          >
+            <option value="">Select a team</option>
+            {teams.map((team) => (
+              <option key={team.id} value={team.name}>
+                {team.name}
+              </option>
+            ))}
+          </select>
+
+          <div>
+            <a href={`/admin/team_individual_view/${selectedTeam}`} className="text-sky-600">
+              Detailed View of Team {selectedTeam}
+            </a>
+          </div>
+
+          <h5 className="text-xl font-semibold text-sky-900 mb-5">
+            Overview of Team {selectedTeam}
+          </h5>
+
           <div className="max-w-sm w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
+          
+
             <div className="text-center">
               <h5 className="text-xl font-semibold text-sky-900 mb-5">
                 {emotionView === "daily"

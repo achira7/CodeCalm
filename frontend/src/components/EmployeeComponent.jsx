@@ -8,6 +8,7 @@ import BarChart from "./charts/BarChart";
 
 import { FaArrowLeft, FaArrowRight, FaCalendarAlt } from "react-icons/fa";
 import { LuFileDown } from "react-icons/lu";
+import { FaArrowRightArrowLeft } from "react-icons/fa6";
 
 import "../index.css";
 import { useParams } from "react-router-dom";
@@ -36,10 +37,10 @@ const EmployeeComponent = ({ id, role }) => {
   const [navigate, setNavigate] = useState(false);
   const [userData, setUserData] = useState({});
 
-  const [emotionChartError, setEmotionChartError] = useState(null)
-  const [stressChartError, setStressChartError] = useState(null)
-  const [breathingChartError, setBreathingChartError] = useState(null)
-  const [listeningChartError, setListeningChartError] = useState(null)
+  const [emotionChartError, setEmotionChartError] = useState(null);
+  const [stressChartError, setStressChartError] = useState(null);
+  const [breathingChartError, setBreathingChartError] = useState(null);
+  const [listeningChartError, setListeningChartError] = useState(null);
 
   const [highestEmotion, setHighestEmotion] = useState({ key: "", value: 0 });
   const [weeklyExerciseData, setWeeklyExerciseData] = useState({});
@@ -68,6 +69,8 @@ const EmployeeComponent = ({ id, role }) => {
 
   const [specificPeriod, setSpecificPeriod] = useState(null);
   const [dateType, setDateType] = useState("daily"); // 'daily', 'weekly', 'monthly'
+
+  const [selectedView, setSelectedView] = useState("daily");
 
   const fetchUserDataWithID = async () => {
     try {
@@ -116,7 +119,7 @@ const EmployeeComponent = ({ id, role }) => {
 
       const allZero = Object.values(data).every((value) => value === 0);
       if (allZero) {
-        setEmotionChartError("No Emotion Data Recorded ⚠" );
+        setEmotionChartError("No Emotion Data Recorded ⚠");
       } else {
         setEmotionChartError(null);
       }
@@ -131,7 +134,6 @@ const EmployeeComponent = ({ id, role }) => {
     }
   };
 
-
   const fetchStressData = async (period) => {
     try {
       const response = await axios.get("http://localhost:8000/api/stress", {
@@ -140,7 +142,7 @@ const EmployeeComponent = ({ id, role }) => {
       const data = response.data.days || {};
       const allZero = Object.values(data).every((value) => value === 0);
       if (allZero) {
-        setStressChartError("No Data Stress Recorded ⚠" );
+        setStressChartError("No Data Stress Recorded ⚠");
       } else {
         setStressChartError(null);
       }
@@ -156,8 +158,6 @@ const EmployeeComponent = ({ id, role }) => {
     }
   };
 
-
-
   const fetchExerciseData = async (period) => {
     try {
       const response = await axios.get("http://localhost:8000/api/breathing/", {
@@ -166,7 +166,7 @@ const EmployeeComponent = ({ id, role }) => {
       const data = response.data.days || {};
       const allZero = Object.values(data).every((value) => value === 0);
       if (allZero) {
-        setBreathingChartError("No Data Recorded ⚠" );
+        setBreathingChartError("No Data Recorded ⚠");
       } else {
         setBreathingChartError(null);
       }
@@ -191,7 +191,7 @@ const EmployeeComponent = ({ id, role }) => {
       const data = response.data.days || {};
       const allZero = Object.values(data).every((value) => value === 0);
       if (allZero) {
-        setListeningChartError("No Data Recorded ⚠" );
+        setListeningChartError("No Data Recorded ⚠");
       } else {
         setListeningChartError(null);
       }
@@ -207,8 +207,6 @@ const EmployeeComponent = ({ id, role }) => {
       console.error("Error fetching listening data:", error);
     }
   };
-
-
 
   useEffect(
     (id) => {
@@ -295,9 +293,79 @@ const EmployeeComponent = ({ id, role }) => {
       });
   };
 
+  const handlePeriodChange = (period) => {
+    setEmotionView(period);
+    setStressView(period);
+    setExerciseView(period);
+    setListeningView(period);
+
+    fetchEmotionData(period);
+    fetchStressData(period);
+    fetchExerciseData(period);
+    fetchListeningData(period);
+  };
+
+  /*const [selectedDate, setSelectedDate] = useState(new Date());
+
+  const handleDateChange = (date) => {
+    setSelectedDate(date);
+    // Fetch data based on the selected date
+    fetchEmotionData(emotionView, date);
+    fetchStressData(stressView, date);
+    fetchExerciseData(exerciseView, date);
+    fetchListeningData(listeningView, date);
+  };*/
+
+  const getDatePickerType = (view) => {
+    switch (view) {
+      case "daily":
+        return "date";
+      case "weekly":
+        return "week";
+      case "monthly":
+        return "month";
+      default:
+        return "date";
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto py-6">
+        {/*Period Selection Buttons */}
+        <div className="flex justify-center my-4">
+          {["daily", "weekly", "monthly"].map((period) => (
+            <button
+              key={period}
+              className={`mx-2 px-4 py-2 rounded ${
+                emotionView === period
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-200 text-gray-800"
+              } hover:bg-blue-700 hover:text-white`}
+              onClick={() => handlePeriodChange(period)}
+            >
+              {period.charAt(0).toUpperCase() + period.slice(1)}
+            </button>
+          ))}
+          {/*<button>
+            <FaCalendarAlt
+              className="text-gray-400 cursor-pointer"
+              title="Select Date"
+              onClick={() =>
+                document.getElementById("emotionDateInput").focus()
+              }
+            />
+            <DatePicker
+              selected={selectedDate}
+              onChange={handleDateChange}
+              dateFormat={getDatePickerType(emotionView)}
+              id="emotionDateInput"
+              className="absolute mt-2"
+              style={{ left: "50%", transform: "translateX(-50%)" }}
+            />
+            </button>*/}
+        </div>
+
         {(userRole === "Admin" || userRole === "Supervisor") && (
           <button
             className="bg-sky-500 text-white px-4 py-2 rounded-md mb-5 flex"
@@ -310,23 +378,6 @@ const EmployeeComponent = ({ id, role }) => {
 
         <div className="flex flex-wrap justify-center" id="report-content">
           <div className="bg-white border border-gray-200 rounded-lg shadow-lg">
-            {/*<div className="relative inline-block">
-              <FaCalendarAlt
-                className="text-gray-400 cursor-pointer"
-                title="Select Date"
-                onClick={() =>
-                  document.getElementById("emotionDateInput").showPicker()
-                }
-              />
-              <input
-                type={getDatePickerType(emotionView)}
-                id="emotionDateInput"
-                className="absolute mt-2"
-                style={{ left: "50%", transform: "translateX(-50%)" }}
-                value={selectedDate}
-                onChange={handleDateChange}
-              />
-              </div>*/}
             <div className="text-center p-3 md:p-5 flex-auto">
               <h5 className="text-xl font-semibold text-sky-900 mb-5">
                 {emotionView === "daily"
@@ -337,6 +388,11 @@ const EmployeeComponent = ({ id, role }) => {
                   ? "Monthly Emotions"
                   : "Overall Emotions"}
               </h5>
+
+              <button>
+                <FaArrowRightArrowLeft />
+              </button>
+
               {emotionChartError ? (
                 <h2 className="text-xl text-gray-700 mt-4 flex-initial">
                   {emotionChartError}
@@ -357,41 +413,6 @@ const EmployeeComponent = ({ id, role }) => {
                   </div>
                 </div>
               )}
-
-              <div className="flex justify-center mt-4">
-                <button
-                  className={`text-sky-900 ${
-                    isEmotionLeftDisabled ? "text-gray-400" : ""
-                  }`}
-                  onClick={() =>
-                    handleViewChange(
-                      setEmotionView,
-                      emotionView,
-                      "prev",
-                      emotionViews
-                    )
-                  }
-                  disabled={isEmotionLeftDisabled}
-                >
-                  <FaArrowLeft />
-                </button>
-                <button
-                  className={`ml-4 text-sky-900 ${
-                    isEmotionRightDisabled ? "text-gray-400" : ""
-                  }`}
-                  onClick={() =>
-                    handleViewChange(
-                      setEmotionView,
-                      emotionView,
-                      "next",
-                      emotionViews
-                    )
-                  }
-                  disabled={isEmotionRightDisabled}
-                >
-                  <FaArrowRight />
-                </button>
-              </div>
             </div>
           </div>
 
@@ -421,40 +442,6 @@ const EmployeeComponent = ({ id, role }) => {
                   period={stressView}
                 />
               )}
-              <div className="flex justify-center mt-4">
-                <button
-                  className={`text-sky-900 ${
-                    isStressLeftDisabled ? "text-gray-400" : ""
-                  }`}
-                  onClick={() =>
-                    handleViewChange(
-                      setStressView,
-                      stressView,
-                      "prev",
-                      stressViews
-                    )
-                  }
-                  disabled={isStressLeftDisabled}
-                >
-                  <FaArrowLeft />
-                </button>
-                <button
-                  className={`ml-4 text-sky-900 ${
-                    isStressRightDisabled ? "text-gray-400" : ""
-                  }`}
-                  onClick={() =>
-                    handleViewChange(
-                      setStressView,
-                      stressView,
-                      "next",
-                      stressViews
-                    )
-                  }
-                  disabled={isStressRightDisabled}
-                >
-                  <FaArrowRight />
-                </button>
-              </div>
             </div>
           </div>
 
@@ -470,7 +457,7 @@ const EmployeeComponent = ({ id, role }) => {
               </h5>
               {breathingChartError ? (
                 <h2 className="text-xl text-gray-700 mt-4 flex-initial">
-                  {breathingChartError }
+                  {breathingChartError}
                 </h2>
               ) : (
                 <LineChart
@@ -483,40 +470,7 @@ const EmployeeComponent = ({ id, role }) => {
                   }
                 />
               )}
-              <div className="flex justify-center mt-4">
-                <button
-                  className={`text-sky-900 ${
-                    isExerciseLeftDisabled ? "text-gray-400" : ""
-                  }`}
-                  onClick={() =>
-                    handleViewChange(
-                      setExerciseView,
-                      exerciseView,
-                      "prev",
-                      exerciseViews
-                    )
-                  }
-                  disabled={isExerciseLeftDisabled}
-                >
-                  <FaArrowLeft />
-                </button>
-                <button
-                  className={`ml-4 text-sky-900 ${
-                    isExerciseRightDisabled ? "text-gray-400" : ""
-                  }`}
-                  onClick={() =>
-                    handleViewChange(
-                      setExerciseView,
-                      exerciseView,
-                      "next",
-                      exerciseViews
-                    )
-                  }
-                  disabled={isExerciseRightDisabled}
-                >
-                  <FaArrowRight />
-                </button>
-              </div>
+
               {mostUsedExercise && (
                 <div className="mt-4">
                   <h5 className="text-lg font-semibold text-sky-900 mb-5">
@@ -560,40 +514,7 @@ const EmployeeComponent = ({ id, role }) => {
                   }
                 />
               )}
-              <div className="flex justify-center mt-4">
-                <button
-                  className={`text-sky-900 ${
-                    isListeningLeftDisabled ? "text-gray-400" : ""
-                  }`}
-                  onClick={() =>
-                    handleViewChange(
-                      setListeningView,
-                      listeningView,
-                      "prev",
-                      listeningViews
-                    )
-                  }
-                  disabled={isListeningLeftDisabled}
-                >
-                  <FaArrowLeft />
-                </button>
-                <button
-                  className={`ml-4 text-sky-900 ${
-                    isListeningRightDisabled ? "text-gray-400" : ""
-                  }`}
-                  onClick={() =>
-                    handleViewChange(
-                      setListeningView,
-                      listeningView,
-                      "next",
-                      listeningViews
-                    )
-                  }
-                  disabled={isListeningRightDisabled}
-                >
-                  <FaArrowRight />
-                </button>
-              </div>
+
               {mostListenedTrack && (
                 <div className="mt-4">
                   <h5 className="text-lg font-semibold text-sky-900 mb-5">

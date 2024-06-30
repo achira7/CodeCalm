@@ -25,7 +25,7 @@ from main.views import (
     GetUserWithIDView,
     EmotionTeamDataView,
     ReportGeneratedView,
-    XXXEmotionDataView,
+    EmotionDataView,
     StressDataView
 )
 

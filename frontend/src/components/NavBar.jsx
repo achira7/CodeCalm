@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import "@fontsource/inter";
 import 'typeface-inter';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import Messages from './Messages';
 import SettingsOverlay from './SettingsOverlay';
@@ -10,6 +10,8 @@ import SettingsOverlay from './SettingsOverlay';
 const baseUrl = 'http://localhost:8000/api/employee/';
 const assets = 'http://127.0.0.1:8000/media/assets/';
 const media = 'http://127.0.0.1:8000/media/';
+
+
 
 
 const NavBar = () => {
@@ -20,6 +22,8 @@ const NavBar = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [userData, setUserData] = useState({});
   const [navLinks, setNavLinks] = useState([]);
+
+  const location = useLocation();
 
   useEffect(() => {
     fetchUserData();
@@ -86,10 +90,9 @@ const NavBar = () => {
 
   const adminLinks = [
     { id: 1, title: 'dashboard', link: './admin/dashboard' },
-    { id: 2, title: 'team dashboard', link: './admin/team_dashboard'},
-    { id: 3, title: 'generate reports', link: './employee/breathingexercise' },
-    { id: 4, title: 'user management', link: './admin/allemployees' },
-    { id: 5, title: 'admin test', link: './admin/test' },
+    { id: 2, title: 'settings', link: './admin/settings' },
+    { id: 3, title: 'user management', link: './admin/allemployees' },
+    { id: 4, title: 'admin test', link: './admin/test' },
   ];
 
   return (
@@ -104,7 +107,7 @@ const NavBar = () => {
           {navLinks.map(({ id, title, link }) => (
             <li
               key={id}
-              className='px-6 font-google font-semibold capitalize font-large text-white hover:text-green-300 hover:scale-105 hover:drop-shadow-xl duration-300'>
+              className={`px-6 font-google font-semibold capitalize font-large hover:scale-105 hover:drop-shadow-xl duration-300 ${location.pathname === link ? 'text-green-300' : 'text-white'}`}>
               <Link to={link} className='cursor-pointer drop-shadow-md shadow-blue-600/50'>{title}</Link>
             </li>
           ))}

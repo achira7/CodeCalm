@@ -11,8 +11,6 @@ const TeamIndividualViewComponenet = ({ team, role }) => {
   const [teamLeaders, setTeamLeaders] = useState([]);
   const [goBackText, setGoBackText] = useState("");
 
-  console.log(team, role);
-
   const fetchTeamMembers = async (team) => {
     try {
       const response = await axios.get(
@@ -90,7 +88,7 @@ const TeamIndividualViewComponenet = ({ team, role }) => {
           <thead>
             <tr>
               <th className="font-google px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Employee Name
+                Employee
               </th>
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100  text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Email Address
@@ -108,7 +106,7 @@ const TeamIndividualViewComponenet = ({ team, role }) => {
                 White Noise
               </th>
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Stress Score
+                Self Stress Report Score
               </th>
               <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"></th>
             </tr>
