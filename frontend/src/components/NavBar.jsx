@@ -93,6 +93,9 @@ const NavBar = () => {
     { id: 2, title: 'settings', link: './admin/settings' },
     { id: 3, title: 'user management', link: './admin/allemployees' },
     { id: 4, title: 'admin test', link: './admin/test' },
+    { id: 5, title: 'add breathing', link: './admin/breathing' },
+    { id: 6, title: 'add track', link: './admin/track' },
+
   ];
 
   return (

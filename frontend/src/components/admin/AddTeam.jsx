@@ -9,12 +9,19 @@ const AddTeam = ({ onSuccess, onError }) => {
     e.preventDefault();
     const teamData = { name, description };
 
-    await axios.post("http://localhost:8000/api/team/", teamData)
-      .then(() => onSuccess())
-      .catch(error => {
-        console.error("There was an error creating the team!", error);
-        onError();
-      });
+    try {
+      await axios.post("http://localhost:8000/api/team/", teamData);
+      onSuccess();
+      setName("");
+      setDescription("");
+    } catch (error) {
+      console.error("There was an error creating the team!", error);
+      if (error.response && error.response.data && error.response.data.name) {
+        onError("A team with this name already exists.");
+      } else {
+        onError("Error adding team");
+      }
+    }
   };
 
   return (
@@ -28,6 +35,7 @@ const AddTeam = ({ onSuccess, onError }) => {
               className="w-full px-3 py-2 text-sm leading-tight text-gray-700 border rounded shadow appearance-none focus:outline-none focus:shadow-outline"
               type="text"
               name="name"
+              value={name}  // Bind the input to the state
               placeholder="Team Name"
               onChange={(e) => setName(e.target.value)}
               required
@@ -36,7 +44,9 @@ const AddTeam = ({ onSuccess, onError }) => {
           <div>
             <label>Team Description:</label>
             <textarea
+              className="w-full px-3 py-2 text-sm leading-tight text-gray-700 border rounded shadow appearance-none focus:outline-none focus:shadow-outline"
               name="description"
+              value={description}  // Bind the input to the state
               placeholder="Team Description"
               onChange={(e) => setDescription(e.target.value)}
             />

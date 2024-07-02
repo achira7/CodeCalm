@@ -26,7 +26,10 @@ from main.views import (
     EmotionTeamDataView,
     ReportGeneratedView,
     EmotionDataView,
-    StressDataView
+    StressDataView,
+    BreathingProfileAPIView,
+    TrackListCreateAPIView,
+    ReminderCreateView,
 )
 
 urlpatterns = [
@@ -56,6 +59,16 @@ urlpatterns = [
     path('stress_form/', SubmitStressFormView.as_view(), name='submit_stress_form'),
     path('stress_form/<int:user_id>/', StressFormDetail.as_view(), name='stress-form-detail'),
     path('team_emotion/', EmotionTeamDataView.as_view(), name='team_emotion'),
-    path('report/', ReportGeneratedView.as_view(), name='report_generated_by')
+    path('report/', ReportGeneratedView.as_view(), name='report_generated_by'),
+    
+    path('breathing_profile/', BreathingProfileAPIView.as_view(), name='breathing_profile_list_create'),
+    path('breathing_profile/<int:pk>/', BreathingProfileAPIView.as_view(), name='breathing_profile_detail'),
+
+    path('tracks/', TrackListCreateAPIView.as_view(), name='track-list-create'),
+    path('tracks/<int:pk>/', TrackListCreateAPIView.as_view()), 
+
+    path('reminders/', ReminderCreateView.as_view(), name='reminder-create'),
+    
+
 ]
 

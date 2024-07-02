@@ -8,14 +8,14 @@ import json
 from matplotlib.image import pil_to_array
 
 #from imp import load_module
-from .models import Employee_Emotion, Employee_Team, Employee_Focus, BreathingExerciseUsage, TrackListening, StressQuestion, StressDetectionForm, ReportGeneration, Employee_Stress
+from .models import Employee_Emotion, Employee_Team, Employee_Focus, BreathingExerciseUsage, TrackListening, StressQuestion, StressDetectionForm, ReportGeneration, Employee_Stress, BreathingProfile, Track, Reminder
 
 from django.http import JsonResponse, StreamingHttpResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework import permissions, status, generics
-from .serializers import UserSerializer, EmployeeTeamSerializer, BreathingExerciseUsageSerializer, TrackListeningSerializer, StressQuestionSerializer, StressDetectionFormSerializer  
+from .serializers import UserSerializer, EmployeeTeamSerializer, BreathingExerciseUsageSerializer, TrackListeningSerializer, StressQuestionSerializer, StressDetectionFormSerializer, BreathingProfileSerializer, TrackSerializer, ReminderSerializer  
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate
 from django.conf import settings
@@ -71,6 +71,14 @@ from .models import Message
 from rest_framework.response import Response
 
 from django.shortcuts import get_object_or_404
+
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.exceptions import ValidationError
+
+from rest_framework import status 
+
+
+
 
 
 User = get_user_model()
@@ -310,41 +318,35 @@ class FaceLoginView(APIView):
         try:
             format, imgstr = image_data.split('image/jpeg;base64,')
             opencv_image = stringToRGB(imgstr)
-            sharpened_image = imageSharpen(opencv_image)
 
-            if is_image_dark(opencv_image):
-                return JsonResponse({'message': 'Webcam cover is closed or image is too dark'})
+            # Assuming that user's facial data is stored in their profile
+            users = User.objects.all()
 
-            if is_image_blurred(opencv_image):
-                return JsonResponse({'message': 'Image is blurred. Please clear the webcam.'})
-        except:
-            pass
+            for user in users:
+                try:
+                    # Get the path to the stored face image
+                    stored_face_path = os.path.join(settings.MEDIA_ROOT, str(user.profile_picture))
 
-        # Assuming that user's facial data is stored in their profile
-        users = User.objects.all()
+                    # Compare the captured face with the stored face data
+                    result = DeepFace.verify(opencv_image, stored_face_path, enforce_detection=False)
 
-        for user in users:
-            try:
-                # Get the path to the stored face image
-                stored_face_path = os.path.join(settings.MEDIA_ROOT, str(user.profile_picture))
+                    if result['verified']:
+                        # Authenticate the user
+                        #user = authenticate(request, username=user.id, password=user.password)
+                        #if user is not None:
+                            login(request, user)
+                            response = JsonResponse({'message': 'Login successful'})
+                            response.set_cookie('user_id', user.id, httponly=True)
+                            return response
+                except Exception as e:
+                    print(f"Error verifying face for user: {e}")
+                    continue
 
-                # Compare the captured face with the stored face data
-                result = DeepFace.verify(opencv_image, stored_face_path, enforce_detection=False)
+            return JsonResponse({'message': 'Face not recognized'}, status=401)
+        except Exception as e:
+            print(f"Error processing the image: {e}")
+            return JsonResponse({'message': 'An error occurred while processing the image'}, status=500)
 
-                if result['verified']:
-                    # Authenticate the user
-                    user = authenticate(request, username=user.username, password=user.password)
-                    if user is not None:
-                        login(request, user)
-                        response = JsonResponse({'message': 'Login successful'})
-                        response.set_cookie('user_id', user.id, httponly=True)
-                        return response
-            except Exception as e:
-                print(f"Error verifying face for user {user.username}: {e}")
-                continue
-
-        return JsonResponse({'message': 'Face not recognized'}, status=401)
-    
 
 '''================================================================================='''
 '''================================================================================='''
@@ -525,7 +527,7 @@ class FaceLoginView(APIView):
                         response.set_cookie('user_id', user.id, httponly=True)
                         return response
             except Exception as e:
-                print(f"Error verifying face for user {user.username}: {e}")
+                print(f"Error verifying face for user: {e}")
                 continue
 
         return JsonResponse({'message': 'Face not recognized'}, status=401)
@@ -822,13 +824,16 @@ class EmployeeTeamView(APIView):
             name = data.get('name')
             description = data.get('description')
 
+            if Employee_Team.objects.filter(name=name).exists():
+                raise ValidationError({"name": "A team with this name already exists."})
+
             # Create a new team instance using the create_team class method
             new_team = Employee_Team.create_team(name=name, description=description)
 
             return Response({"message": "Team created successfully"}, status=status.HTTP_201_CREATED)
 
-        except Employee_Team.DoesNotExist:
-            return Response({"error": "Team does not exist"}, status=status.HTTP_404_NOT_FOUND)
+        except ValidationError as e:
+            return Response({"error": e.detail}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
@@ -1224,6 +1229,68 @@ class ReportGeneratedView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+class BreathingProfileAPIView(APIView):
+    def get(self, request, format=None):
+        profiles = BreathingProfile.objects.all()
+        serializer = BreathingProfileSerializer(profiles, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, format=None):
+        serializer = BreathingProfileSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, pk, format=None):
+        try:
+            profile = BreathingProfile.objects.get(pk=pk)
+        except BreathingProfile.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = BreathingProfileSerializer(profile, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk, format=None):
+        try:
+            profile = BreathingProfile.objects.get(pk=pk)
+        except BreathingProfile.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        profile.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    
+class TrackListCreateAPIView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+
+    def get(self, request):
+        tracks = Track.objects.all()
+        serializer = TrackSerializer(tracks, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        if Track.objects.filter(title=request.data.get('title')).exists():
+            raise ValidationError({"title": "A track with this title already exists."})
+        serializer = TrackSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk=None):
+        track = get_object_or_404(Track, pk=pk)
+        track.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
+
+class ReminderCreateView(generics.CreateAPIView):
+    queryset = Reminder.objects.all()
+    serializer_class = ReminderSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
 
 
@@ -1462,7 +1529,7 @@ class XXXBreathingExerciseUsageView(APIView):
             "days": days,
             "most_used_exercise": most_used_exercise
         })
-
+    
 class XXXStressDataView(APIView):
     def get(self, request):
         user_id = request.GET.get('user')

@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import AudioPlayer from "react-h5-audio-player";
 import "react-h5-audio-player/lib/styles.css";
-import tracks from "../Tracks";
+//import tracks from "../Tracks";
 import "tailwindcss/tailwind.css";
 import "./PlayerStyles.css"; // Import custom CSS for additional styling
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
@@ -16,13 +16,18 @@ const Player = () => {
   const [dominantColor, setDominantColor] = useState("#000");
   const [progress, setProgress] = useState(0);
   const [userID, setUserID] = useState("");
+  //const [tracks, setTracks] = useState({})
 
-  const currentTrack = tracks[currentTrackIndex];
+  //const currentTrack = tracks[currentTrackIndex];
   const audioRef = useRef(null);
   const imageRef = useRef(null);
 
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+
+  const [tracks, setTracks] = useState([]); // Change from object to array
+
+  const currentTrack = tracks.length > 0 ? tracks[currentTrackIndex] : {};
 
   useEffect(() => {
     (async () => {
@@ -30,12 +35,24 @@ const Player = () => {
         const response = await axios.get("http://localhost:8000/api/getuser/", {
           withCredentials: true,
         });
-        console.log("User ID fetched: ", response.data.id);
         setUserID(response.data.id);
       } catch (e) {
         console.error(e);
       }
     })();
+  }, []);
+
+  useEffect(() => {
+    const fetchTracks = async () => {
+      try {
+        const response = await axios.get("http://localhost:8000/api/tracks/");
+        setTracks(response.data);
+      } catch (error) {
+        console.error("Error fetching tracks: ", error);
+      }
+    };
+  
+    fetchTracks();
   }, []);
 
   const handleNext = () => {
@@ -74,7 +91,7 @@ const Player = () => {
     try {
       await axios.post("http://localhost:8000/api/listening/", {
         user: user_id,
-        track_name: currentTrack.name,
+        track_name: currentTrack.title,
         duration: duration,
       });
     } catch (error) {
@@ -152,8 +169,8 @@ const Player = () => {
             <div className="absolute inset-0 flex items-center justify-center">
               <img
                 ref={imageRef}
-                src={currentTrack.artwork}
-                alt={currentTrack.name}
+                src={`http://127.0.0.1:8000${currentTrack.image}`}
+                alt={currentTrack.title}
                 className={`w-56 h-56 rounded-full ${
                   isPlaying ? "spinning" : "paused"
                 }`}
@@ -161,7 +178,7 @@ const Player = () => {
             </div>
           </div>
           <h2 className="text-white text-center song-title">
-            {currentTrack.name}
+            {currentTrack.title}
             <div className="py-2 bg-white rounded-md shadow-md">
               {formatTime(currentTime)} / {formatTime(duration)}
             </div>
@@ -172,7 +189,7 @@ const Player = () => {
       <AudioPlayer
         autoPlay={false}
         ref={audioRef}
-        src={currentTrack.url}
+        src={`http://127.0.0.1:8000${currentTrack.audioSrc}` }
         onPlay={handlePlayPause}
         onPause={handlePlayPause}
         onEnded={handleNext}

@@ -24,6 +24,7 @@ function SupervisorRegister() {
   const [selectedTeam, setSelectedTeam] = useState("");
   const [teams, setTeams] = useState([]);
   const [isOverlayOpen, setIsOverlayOpen] = useState(false); // State to manage overlay visibility
+  
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -110,7 +111,6 @@ function SupervisorRegister() {
             </button>
             <AddTeam
               onSuccess={() => {
-                handleCloseOverlay();
                 toast.success("Team created successfully!");
               }}
               onError={() => {

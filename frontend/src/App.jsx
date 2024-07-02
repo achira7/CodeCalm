@@ -28,6 +28,8 @@ import TestDashboard from './components/TestDashboard';
 import AdminTeamIndividualView from './components/admin/AdminTeamIndividualView';
 import EmployeeComponent from './components/EmployeeComponent';
 import AdminSettings from './components/admin/AdminSettings';
+import AddBreathingProfile from './components/admin/AddBreathingProfile';
+import AddTrack from './components/admin/AddTrack';
 
 
 function App() {
@@ -71,6 +73,8 @@ function App() {
         <Route path="/admin/test" element={<TestDashboard/>} />
         <Route path="/admin/team_individual_view/:selectedTeam" element={<AdminTeamIndividualView />} />
         <Route path="/admin/settings" element={<AdminSettings />} />
+        <Route path="/admin/breathing" element={<AddBreathingProfile />} />
+        <Route path="/admin/track" element={<AddTrack />} />
       </Routes>
     </RecoilRoot>
   );

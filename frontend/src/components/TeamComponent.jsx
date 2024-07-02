@@ -244,7 +244,7 @@ const TeamComponent = ({ team }) => {
           20
         );
 
-        pdf.save(`team_${componenetUserData.team}_report_${timestamp}.pdf`);
+        pdf.save(`team_${team}_report_${timestamp}.pdf`);
       })
       .catch((error) => {
         console.error("Error generating PDF:", error);

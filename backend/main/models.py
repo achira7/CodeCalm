@@ -84,7 +84,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
 
 
 class Employee_Team(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     description = models.TextField(null=True, blank=True)
 
     @classmethod
@@ -161,4 +161,37 @@ class ReportGeneration(models.Model):
     downloaded_by = models.ForeignKey(UserAccount, on_delete=models.CASCADE)
     role = models.CharField(max_length=10)
     downloaded_on = models.DateTimeField(auto_now_add=False)
+
+class BreathingProfile(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    inhale_duration = models.IntegerField()
+    exhale_duration = models.IntegerField()
+    hold_duration = models.IntegerField()
+    description = models.TextField()
+
+    def __str__(self):
+        return self.name
+    
+
+class Track(models.Model):
+    title = models.CharField(max_length=100, unique=True)
+    artist = models.CharField(max_length=100)
+    audioSrc = models.FileField(upload_to='audio/')
+    image = models.ImageField(upload_to='audio_images/')
+    color = models.CharField(max_length=7)
+
+    def __str__(self):
+        return self.title
+
+
+class Reminder(models.Model):
+    user = models.ForeignKey(UserAccount, on_delete=models.CASCADE)
+    date = models.DateTimeField()
+    message = models.CharField(max_length=255)
+    type = models.CharField(max_length=50, choices=[('Breathing Exercise', 'Breathing Exercise'), ('Track Listening', 'Track Listening')])
+
+    def __str__(self):
+        return f"{self.user} - {self.type} - {self.date}"
+
+
 

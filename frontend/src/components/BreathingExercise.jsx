@@ -3,32 +3,33 @@ import axios from 'axios'; // Ensure axios is imported
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import './BreathingExercise.css';
-
-const profiles = {
-  Profile1: { name: "Deep Breathing", inhaleDuration: 3000, exhaleDuration: 3000, holdDuration: 0, description: "1. Find a comfortable position: Sit or lie down in a comfortable position.\n2. Place your hands: One hand on your chest and the other on your abdomen.\n3. Inhale deeply: Breathe in slowly through your nose, allowing your abdomen to rise while keeping your chest still.\n4. Exhale slowly: Exhale slowly through your mouth, feeling your abdomen fall.\n5. Repeat: Continue this for 5-10 minutes." },
-  Profile2: { name: "Profile 2 (4s Inhale, 4s Exhale)", inhaleDuration: 4000, exhaleDuration: 4000, holdDuration: 0, description: "4 seconds inhale, 4 seconds exhale." },
-  Profile3: { name: "Profile 3 (5s Inhale, 5s Exhale)", inhaleDuration: 5000, exhaleDuration: 5000, holdDuration: 0, description: "5 seconds inhale, 5 seconds exhale." },
-  Profile4: { name: "Box Breathing (3-3-3)", inhaleDuration: 3000, holdDuration: 3000, exhaleDuration: 3000, description: "Inhale for 3 seconds, hold for 3 seconds, exhale for 3 seconds." },
-  Profile5: { name: "4-7-8 Breathing", inhaleDuration: 5000, holdDuration: 5000, exhaleDuration: 5000, description: "Inhale for 4 seconds, hold for 7 seconds, exhale for 8 seconds." },
-};
+import Reminders from "./Reminders";
+import { FaClock } from 'react-icons/fa';
+//import { checkReminders } from './notificationService';
 
 const BreathingExercise = () => {
   const [breathing, setBreathing] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [showIntroText, setShowIntroText] = useState(false);
-  const [selectedProfile, setSelectedProfile] = useState('Profile1');
-  const { inhaleDuration, exhaleDuration, holdDuration, name, description } = profiles[selectedProfile];
-  const cycleDuration = inhaleDuration + holdDuration + exhaleDuration;
-  const inhaleColor = "#4ade80";
-  const exhaleColor = "#38bdf8";
-  const holdColor = "#f59e0b";
-  const greyColor = "gray";
+  const [selectedProfile, setSelectedProfile] = useState(null);
+  const [profiles, setProfiles] = useState({});
   const [circleText, setCircleText] = useState("Start");
   const [showText, setShowText] = useState(true);
   const [isHovering, setIsHovering] = useState(false);
-  const [circleColor, setCircleColor] = useState(inhaleColor);
+  const [circleColor, setCircleColor] = useState("#4ade80");
   const [elapsedTime, setElapsedTime] = useState(0);
   const [userID, setUserID] = useState("")
+  const [showReminders, setShowReminders] = useState(false);
+
+  const fetchProfiles = async () => {
+    try {
+      const response = await axios.get("http://localhost:8000/api/breathing_profile/");
+      setProfiles(response.data);
+      setSelectedProfile(Object.keys(response.data)[0]);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -41,6 +42,7 @@ const BreathingExercise = () => {
         console.error(e);
       }
     })();
+    fetchProfiles();
   }, []);
 
   useEffect(() => {
@@ -62,7 +64,7 @@ const BreathingExercise = () => {
     const startBreathingCycle = () => {
       setShowIntroText(false);
       setCircleText("Inhale!");
-      setCircleColor(inhaleColor);
+      setCircleColor("#4ade80");
       setElapsedTime(0);
 
       elapsedTimer = setInterval(() => {
@@ -71,22 +73,22 @@ const BreathingExercise = () => {
 
       const breatheCycle = () => {
         setCircleText("Inhale!");
-        setCircleColor(inhaleColor);
+        setCircleColor("#4ade80");
         setShowText(true);
 
         breatheCycleTimer = setTimeout(() => {
           setCircleText("Hold!");
-          setCircleColor(holdColor);
+          setCircleColor("#f59e0b");
           setShowText(true);
 
           breatheCycleTimer = setTimeout(() => {
             setCircleText("Exhale!");
-            setCircleColor(exhaleColor);
+            setCircleColor("#38bdf8");
             setShowText(true);
 
-            breatheCycleTimer = setTimeout(breatheCycle, exhaleDuration);
-          }, holdDuration);
-        }, inhaleDuration);
+            breatheCycleTimer = setTimeout(breatheCycle, profiles[selectedProfile].exhaleDuration);
+          }, profiles[selectedProfile].holdDuration);
+        }, profiles[selectedProfile].inhaleDuration);
       };
 
       breatheCycle();
@@ -103,13 +105,7 @@ const BreathingExercise = () => {
       clearTimeout(breatheCycleTimer);
       clearInterval(elapsedTimer);
     };
-  }, [countdown, breathing, inhaleDuration, exhaleDuration, holdDuration]);
-
-  useEffect(() => {
-    if (breathing) {
-      
-    }
-  }, [breathing, selectedProfile]);
+  }, [countdown, breathing, selectedProfile, profiles]);
 
   const toggleBreathing = async () => {
     if (breathing) {
@@ -117,21 +113,21 @@ const BreathingExercise = () => {
       setCircleText("Start");
       setShowIntroText(false);
       setIsHovering(false);
-      setCircleColor(inhaleColor);
+      setCircleColor("#4ade80");
 
-         await axios.post(
-            "http://127.0.0.1:8000/api/breathing/",{
-              user: userID,
-              exercise_name: name,
-              duration: elapsedTime
-            },
-            {
-              headers: {
-                accept: "application/json",
-                "Accept-Language": "en-US,en;q=0.8",
-              },
-            }
-          )
+      await axios.post(
+        "http://127.0.0.1:8000/api/breathing/",{
+          user: userID,
+          exercise_name: profiles[selectedProfile].name,
+          duration: elapsedTime
+        },
+        {
+          headers: {
+            accept: "application/json",
+            "Accept-Language": "en-US,en;q=0.8",
+          },
+        }
+      );
 
     } else {
       setCountdown(3);
@@ -144,6 +140,12 @@ const BreathingExercise = () => {
     const seconds = (time % 60).toString().padStart(2, '0');
     return `${minutes}:${seconds}`;
   };
+
+  const toggleReminders = () => {
+    setShowReminders(!showReminders);
+  };
+
+  if (!selectedProfile) return <div>Loading...</div>;
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 relative">
@@ -164,8 +166,8 @@ const BreathingExercise = () => {
         </select>
       </div>
       <div className="mt-20 text-gray-600">
-        <h2 className="text-xl font-bold">{name}</h2>
-        <p className="text-sm whitespace-pre-wrap">{description}</p>
+        <h2 className="text-xl font-bold">{profiles[selectedProfile].name}</h2>
+        <p className="text-sm whitespace-pre-wrap">{profiles[selectedProfile].description}</p>
       </div>
       <div className="px-4 py-4 m-5 w-full max-w-sm bg-gradient-to-t from-sky-100 to-sky-50 border border-gray-200 rounded-xl drop-shadow-lg">
         <div className="relative flex items-center justify-center mt-20">
@@ -185,7 +187,7 @@ const BreathingExercise = () => {
           <div
             className="w-48 h-48 rounded-full absolute"
             style={{
-              backgroundColor: countdown > 0 ? greyColor : circleColor,
+              backgroundColor: countdown > 0 ? "gray" : circleColor,
               opacity: 0.2,
               transition: "background-color 0.5s ease",
             }}
@@ -193,9 +195,9 @@ const BreathingExercise = () => {
           <div
             className={`w-32 h-32 rounded-full relative cursor-pointer ${breathing && countdown === 0 ? "animate-breath" : ""}`}
             style={{
-              animationDuration: `${cycleDuration}ms`,
-              backgroundColor: countdown > 0 ? greyColor : circleColor,
-              boxShadow: `0 0 20px ${countdown > 0 ? greyColor : circleColor}`,
+              animationDuration: `${profiles[selectedProfile].inhaleDuration + profiles[selectedProfile].holdDuration + profiles[selectedProfile].exhaleDuration}ms`,
+              backgroundColor: countdown > 0 ? "gray" : circleColor,
+              boxShadow: `0 0 20px ${countdown > 0 ? "gray" : circleColor}`,
               transform: breathing && countdown === 0 ? "scale(1.5)" : "scale(1)",
               transition: "background-color 0.5s ease, transform 0.5s ease, box-shadow 0.5s ease"
             }}
@@ -215,6 +217,26 @@ const BreathingExercise = () => {
           <p className="mt-4 text-xl text-gray-600">Focus on your breath as you Inhale, Hold, and Exhale</p>
         </div>
       </div>
+
+      <div className="absolute bottom-10 right-10">
+        <button onClick={toggleReminders} className="p-2 bg-sky-500 text-white rounded-full">
+          <FaClock size={24} />
+        </button>
+      </div>
+
+      {showReminders && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="relative w-3/4 h-3/4 bg-white rounded-lg p-4 overflow-auto">
+            <button
+              className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full"
+              onClick={toggleReminders}
+            >
+              X
+            </button>
+            <Reminders />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
