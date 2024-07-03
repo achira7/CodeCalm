@@ -5,6 +5,7 @@ import 'react-circular-progressbar/dist/styles.css';
 import './BreathingExercise.css';
 import Reminders from "./Reminders";
 import { FaClock } from 'react-icons/fa';
+
 //import { checkReminders } from './notificationService';
 
 const BreathingExercise = () => {
@@ -30,6 +31,7 @@ const BreathingExercise = () => {
       console.error(e);
     }
   };
+
 
   useEffect(() => {
     (async () => {

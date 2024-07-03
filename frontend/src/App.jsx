@@ -30,6 +30,7 @@ import EmployeeComponent from './components/EmployeeComponent';
 import AdminSettings from './components/admin/AdminSettings';
 import AddBreathingProfile from './components/admin/AddBreathingProfile';
 import AddTrack from './components/admin/AddTrack';
+import FaceLoginRegistration from './components/FaceLoginRegistration';
 
 
 function App() {
@@ -49,6 +50,8 @@ function App() {
         
         <Route path="/employee/test" element={<Test />}/>
         <Route path={`/employee/dashboard/:id`} element={<Dashboard />}/>
+        <Route path="/employee/facelogin_reg" element={<FaceLoginRegistration />}/>
+
 
 
         

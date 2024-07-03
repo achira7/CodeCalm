@@ -8,14 +8,14 @@ import json
 from matplotlib.image import pil_to_array
 
 #from imp import load_module
-from .models import Employee_Emotion, Employee_Team, Employee_Focus, BreathingExerciseUsage, TrackListening, StressQuestion, StressDetectionForm, ReportGeneration, Employee_Stress, BreathingProfile, Track, Reminder
+from .models import Employee_Emotion, Employee_Team, Employee_Focus, BreathingExerciseUsage, TrackListening, StressQuestion, StressDetectionForm, ReportGeneration, Employee_Stress, BreathingProfile, Track, Reminder, FaceLoginProfile, FaceImage
 
 from django.http import JsonResponse, StreamingHttpResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework import permissions, status, generics
-from .serializers import UserSerializer, EmployeeTeamSerializer, BreathingExerciseUsageSerializer, TrackListeningSerializer, StressQuestionSerializer, StressDetectionFormSerializer, BreathingProfileSerializer, TrackSerializer, ReminderSerializer  
+from .serializers import UserSerializer, EmployeeTeamSerializer, BreathingExerciseUsageSerializer, TrackListeningSerializer, StressQuestionSerializer, StressDetectionFormSerializer, BreathingProfileSerializer, TrackSerializer, ReminderSerializer, FaceImageSerializer
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate
 from django.conf import settings
@@ -80,9 +80,7 @@ from rest_framework import status
 
 
 
-
 User = get_user_model()
-
 
 secret_key = settings.SECRET_KEY
 
@@ -347,6 +345,44 @@ class FaceLoginView(APIView):
             print(f"Error processing the image: {e}")
             return JsonResponse({'message': 'An error occurred while processing the image'}, status=500)
 
+from django.core.files.base import ContentFile
+from io import BytesIO
+import base64
+
+def stringToRGBuffer(base64_string):
+    imgdata = base64.b64decode(base64_string)
+    img = Image.open(BytesIO(imgdata))
+    opencv_img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+    return opencv_img
+
+class FaceRegisterView(APIView):
+    @csrf_exempt
+    def post(self, request):
+        image_data = request.data.get('image')
+        user_id = request.data.get('user_id')
+
+        format, imgstr = image_data.split(';base64,')
+        opencv_image = stringToRGB(imgstr)
+        
+        
+        try:
+            user = User.objects.get(id=user_id)
+            
+            profile, created = FaceLoginProfile.objects.get_or_create(user=user)
+            
+            img = ContentFile(opencv_image, name=f'{user_id}_{profile.face_images.count() + 1}.jpg')
+
+            FaceImage.objects.create(profile = profile, image = img) # ====== ERROR LINE ==========
+
+            print(profile)
+
+            return Response({'message': 'Image saved successfully'}, status=status.HTTP_201_CREATED)
+
+        except User.DoesNotExist:
+            return Response({"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 '''================================================================================='''
 '''================================================================================='''
@@ -531,6 +567,54 @@ class FaceLoginView(APIView):
                 continue
 
         return JsonResponse({'message': 'Face not recognized'}, status=401)
+    
+
+@api_view(['GET'])
+def check_face_login(request, user_id):
+    try:
+        profile = FaceLoginProfile.objects.get(user_id=user_id)
+        return Response({'has_face_login': True})
+    except FaceLoginProfile.DoesNotExist:
+        return Response({'has_face_login': False})
+    
+@api_view(['POST'])
+def start_face_registration(request):
+    user_id = request.data.get('user_id')
+    try:
+        user = User.objects.get(id=user_id)
+        profile, created = FaceLoginProfile.objects.get_or_create(user=user)
+        if created:
+            return Response({"message": "Registration started successfully"})
+        elif (FaceLoginProfile.objects.filter(user=user_id)):
+            return Response({"message": "Resume Registration"})
+    except User.DoesNotExist:
+        return Response({"message": "User not found"}, status=404)
+
+@api_view(['POST'])
+def complete_face_registration(request):
+    user_id = request.data.get('user_id')
+    try:
+        user = User.objects.get(id=user_id)
+        profile = FaceLoginProfile.objects.get(user=user)
+        profile.completed = True
+        profile.save()
+        return Response({"message": "Registration completed successfully"})
+    except User.DoesNotExist:
+        return Response({"message": "User not found"}, status=404)
+    except FaceLoginProfile.DoesNotExist:
+        return Response({"message": "Registration not started"}, status=400)
+    
+
+
+"""
+===============================================================================================================================
+===============================================================================================================================
+===============================================================================================================================
+===============================================================================================================================
+===============================================================================================================================
+===============================================================================================================================
+
+"""
         
 
 class EmotionDataView(APIView):

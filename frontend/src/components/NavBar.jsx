@@ -11,9 +11,6 @@ const baseUrl = 'http://localhost:8000/api/employee/';
 const assets = 'http://127.0.0.1:8000/media/assets/';
 const media = 'http://127.0.0.1:8000/media/';
 
-
-
-
 const NavBar = () => {
   const navigate = useNavigate();
   const [profilePicture, setProfilePicture] = useState('');
@@ -72,29 +69,29 @@ const NavBar = () => {
   }
 
   const employeeLinks = [
-    { id: 1, title: 'dashboard', link: './employee/dashboard' },
-    { id: 2, title: 'live camera', link: './employee/livecam' },
+    { id: 1, title: 'dashboard', link: '/employee/dashboard' },
+    { id: 2, title: 'live camera', link: '/employee/livecam' },
     { id: 3, title: 'breathing exercise', link: '/employee/breathingexercise' },
-    { id: 4, title: 'Ambient white noise', link: './employee/player' },
-    { id: 5, title: 'Self Stress Assess', link: './employee/self_stress' },
-    { id: 6, title: 'test', link: './employee/test' },
+    { id: 4, title: 'Ambient white noise', link: '/employee/player' },
+    { id: 5, title: 'Self Stress Assess', link: '/employee/self_stress' },
+    { id: 6, title: 'face login reg', link: '/employee/facelogin_reg' },
   ];
 
   const supervisorLinks = [
-    { id: 1, title: 'dashboard', link: './employee/dashboard' },
-    { id: 2, title: 'live camera', link: './employee/livecam' },
+    { id: 1, title: 'dashboard', link: '/employee/dashboard' },
+    { id: 2, title: 'live camera', link: '/employee/livecam' },
     { id: 3, title: 'breathing exercise', link: '/employee/breathingexercise' },
-    { id: 4, title: 'Ambient white noise', link: './employee/player' },
-    { id: 5, title: 'team dashboard', link: './supervisor/teamdashboard' },
+    { id: 4, title: 'Ambient white noise', link: '/employee/player' },
+    { id: 5, title: 'team dashboard', link: '/supervisor/teamdashboard' },
   ];
 
   const adminLinks = [
-    { id: 1, title: 'dashboard', link: './admin/dashboard' },
-    { id: 2, title: 'settings', link: './admin/settings' },
-    { id: 3, title: 'user management', link: './admin/allemployees' },
-    { id: 4, title: 'admin test', link: './admin/test' },
-    { id: 5, title: 'add breathing', link: './admin/breathing' },
-    { id: 6, title: 'add track', link: './admin/track' },
+    { id: 1, title: 'dashboard', link: '/admin/dashboard' },
+    { id: 2, title: 'settings', link: '/admin/settings' },
+    { id: 3, title: 'user management', link: '/admin/allemployees' },
+    { id: 4, title: 'admin test', link: '/admin/test' },
+    { id: 5, title: 'add breathing', link: '/admin/breathing' },
+    { id: 6, title: 'add track', link: '/admin/track' },
 
   ];
 

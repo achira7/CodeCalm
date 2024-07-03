@@ -21,6 +21,7 @@ const Login = () => {
   const navigate = useNavigate();
 
   const [showFaceLogin, setShowFaceLogin] = useState(false);
+  const [hasFaceLogin, setHasFaceLogin] = useState(false);
 
   const submitLoginForm = async (e) => {
     e.preventDefault();
@@ -167,11 +168,15 @@ const Login = () => {
                     </div>
                   </div>
                   <div>
-                  <a onClick={openFaceLogin} className="text-sky-500 underline cursor-pointer">Try FaceLogin</a>
+                      <a
+                        onClick={openFaceLogin}
+                        className="text-sky-500 underline cursor-pointer"
+                      >
+                        Try FaceLogin
+                      </a>
                   </div>
-
                   {showFaceLogin && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 ">
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
                       <div className="relative bg-white p-5 rounded-lg shadow-lg w-11/12 md:w-2/3 lg:w-1/2">
                         <button
                           className="absolute top-2 right-2 text-gray-600 hover:text-gray-900"

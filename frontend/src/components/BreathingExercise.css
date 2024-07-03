@@ -1,13 +1,13 @@
 @keyframes breath {
   0%, 100% {
     transform: scale(1);
-    background-color: #38bdf8; /* exhaleColor */
-    box-shadow: 0 0 20px #38bdf8; /* exhaleColor */
+    background-color: #38bdf8; 
+    box-shadow: 0 0 20px #38bdf8; 
   }
   50% {
     transform: scale(1.5);
-    background-color: #4ade80; /* inhaleColor */
-    box-shadow: 0 0 20px #4ade80; /* inhaleColor */
+    background-color: #4ade80; 
+    box-shadow: 0 0 20px #4ade80; 
   }
 }
 

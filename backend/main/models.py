@@ -192,6 +192,23 @@ class Reminder(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.type} - {self.date}"
+    
+    
+def user_directory_path(instance, filename):
+    return f'face_login_images/user_{instance.user.id}/{filename}'
+
+class FaceLoginProfile(models.Model):
+    user = models.OneToOneField(UserAccount, on_delete=models.CASCADE, related_name="face_login_profile")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    completed = models.BooleanField(default=False)
+
+class FaceImage(models.Model):
+    profile = models.ForeignKey(FaceLoginProfile, on_delete=models.CASCADE, related_name="face_images")
+    image = models.ImageField(upload_to=user_directory_path)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
 
 
 

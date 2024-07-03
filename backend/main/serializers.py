@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 User = get_user_model()
-from .models import Employee_Emotion,Employee_Team, BreathingExerciseUsage, TrackListening, StressQuestion, StressDetectionForm, BreathingProfile, Track, Reminder
+from .models import Employee_Emotion,Employee_Team, BreathingExerciseUsage, TrackListening, StressQuestion, StressDetectionForm, BreathingProfile, Track, Reminder, FaceImage, FaceLoginProfile
 
 class RegistrationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -77,5 +77,18 @@ class ReminderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reminder
         fields = ['date', 'message', 'type']
+
+
+class FaceImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FaceImage
+        fields = '__all__'
+
+class FaceLoginProfileSerializer(serializers.ModelSerializer):
+    face_images = FaceImageSerializer(many=True)
+
+    class Meta:
+        model = FaceLoginProfile
+        fields = '__all__'
 
 

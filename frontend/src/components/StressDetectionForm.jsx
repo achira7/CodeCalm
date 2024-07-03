@@ -164,7 +164,6 @@ const StressDetectionForm = () => {
           Submit
         </button>
       </form>
-      <div className="mt-4 text-xl font-bold">Total Points: {totalPoints}</div>
     </div>
   );
 };

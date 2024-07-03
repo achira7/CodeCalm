@@ -30,6 +30,10 @@ from main.views import (
     BreathingProfileAPIView,
     TrackListCreateAPIView,
     ReminderCreateView,
+    FaceRegisterView,
+    check_face_login,
+    start_face_registration,
+    complete_face_registration
 )
 
 urlpatterns = [
@@ -68,6 +72,14 @@ urlpatterns = [
     path('tracks/<int:pk>/', TrackListCreateAPIView.as_view()), 
 
     path('reminders/', ReminderCreateView.as_view(), name='reminder-create'),
+
+    path('faceregister/', FaceRegisterView.as_view(), name='face_register'),
+    path('check_face_login/<int:user_id>/', check_face_login, name='check_face_login'),
+
+    path('startfaceregister/', start_face_registration, name='start_face_registration'),
+    path('completefaceregister/', complete_face_registration, name='complete_face_registration'),
+
+
     
 
 ]
