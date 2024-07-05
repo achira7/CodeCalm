@@ -25,4 +25,4 @@ export const ColorSet02 = {
 
 
 
-export const Color = ColorSet01
+export const Color = ColorSet02

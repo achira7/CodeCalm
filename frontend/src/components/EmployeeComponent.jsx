@@ -379,9 +379,9 @@ const EmployeeComponent = ({ id, role }) => {
         )}
 
 <div className="flex flex-wrap justify-center mt-4" id="report-content">
-  <div className="bg-white border border-gray-200 rounded-lg shadow-lg m-4 p-6 w-full md:w-1/2 lg:w-1/3">
+  <div className={`bg-white border border-gray-200 rounded-lg shadow-lg ${Color.cardBGText} m-4 p-6 w-full md:w-1/2 lg:w-1/3`}>
     <div className="text-center flex-auto">
-      <h5 className="text-2xl font-semibold text-sky-900 mb-5">
+      <h5 className="text-2xl font-semibold  mb-5">
         {emotionView === "daily"
           ? "Daily Emotions"
           : emotionView === "weekly"
@@ -391,12 +391,12 @@ const EmployeeComponent = ({ id, role }) => {
           : "Overall Emotions"}
       </h5>
 
-      <button className="text-sky-900 hover:text-sky-600">
+      <button className=" hover:text-sky-600">
         <FaArrowRightArrowLeft size={20} />
       </button>
 
       {emotionChartError ? (
-        <h2 className="text-xl text-gray-700 mt-4">
+        <h2 className="text-xl  mt-4">
           {emotionChartError}
         </h2>
       ) : (
@@ -419,9 +419,9 @@ const EmployeeComponent = ({ id, role }) => {
   </div>
 
   {/* Stress Data */}
-  <div className="bg-white border border-gray-200 rounded-lg shadow-lg m-4 p-6 w-full md:w-1/2 lg:w-1/3">
+  <div className={`border ${Color.cardBGText} border-gray-200 rounded-lg shadow-lg m-4 p-6 w-full md:w-1/2 lg:w-1/3`}>
     <div className="text-center">
-      <h5 className="text-2xl font-semibold text-sky-900 mb-5">
+      <h5 className="text-2xl font-semibold  mb-5">
         {stressView === "daily"
           ? "Daily Stress Levels"
           : stressView === "weekly"
@@ -429,7 +429,7 @@ const EmployeeComponent = ({ id, role }) => {
           : "Monthly Stress Levels"}
       </h5>
       {stressChartError ? (
-        <h2 className="text-xl text-gray-700 mt-4">
+        <h2 className="text-xl  mt-4">
           {stressChartError}
         </h2>
       ) : (
@@ -448,9 +448,9 @@ const EmployeeComponent = ({ id, role }) => {
   </div>
 
   {/* Exercise Data */}
-  <div className="bg-white border border-gray-200 rounded-lg shadow-lg m-4 p-6 w-full md:w-1/2 lg:w-1/3">
+  <div className={` ${Color.cardBGText} border border-gray-200 rounded-lg shadow-lg m-4 p-6 w-full md:w-1/2 lg:w-1/3`}>
     <div className="text-center">
-      <h5 className="text-2xl font-semibold text-sky-900 mb-5">
+      <h5 className="text-2xl font-semibold  mb-5">
         {exerciseView === "daily"
           ? "Daily Breathing Exercise Usage"
           : exerciseView === "weekly"
@@ -458,7 +458,7 @@ const EmployeeComponent = ({ id, role }) => {
           : "Monthly Breathing Exercise Usage"}
       </h5>
       {breathingChartError ? (
-        <h2 className="text-xl text-gray-700 mt-4">
+        <h2 className="text-xl  mt-4">
           {breathingChartError}
         </h2>
       ) : (
@@ -475,13 +475,13 @@ const EmployeeComponent = ({ id, role }) => {
 
       {mostUsedExercise && (
         <div className="mt-4">
-          <h5 className="text-lg font-semibold text-sky-900 mb-2">
+          <h5 className="text-lg font-semibold  mb-2">
             {userData.first_name}'s Most Used Exercise:
           </h5>
-          <p className="text-gray-700">
+          <p className="">
             {mostUsedExercise.exercise_name}
           </p>
-          <p className="text-gray-700">
+          <p className="">
             Total Duration:{" "}
             {(mostUsedExercise.total_duration / 60.0).toFixed(2)} minutes
           </p>
@@ -491,9 +491,9 @@ const EmployeeComponent = ({ id, role }) => {
   </div>
 
   {/* Listening Data */}
-  <div className="bg-white border border-gray-200 rounded-lg shadow-lg m-4 p-6 w-full md:w-1/2 lg:w-1/3">
+  <div className={` ${Color.cardBGText}  border border-gray-200 rounded-lg shadow-lg m-4 p-6 w-full md:w-1/2 lg:w-1/3`}>
     <div className="text-center">
-      <h5 className="text-2xl font-semibold text-sky-900 mb-5">
+      <h5 className="text-2xl font-semibold  mb-5">
         {listeningView === "daily"
           ? "Daily Track Listening Usage"
           : listeningView === "weekly"
