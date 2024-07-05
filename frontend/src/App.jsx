@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useParams } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useParams, useLocation } from "react-router-dom";
 import { RecoilRoot } from 'recoil';
 
 import Login from "./components/Login";
@@ -34,9 +34,13 @@ import FaceLoginRegistration from './components/FaceLoginRegistration';
 
 
 function App() {
+  const location = useLocation();
+  const hideNavBarRoutes = ['/employee/login', '/employee/facelogin', '/employee/facelogin_reg'];
+  const shouldShowNavBar = !hideNavBarRoutes.includes(location.pathname);
+
   return (
     <RecoilRoot>
-      <NavBar />
+      {shouldShowNavBar && <NavBar />}
       <Routes>
 
         {/*EMPLOYEE URLs */}

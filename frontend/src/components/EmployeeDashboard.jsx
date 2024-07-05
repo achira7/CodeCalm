@@ -3,6 +3,7 @@ import axios from "axios";
 import { Navigate } from "react-router-dom";
 import "../index.css";
 import TestComponent from "./EmployeeComponent";
+import { Color } from "../theme/Colors";
 
 const pfp = "http://127.0.0.1:8000/media/profilePictures/default.jpg";
 const icons = "http://127.0.0.1:8000/media/icons";
@@ -36,9 +37,9 @@ const EmployeeDashboard = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen ${Color.background}`}>
       <div className="container mx-auto py-6">
-        <div className="text-center mb-6">
+        <div className="text-center">
           <h1 className="text-3xl font-semibold text-sky-700">
             Employee Dashboard
           </h1>

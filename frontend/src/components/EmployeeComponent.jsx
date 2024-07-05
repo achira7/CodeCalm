@@ -15,6 +15,8 @@ import { useParams } from "react-router-dom";
 
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { Color } from "../theme/Colors";
+import { BtnColor } from "../theme/ButtonTheme";
 
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -330,18 +332,18 @@ const EmployeeComponent = ({ id, role }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto py-6">
+    <div className={`min-h-screen ${Color.background}`}>
+      <div className="container mx-auto py-2 ">
         {/*Period Selection Buttons */}
-        <div className="flex justify-center my-4">
+        <div className="flex justify-center ">
           {["daily", "weekly", "monthly"].map((period) => (
             <button
               key={period}
               className={`mx-2 px-4 py-2 rounded ${
                 emotionView === period
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 text-gray-800"
-              } hover:bg-blue-700 hover:text-white`}
+                  ? BtnColor.dashBoardBtnSelected
+                  : BtnColor.dashBoardBtnIdel
+              } `}
               onClick={() => handlePeriodChange(period)}
             >
               {period.charAt(0).toUpperCase() + period.slice(1)}
@@ -376,163 +378,163 @@ const EmployeeComponent = ({ id, role }) => {
           </button>
         )}
 
-        <div className="flex flex-wrap justify-center" id="report-content">
-          <div className="bg-white border border-gray-200 rounded-lg shadow-lg">
-            <div className="text-center p-3 md:p-5 flex-auto">
-              <h5 className="text-xl font-semibold text-sky-900 mb-5">
-                {emotionView === "daily"
-                  ? "Daily Emotions"
-                  : emotionView === "weekly"
-                  ? "Weekly Emotions"
-                  : emotionView === "monthly"
-                  ? "Monthly Emotions"
-                  : "Overall Emotions"}
-              </h5>
+<div className="flex flex-wrap justify-center mt-4" id="report-content">
+  <div className="bg-white border border-gray-200 rounded-lg shadow-lg m-4 p-6 w-full md:w-1/2 lg:w-1/3">
+    <div className="text-center flex-auto">
+      <h5 className="text-2xl font-semibold text-sky-900 mb-5">
+        {emotionView === "daily"
+          ? "Daily Emotions"
+          : emotionView === "weekly"
+          ? "Weekly Emotions"
+          : emotionView === "monthly"
+          ? "Monthly Emotions"
+          : "Overall Emotions"}
+      </h5>
 
-              <button>
-                <FaArrowRightArrowLeft />
-              </button>
+      <button className="text-sky-900 hover:text-sky-600">
+        <FaArrowRightArrowLeft size={20} />
+      </button>
 
-              {emotionChartError ? (
-                <h2 className="text-xl text-gray-700 mt-4 flex-initial">
-                  {emotionChartError}
-                </h2>
-              ) : (
-                <div>
-                  <div className="flex items-center justify-center">
-                    <DoughnutChart {...emotions} />
+      {emotionChartError ? (
+        <h2 className="text-xl text-gray-700 mt-4">
+          {emotionChartError}
+        </h2>
+      ) : (
+        <div>
+          <div className="flex items-center justify-center">
+            <DoughnutChart {...emotions} />
 
-                    <div className="w-1/2 mb-28" id="highestEmotion">
-                      <img
-                        className="w-15 h-15 mx-auto mt-4"
-                        src={`http://127.0.0.1:8000/media/emojis/${highestEmotion.key}.png`}
-                        alt={highestEmotion.key}
-                        title={`Highest emotion is: ${highestEmotion.key}`}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Stress Data */}
-          <div className="max-w-sm w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
-            <div className="text-center">
-              <h5 className="text-xl font-semibold text-sky-900 inline-flex">
-                {stressView === "daily"
-                  ? "Daily Stress Levels"
-                  : stressView === "weekly"
-                  ? "Weekly Stress Levels"
-                  : "Monthly Stress Levels"}
-              </h5>
-              {stressChartError ? (
-                <h2 className="text-xl text-gray-700 mt-4 flex-initial">
-                  {stressChartError}
-                </h2>
-              ) : (
-                <BarChart
-                  data={
-                    {
-                      daily: dailyStressData,
-                      weekly: weeklyStressData,
-                      monthly: monthlyStressData,
-                    }[stressView]
-                  }
-                  period={stressView}
-                />
-              )}
-            </div>
-          </div>
-
-          {/* Exercise Data */}
-          <div className="max-w-sm w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
-            <div className="text-center">
-              <h5 className="text-xl font-semibold text-sky-900 inline-flex">
-                {exerciseView === "daily"
-                  ? "Daily Breathing Exercise Usage"
-                  : exerciseView === "weekly"
-                  ? "Weekly Breathing Exercise Usage"
-                  : "Monthly Breathing Exercise Usage"}
-              </h5>
-              {breathingChartError ? (
-                <h2 className="text-xl text-gray-700 mt-4 flex-initial">
-                  {breathingChartError}
-                </h2>
-              ) : (
-                <LineChart
-                  data={
-                    {
-                      daily: dailyExerciseData,
-                      weekly: weeklyExerciseData,
-                      monthly: monthlyExerciseData,
-                    }[exerciseView]
-                  }
-                />
-              )}
-
-              {mostUsedExercise && (
-                <div className="mt-4">
-                  <h5 className="text-lg font-semibold text-sky-900 mb-5">
-                    {userData.first_name}'s Most Used Exercise:
-                  </h5>
-                  <p className="text-gray-700">
-                    {mostUsedExercise.exercise_name}
-                  </p>
-                  <p className="text-gray-700">
-                    Total Duration:{" "}
-                    {(mostUsedExercise.total_duration / 60.0).toFixed(2)}{" "}
-                    minutes
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Listening Data */}
-          <div className="max-w-sm w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
-            <div className="text-center">
-              <h5 className="text-xl font-semibold text-sky-900 mb-5">
-                {listeningView === "daily"
-                  ? "Daily Track Listening Usage"
-                  : listeningView === "weekly"
-                  ? "Weekly Track Listening Usage"
-                  : "Monthly Track Listening Usage"}
-              </h5>
-              {listeningChartError ? (
-                <h2 className="text-xl text-gray-700 mt-4 flex-initial">
-                  {listeningChartError}
-                </h2>
-              ) : (
-                <LineChart
-                  data={
-                    {
-                      daily: dailyListeningData,
-                      weekly: weeklyListeningData,
-                      monthly: monthlyListeningData,
-                    }[listeningView]
-                  }
-                />
-              )}
-
-              {mostListenedTrack && (
-                <div className="mt-4">
-                  <h5 className="text-lg font-semibold text-sky-900 mb-5">
-                    {userData.first_name}'s Most Listened Track:
-                  </h5>
-                  <p className="text-gray-700">
-                    {mostListenedTrack.track_name}
-                  </p>
-                  <p className="text-gray-700">
-                    Total Duration:{" "}
-                    {(mostListenedTrack.total_duration / 60).toFixed(2)} minutes
-                  </p>
-                </div>
-              )}
+            <div className="w-1/2 mb-28" id="highestEmotion">
+              <img
+                className="w-15 h-15 mx-auto mt-4"
+                src={`http://127.0.0.1:8000/media/emojis/${highestEmotion.key}.png`}
+                alt={highestEmotion.key}
+                title={`Highest emotion is: ${highestEmotion.key}`}
+              />
             </div>
           </div>
         </div>
-      </div>
+      )}
+    </div>
+  </div>
+
+  {/* Stress Data */}
+  <div className="bg-white border border-gray-200 rounded-lg shadow-lg m-4 p-6 w-full md:w-1/2 lg:w-1/3">
+    <div className="text-center">
+      <h5 className="text-2xl font-semibold text-sky-900 mb-5">
+        {stressView === "daily"
+          ? "Daily Stress Levels"
+          : stressView === "weekly"
+          ? "Weekly Stress Levels"
+          : "Monthly Stress Levels"}
+      </h5>
+      {stressChartError ? (
+        <h2 className="text-xl text-gray-700 mt-4">
+          {stressChartError}
+        </h2>
+      ) : (
+        <BarChart
+          data={
+            {
+              daily: dailyStressData,
+              weekly: weeklyStressData,
+              monthly: monthlyStressData,
+            }[stressView]
+          }
+          period={stressView}
+        />
+      )}
+    </div>
+  </div>
+
+  {/* Exercise Data */}
+  <div className="bg-white border border-gray-200 rounded-lg shadow-lg m-4 p-6 w-full md:w-1/2 lg:w-1/3">
+    <div className="text-center">
+      <h5 className="text-2xl font-semibold text-sky-900 mb-5">
+        {exerciseView === "daily"
+          ? "Daily Breathing Exercise Usage"
+          : exerciseView === "weekly"
+          ? "Weekly Breathing Exercise Usage"
+          : "Monthly Breathing Exercise Usage"}
+      </h5>
+      {breathingChartError ? (
+        <h2 className="text-xl text-gray-700 mt-4">
+          {breathingChartError}
+        </h2>
+      ) : (
+        <LineChart
+          data={
+            {
+              daily: dailyExerciseData,
+              weekly: weeklyExerciseData,
+              monthly: monthlyExerciseData,
+            }[exerciseView]
+          }
+        />
+      )}
+
+      {mostUsedExercise && (
+        <div className="mt-4">
+          <h5 className="text-lg font-semibold text-sky-900 mb-2">
+            {userData.first_name}'s Most Used Exercise:
+          </h5>
+          <p className="text-gray-700">
+            {mostUsedExercise.exercise_name}
+          </p>
+          <p className="text-gray-700">
+            Total Duration:{" "}
+            {(mostUsedExercise.total_duration / 60.0).toFixed(2)} minutes
+          </p>
+        </div>
+      )}
+    </div>
+  </div>
+
+  {/* Listening Data */}
+  <div className="bg-white border border-gray-200 rounded-lg shadow-lg m-4 p-6 w-full md:w-1/2 lg:w-1/3">
+    <div className="text-center">
+      <h5 className="text-2xl font-semibold text-sky-900 mb-5">
+        {listeningView === "daily"
+          ? "Daily Track Listening Usage"
+          : listeningView === "weekly"
+          ? "Weekly Track Listening Usage"
+          : "Monthly Track Listening Usage"}
+      </h5>
+      {listeningChartError ? (
+        <h2 className="text-xl text-gray-700 mt-4">
+          {listeningChartError}
+        </h2>
+      ) : (
+        <LineChart
+          data={
+            {
+              daily: dailyListeningData,
+              weekly: weeklyListeningData,
+              monthly: monthlyListeningData,
+            }[listeningView]
+          }
+        />
+      )}
+
+      {mostListenedTrack && (
+        <div className="mt-4">
+          <h5 className="text-lg font-semibold text-sky-900 mb-2">
+            {userData.first_name}'s Most Listened Track:
+          </h5>
+          <p className="text-gray-700">
+            {mostListenedTrack.track_name}
+          </p>
+          <p className="text-gray-700">
+            Total Duration:{" "}
+            {(mostListenedTrack.total_duration / 60).toFixed(2)} minutes
+          </p>
+        </div>
+      )}
+    </div>
+  </div>
+</div>
+</div>
+
 
       <div className="max-w-xl w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
         <h5 className="text-xl font-semibold text-sky-900">

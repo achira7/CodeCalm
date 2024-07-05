@@ -6,6 +6,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import Messages from './Messages';
 import SettingsOverlay from './SettingsOverlay';
+import { Color } from '../theme/Colors';
 
 const baseUrl = 'http://localhost:8000/api/employee/';
 const assets = 'http://127.0.0.1:8000/media/assets/';
@@ -43,7 +44,7 @@ const NavBar = () => {
       }
     } catch (e) {
       console.error(e);
-      navigate("/employee/login");
+      // navigate("/employee/login");  Remove this later
     }
   }
 
@@ -96,13 +97,13 @@ const NavBar = () => {
   ];
 
   return (
-    <div className='flex justify-between items-center w-full h-15 p-4 bg-sky-400 text-white sticky top-0 z-10 flex-initial'>
+    <div className={`flex justify-between items-center w-full h-15 p-4 ${Color.navBar} text-white sticky top-0 z-10 flex-initial`}>
       <div className="flex items-center hover:cursor-pointer">
         <img className="h-8 px-2 drop-shadow-md shadow-blue-600/50 hover:cursor-pointer" src={`${assets}codecalm-logo-colored.png`} alt="Logo" />
         <h1 className='text-2xl font-google font-bold drop-shadow-xl shadow-blue-600/50 hover:cursor-pointer'>CodeCalm</h1>
       </div>
 
-      <div className='flex justify-center w-full h-20 items-center fixed'>
+      <div className='flex justify-center w-full h-20 items-center fixed '>
         <ul className='flex'>
           {navLinks.map(({ id, title, link }) => (
             <li

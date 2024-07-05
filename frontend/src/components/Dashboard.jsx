@@ -198,8 +198,8 @@ const Dashboard = (props) => {
   const isListeningRightDisabled = listeningView === "monthly";
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto py-6">
+    <div className="min-h-screen bg-gray-50 ">
+      <div className="container mx-auto py-6 ">
         <Link to={goBackText}>
           <div className="flex items-center mx-5 hover: transition-transform duration-300 cursor-pointer">
             <svg
@@ -219,7 +219,7 @@ const Dashboard = (props) => {
           </div>
         </Link>
 
-        <div className="flex flex-wrap justify-center">
+        <div className="flex flex-wrap justify-center ">
           <div className="max-w-sm w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
             <div className="text-center">
               <img
