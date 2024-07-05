@@ -10,5 +10,13 @@ User = get_user_model()
 admin.site.register(models.UserAccount)
 admin.site.register(models.Employee_Emotion)
 admin.site.register(models.Employee_Stress)
+admin.site.register(models.Employee_Team)
+admin.site.register(models.BreathingExerciseUsage)
+admin.site.register(models.TrackListening)
+#admin.site.register(models.StressQuestion)
+#admin.site.register(models.StressDetectionForm)
 
-
+'''
+Message
+Employee_Focus
+'''

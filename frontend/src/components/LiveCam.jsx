@@ -8,9 +8,9 @@ import 'react-toastify/dist/ReactToastify.css';
 
 const LiveCam = () => {
   const [userData, setUserData] = useState({});
-  const [message, setMessage] = useState("You are not authenticated");
-  const [emotionResponse, setEmotionResponse] = useState("");
+  const [emotionResponseState, setEmotionResponseState] = useState("");
   const [emotionFrequency, setEmotionFrequency] = useState("");
+  const [gaze, setGaze] = useState("");
   const [progress, setProgress] = useState(0);
 
   const webcamRef = useRef(null);
@@ -26,7 +26,6 @@ const LiveCam = () => {
         setUserData(user);
       } catch (e) {
         console.log(e);
-        setMessage("You are not authenticated");
       }
     })();
   }, []);
@@ -39,7 +38,7 @@ const LiveCam = () => {
         formData.append("user_id", userData.id);
 
         const response = await axios.post(
-          "http://127.0.0.1:8000/api/emotion/",
+          "http://127.0.0.1:8000/api/emotions/",
           formData,
           {
             headers: {
@@ -48,10 +47,12 @@ const LiveCam = () => {
             },
           }
         );
+
         if (response) {
-          const { emo, frq } = response.data;
-          setEmotionResponse(emo);
+          const { emo, frq, gaze } = response.data;
+          setEmotionResponseState(emo);
           setEmotionFrequency(frq);
+          setGaze(gaze);
 
           if (
             response.data.emo === "No Face Detected" ||
@@ -60,7 +61,6 @@ const LiveCam = () => {
             response.data.emo === "Webcam cover is closed or image is too dark" ||
             response.data.emo === "Image is blurred. Please clear the webcam."
           ) {
-            notifyUser(response.data.emo);
             toast.error(response.data.emo, {
               position: "top-right",
               autoClose: 5000,
@@ -70,12 +70,10 @@ const LiveCam = () => {
               draggable: true,
               progress: undefined,
               theme: "colored",
-              toastId: customId,
             });
           }
 
           if (response.data.frq === "You seem to be stressed!") {
-            notifyUser("You seem to be stressed!");
             toast.error(`You seem to be stressed!`, {
               position: "top-right",
               autoClose: 5000,
@@ -85,12 +83,11 @@ const LiveCam = () => {
               draggable: true,
               progress: undefined,
               theme: "colored",
-              toastId: customId,
             });
           }
         }
       } catch (error) {
-        console.error("Error in POST request:", error);
+        console.error("Error in POST requests:", error);
       }
     };
 
@@ -102,7 +99,7 @@ const LiveCam = () => {
     };
 
     const intervalTime = 10000;
-    const progressIntervalTime = 100; // Update progress every 100ms
+    const progressIntervalTime = 100;
 
     intervalRef.current = setInterval(() => {
       captureAndPostImage();
@@ -123,53 +120,54 @@ const LiveCam = () => {
     };
   }, [userData.id]);
 
-  const customId = "custom-id-yes";
-
-  const notifyUser = (message) => {
-    if (document.hidden && Notification.permission === "granted") {
-      new Notification("CodeCalm", {
-        body: message,
-        icon: "http://127.0.0.1:8000/media/favicons/codecalm_favicon_2.png",
-      });
-    }
-  };
-
-  const requestNotificationPermission = () => {
+  useEffect(() => {
     if (Notification.permission !== "granted") {
       Notification.requestPermission();
     }
-  };
-
-  useEffect(() => {
-    requestNotificationPermission();
   }, []);
 
   return (
-    <div>
-      <h1>Webcam Data to Server</h1>
-
-      <div className="flex flex-col items-center">
-        <Webcam
-          audio={false}
-          ref={webcamRef}
-          height={500}
-          width={500}
-          screenshotFormat="image/jpeg"
-        />
-        <h2 className="font-google">Detected Emotion is: {emotionResponse}</h2>
-        <div style={{ width: 50, height: 50, marginTop: 20 }}>
-          <CircularProgressbar
-            value={progress}
-            strokeWidth={50}
-            styles={buildStyles({
-              strokeLinecap: "butt",
-            })}
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
+      <div className="bg-white rounded-lg shadow-lg p-4 w-full max-w-xl">
+        <div className="relative">
+          <Webcam
+            audio={false}
+            ref={webcamRef}
+            screenshotFormat="image/jpeg"
+            className="rounded-lg w-full"
+          />
+          <div className="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold py-1 px-2 rounded-full">
+            LIVE
+          </div>
+          <img
+            src="http://127.0.0.1:8000/media/assets/codecalm-logo-colored.png"
+            alt="CodeCalm"
+            className="absolute top-2 right-2 w-10"
           />
         </div>
+        <div className="flex justify-between items-center mt-4">
+          <div className="flex flex-col items-center">
+            <p className="text-gray-500 text-sm">Current Emotion</p>
+            <p className="text-lg font-semibold">{emotionResponseState}</p>
+          </div>
+          <div className="flex flex-col items-center">
+            <p className="text-gray-500 text-sm">Current Stress Level</p>
+            <p className="text-lg font-semibold">{emotionFrequency}</p>
+          </div>
+        </div>
+        <div className="flex justify-center mt-4">
+          <div style={{ width: 50, height: 50 }}>
+            <CircularProgressbar
+              value={progress}
+              strokeWidth={50}
+              styles={buildStyles({
+                strokeLinecap: "butt",
+              })}
+            />
+          </div>
+        </div>
       </div>
-      <div>
-        <ToastContainer />
-      </div>
+      <ToastContainer />
     </div>
   );
 };

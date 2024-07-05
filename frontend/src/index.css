@@ -13,3 +13,58 @@
  body{
   background-color: rgb(168, 246, 255);
  }
+
+ 
+ /* Tooltip text */
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 120px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+ 
+  /* Position the tooltip text - see examples below! */
+  position: absolute;
+  z-index: 1;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+}
+
+
+#highestEmotion {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1rem;
+  text-align: center;
+  border-radius: 50%;
+  padding: 2rem;
+  width: 200px; /* Adjust width as needed */
+  height: 200px; /* Adjust height as needed */
+  position: absolute;
+
+}
+
+#highestEmotion h2 {
+  font-size: 1.25rem;
+  color: #0c4a6e; /* text-sky-900 */
+  text-transform: capitalize;
+  margin-bottom: 1rem;
+}
+
+#highestEmotion img {
+  width: 5rem;
+  height: 5rem;
+  margin-top: 1rem;
+}
+
+#highestEmotion p {
+  color: #4b5563; /* text-gray-700 */
+  margin-top: 1rem;
+}
