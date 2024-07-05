@@ -19,7 +19,7 @@ export const ColorSet02 = {
     primary :  "bg-sky-400",
     navBar: "bg-sky-500",
     cardBGText : "bg-gray-700 text-white",
-    chartsBGText : "bg-gray-700 text-black",
+    chartsBGText : "bg-gray-700 text-white",
 
     background : "bg-gray-800",
     LoginleftSideBg: 'bg-gray-500',
