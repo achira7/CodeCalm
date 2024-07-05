@@ -24,48 +24,115 @@ import "react-datepicker/dist/react-datepicker.css";
 const pfp = "http://127.0.0.1:8000/media/profilePictures/default.jpg";
 const icons = "http://127.0.0.1:8000/media/icons";
 
+const emoji = " "
+
 const EmployeeComponent = ({ id, role }) => {
   const params = useParams();
-
-  const [emotions, setEmotions] = useState({
-    angry: 0,
-    disgust: 0,
-    fear: 0,
-    happy: 0,
-    sad: 0,
+  
+    const [emotions, setEmotions] = useState({
+    angry: 10,
+    disgust: 10,
+    fear: 20,
+    happy: 50,
+    sad: 30,
     surprise: 0,
-    neutral: 0,
+    neutral: 30,
   });
   const [navigate, setNavigate] = useState(false);
-  const [userData, setUserData] = useState({});
+  const [userData, setUserData] = useState({email: "e@e.com", employment_type: "full-time", first_name: "Achira", gender: "M", id: 18, is_staff: false, is_superuser: false, last_name: "Silva", team: "Test", work_location: "hybrid"});
 
   const [emotionChartError, setEmotionChartError] = useState(null);
   const [stressChartError, setStressChartError] = useState(null);
   const [breathingChartError, setBreathingChartError] = useState(null);
   const [listeningChartError, setListeningChartError] = useState(null);
 
-  const [highestEmotion, setHighestEmotion] = useState({ key: "", value: 0 });
-  const [weeklyExerciseData, setWeeklyExerciseData] = useState({});
-  const [monthlyExerciseData, setMonthlyExerciseData] = useState({});
-  const [dailyExerciseData, setDailyExerciseData] = useState({});
-  const [weeklyListeningData, setWeeklyListeningData] = useState({});
-  const [monthlyListeningData, setMonthlyListeningData] = useState({});
-  const [dailyListeningData, setDailyListeningData] = useState({});
-  const [mostUsedExercise, setMostUsedExercise] = useState(null);
-  const [mostListenedTrack, setMostListenedTrack] = useState(null);
+  const [highestEmotion, setHighestEmotion] = useState({ key: "Happy", value: 50 });
+  const [weeklyExerciseData, setWeeklyExerciseData] = useState({
+    Monday: 30,
+    Tuesday: 45,
+    Wednesday: 60,
+    Thursday: 20,
+    Friday: 40,
+    Saturday: 50,
+    Sunday: 35,
+  });
+  const [monthlyExerciseData, setMonthlyExerciseData] = useState({
+    Week1: 150,
+    Week2: 200,
+    Week3: 180,
+    Week4: 220,
+  });
+  const [dailyExerciseData, setDailyExerciseData] = useState({
+    "6 AM": 5,
+    "7 AM": 10,
+    "8 AM": 15,
+    "9 AM": 5,
+    "10 AM": 20,
+  });
+  const [weeklyListeningData, setWeeklyListeningData] = useState({
+    Monday: 40,
+    Tuesday: 50,
+    Wednesday: 60,
+    Thursday: 70,
+    Friday: 80,
+    Saturday: 90,
+    Sunday: 100,
+  });
+  const [monthlyListeningData, setMonthlyListeningData] = useState({
+    Week1: 200,
+    Week2: 250,
+    Week3: 300,
+    Week4: 350,
+  });
+  const [dailyListeningData, setDailyListeningData] = useState({
+    "6 AM": 10,
+    "7 AM": 20,
+    "8 AM": 30,
+    "9 AM": 15,
+    "10 AM": 25,
+  });
+  const [mostUsedExercise, setMostUsedExercise] = useState({
+    exercise_name: "Breathing Exercise",
+    total_duration: 1800,
+  });
+  const [mostListenedTrack, setMostListenedTrack] = useState({
+    track_name: "Calm Music",
+    total_duration: 3600,
+  });
   const [exerciseView, setExerciseView] = useState("daily");
   const [listeningView, setListeningView] = useState("daily");
   const [emotionView, setEmotionView] = useState("daily");
 
-  const [dailyStressData, setDailyStressData] = useState({});
-  const [weeklyStressData, setWeeklyStressData] = useState({});
-  const [monthlyStressData, setMonthlyStressData] = useState({});
+  const [dailyStressData, setDailyStressData] = useState({
+    "6 AM": 3,
+    "7 AM": 4,
+    "8 AM": 5,
+    "9 AM": 6,
+    "10 AM": 2,
+  });
+  const [weeklyStressData, setWeeklyStressData] = useState({
+    Monday: 20,
+    Tuesday: 30,
+    Wednesday: 25,
+    Thursday: 35,
+    Friday: 40,
+    Saturday: 20,
+    Sunday: 15,
+  });
+  const [monthlyStressData, setMonthlyStressData] = useState({
+    Week1: 100,
+    Week2: 120,
+    Week3: 110,
+    Week4: 130,
+  });
   const [stressView, setStressView] = useState("daily");
 
-  const [hourlyEmotion, setHourlyEmotion] = useState([]);
+  const [hourlyEmotion, setHourlyEmotion] = useState([
+    "Happy", "Sad", "Neutral", "Happy", "Angry", "Happy", "Surprise", "Fear", "Happy", "Neutral", "Happy", "Sad"
+  ]);
 
-  const [userRole, setUserRole] = useState("");
-  const [componenetUserData, setComponenetUserData] = useState({});
+  const [userRole, setUserRole] = useState("Admin");
+  const [componenetUserData, setComponenetUserData] = useState({first_name: "John", last_name: "Doe"});
 
   const [goBackText, setGoBackText] = useState("");
 
