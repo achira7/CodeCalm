@@ -1,8 +1,12 @@
 import React from 'react';
+import { Color } from '../../theme/Colors';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 
+
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+
+
 
 function LineChart({ data, period }) {
   const labels = period === 'weekly' 
@@ -18,7 +22,8 @@ function LineChart({ data, period }) {
         fill: false,
         backgroundColor: '#38bdf8',
         borderColor: '#38bdf8',
-      }
+      },
+      
     ]
   };
 
@@ -26,9 +31,14 @@ function LineChart({ data, period }) {
     plugins: {
       legend: {
         display: true,
-        position: 'bottom'
+        position: 'bottom',
+        labels: {
+          color: Color.chartText // Legend font color
+      }
       },
       tooltip: {
+        titleColor: 'blue',
+        bodyColor: 'green',
         callbacks: {
           label: function (tooltipItem) {
             const label = chartData.labels[tooltipItem.dataIndex] || '';
@@ -43,13 +53,27 @@ function LineChart({ data, period }) {
       x: {
         title: {
           display: true,
-          text: 'Day'
-        }
+          text: 'Day',
+          color: Color.chartText
+        },
+        ticks: {
+          color: Color.chartText,  // Change the color of the x-axis labels
+        },
+        grid: {
+          color: Color.chartGrids,  // Change the color of the x-axis grid lines
+        },
       },
       y: {
         title: {
           display: true,
-          text: 'Duration (seconds)'
+          text: 'Duration (seconds)',
+          color: Color.chartText,
+        },
+        grid: {
+          color: Color.chartGrids,  // Change the color of the x-axis grid lines
+        },
+        ticks: {
+          color: Color.chartText,  // Change the color of the x-axis labels
         },
         beginAtZero: true
       }

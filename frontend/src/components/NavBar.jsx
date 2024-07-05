@@ -60,6 +60,19 @@ const NavBar = () => {
     setIsSettingsOpen(!isSettingsOpen);
   }
 
+  const handleThemeMode = () => {
+    const currentMode = localStorage.getItem('darkMode');
+    if (currentMode === null) {
+      localStorage.setItem('darkMode', 'true');
+    } else if (currentMode === 'true') {
+      localStorage.setItem('darkMode', 'false');
+      navigate(0)
+    } else {
+      localStorage.setItem('darkMode', 'true');
+      navigate(0)
+    }
+  }
+
   const logoutUser = async () => {
     try {
       await axios.post('http://127.0.0.1:8000/api/logout/');
@@ -137,6 +150,7 @@ const NavBar = () => {
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-md overflow-hidden shadow-lg z-10">
                 <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font google"><img src={`${media}/icons/profile-icon.png`} className="w-4 inline-flex mx-2"/> Profile </Link>
                 <button onClick={handleSettingsToggle} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font google"><img src={`${media}/icons/settings-icon.png`} className="w-4 inline-flex mx-2"/>Settings</button>
+                <button onClick={handleThemeMode} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font google"><img src={`${media}/icons/settings-icon.png`} className="w-4 inline-flex mx-2"/>Theme: {localStorage.getItem('darkMode') === 'true' ? 'Dark' : 'Light'}</button>
                 <button onClick={logoutUser} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font google"><img src={`${media}/icons/logout-icon.png`} className="w-4 inline-flex mx-2"/>Logout</button>
               </div>
             )}

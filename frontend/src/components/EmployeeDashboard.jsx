@@ -40,7 +40,7 @@ const EmployeeDashboard = () => {
     <div className={`min-h-screen ${Color.background}`}>
       <div className="container mx-auto py-6">
         <div className="text-center">
-          <h1 className="text-3xl font-semibold text-sky-700">
+          <h1 className={`text-3xl font-semibold ${Color.textColor}`}>
             Employee Dashboard
           </h1>
         </div>

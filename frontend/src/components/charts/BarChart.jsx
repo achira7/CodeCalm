@@ -1,5 +1,6 @@
 import React from 'react';
 import { Bar } from 'react-chartjs-2';
+import { Color } from '../../theme/Colors';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
@@ -27,6 +28,9 @@ function BarChart({ data, period }) {
       legend: {
         display: false,
         position: 'bottom',
+        labels: {
+          color: Color.chartText // Legend font color
+      }
       },
       tooltip: {
         callbacks: {
@@ -44,12 +48,26 @@ function BarChart({ data, period }) {
         title: {
           display: true,
           text: 'Day/Hour',
+          color: Color.chartText
+        },
+        ticks: {
+          color: Color.chartText,  // Change the color of the x-axis labels
+        },
+        grid: {
+          color: Color.chartGrids,  // Change the color of the x-axis grid lines
         },
       },
       y: {
         title: {
           display: true,
           text: 'Stress Level',
+          color: Color.chartText
+        },
+        ticks: {
+          color: Color.chartText,  // Change the color of the x-axis labels
+        },
+        grid: {
+          color: Color.chartGrids,  // Change the color of the x-axis grid lines
         },
         beginAtZero: true,
       },
