@@ -8,6 +8,7 @@ export const ColorSet01 = {
     main500 : "bg-black",
 
     cardBGText : "bg-white text-black",
+    chartsBGText : "bg-gray-100 text-black",
     background : "bg-white",
 
     LoginleftSideBg: 'bg-gray-100',
@@ -16,9 +17,11 @@ export const ColorSet01 = {
 
 export const ColorSet02 = {
     primary :  "bg-sky-400",
-    navBar: "bg-sky-800",
+    navBar: "bg-sky-500",
     cardBGText : "bg-gray-700 text-white",
-    background : "bg-gray-700",
+    chartsBGText : "bg-gray-700 text-black",
+
+    background : "bg-gray-800",
     LoginleftSideBg: 'bg-gray-500',
     LoginrightSideBg: 'bg-gray-800'
 }

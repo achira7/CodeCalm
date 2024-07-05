@@ -379,7 +379,7 @@ const EmployeeComponent = ({ id, role }) => {
         )}
 
 <div className="flex flex-wrap justify-center mt-4" id="report-content">
-  <div className={`bg-white border border-gray-200 rounded-lg shadow-lg ${Color.cardBGText} m-4 p-6 w-full md:w-1/2 lg:w-1/3`}>
+  <div className={`rounded-lg  ${Color.chartsBGText} m-4 p-6 w-full md:w-1/2 lg:w-1/3`}>
     <div className="text-center flex-auto">
       <h5 className="text-2xl font-semibold  mb-5">
         {emotionView === "daily"
@@ -419,7 +419,7 @@ const EmployeeComponent = ({ id, role }) => {
   </div>
 
   {/* Stress Data */}
-  <div className={`border ${Color.cardBGText} border-gray-200 rounded-lg shadow-lg m-4 p-6 w-full md:w-1/2 lg:w-1/3`}>
+  <div className={`${Color.chartsBGText} rounded-lg  m-4 p-6 w-full md:w-1/2 lg:w-1/3`}>
     <div className="text-center">
       <h5 className="text-2xl font-semibold  mb-5">
         {stressView === "daily"
@@ -448,7 +448,7 @@ const EmployeeComponent = ({ id, role }) => {
   </div>
 
   {/* Exercise Data */}
-  <div className={` ${Color.cardBGText} border border-gray-200 rounded-lg shadow-lg m-4 p-6 w-full md:w-1/2 lg:w-1/3`}>
+  <div className={` ${Color.chartsBGText}  rounded-lg  m-4 p-6 w-full md:w-1/2 lg:w-1/3`}>
     <div className="text-center">
       <h5 className="text-2xl font-semibold  mb-5">
         {exerciseView === "daily"
@@ -491,7 +491,7 @@ const EmployeeComponent = ({ id, role }) => {
   </div>
 
   {/* Listening Data */}
-  <div className={` ${Color.cardBGText}  border border-gray-200 rounded-lg shadow-lg m-4 p-6 w-full md:w-1/2 lg:w-1/3`}>
+  <div className={` ${Color.chartsBGText}   rounded-lg m-4 p-6 w-full md:w-1/2 lg:w-1/3`}>
     <div className="text-center">
       <h5 className="text-2xl font-semibold  mb-5">
         {listeningView === "daily"
