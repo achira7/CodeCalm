@@ -88,7 +88,6 @@
     border-radius: 20px;
     margin: auto;
     display: flex;
-    align-items: center;
     justify-content: center;
 
     background: rgba(27, 45, 248, 0.248);
@@ -109,7 +108,7 @@
     justify-content: center;
     align-items: center;
     padding: 10px, 10px, 10px, 10px;
-    max-width: 600px;
+    /* max-width: 700px; */
   }
   
   .rhap_main-controls-button {
