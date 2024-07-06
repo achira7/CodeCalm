@@ -40,11 +40,11 @@ const NavBar = () => {
       // } else if (user.is_staff) {
       //   setNavLinks(supervisorLinks);
       // } else {
-      //   setNavLinks(employeeLinks);
+      setNavLinks(employeeLinks);
       // }                                Enable this thing
     } catch (e) {
-      console.error(e);
-      setNavLinks(supervisorLinks); // Remove this later added by senal
+      //console.error(e);
+      //setNavLinks(supervisorLinks); // Remove this later added by senal
       // navigate("/employee/login");  Enable this later - senal
     }
   }
@@ -113,7 +113,7 @@ const NavBar = () => {
   return (
     <div className={`flex justify-between items-center w-full h-15 p-4 ${Color.navBar} text-white sticky top-0 z-10 flex-initial`}>
       <div className="flex items-center hover:cursor-pointer">
-        <img className="h-8 px-2 drop-shadow-md shadow-blue-600/50 hover:cursor-pointer" src={`${assets}codecalm-logo-colored.png`} alt="Logo" />
+        <img className="h-8 px-2 drop-shadow-md shadow-blue-600/50 hover:cursor-pointer" src={` `} alt="Logo" />
         <h1 className='text-2xl font-google font-bold drop-shadow-xl shadow-blue-600/50 hover:cursor-pointer'>CodeCalm</h1>
       </div>
 
@@ -144,7 +144,7 @@ const NavBar = () => {
           </li>
           <li>
             <button onClick={handleDropdownToggle} className="relative">
-              <img className="h-9 rounded-full border-2 border-white shadow-blue-600/50 transform hover:scale-110 transition-transform duration-300 cursor-pointer" src={userData.profile_picture ? userData.profile_picture : "http://127.0.0.1:8000/media/profilePictures/default.jpg"} alt="Profile" />
+              <img className="h-9 rounded-full border-2 border-white shadow-blue-600/50 transform hover:scale-110 transition-transform duration-300 cursor-pointer" src={userData.profile_picture ? userData.profile_picture : " "} alt="Profile" />
             </button>
 
             {isDropdownOpen && (
