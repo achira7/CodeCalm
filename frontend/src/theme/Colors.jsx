@@ -17,7 +17,9 @@ export const ColorSet01 = {
     LoginleftSideBg: 'bg-gray-100',
     LoginrightSideBg: 'bg-sky-300',
     chartText : 'black',
-    chartGrids : 'rgba(0, 161, 201, 0.404)'
+    chartGrids : 'rgba(0, 161, 201, 0.404)',
+
+    playerBG : "bg-gray-500 text-black",
 }
 
 export const ColorSet02 = {
@@ -34,7 +36,8 @@ export const ColorSet02 = {
     LoginleftSideBg: 'bg-gray-500',
     LoginrightSideBg: 'bg-gray-800',
     chartText : 'white',
-    chartGrids : 'rgba(7, 142, 196, 0.507)'
+    chartGrids : 'rgba(7, 142, 196, 0.507)',
+    playerBG : "bg-gray-500 text-white",
 }
 
 export const getColorSet = () => {

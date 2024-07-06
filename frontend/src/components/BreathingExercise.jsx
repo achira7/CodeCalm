@@ -12,8 +12,8 @@ const BreathingExercise = () => {
   const [breathing, setBreathing] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [showIntroText, setShowIntroText] = useState(false);
-  const [selectedProfile, setSelectedProfile] = useState(null);
-  const [profiles, setProfiles] = useState({id: 1, name: 'Test Breathing', inhale_duration: 3, exhale_duration: 3, hold_duration: 5, description: '1. Lie on your back with your knees slightly bent and your head on a pillow. \n 2. You may place a pillow under your knees for support. \n3. Place one hand on your upper chest and one hand below your rib cage, allowing you to feel the movement of your diaphragm. \n4. Slowly inhale through your nose, feeling your stomach pressing into your hand. \n5. Keep your other hand as still as possible. \n6. Exhale using pursed lips as you tighten your abdominal muscles, keeping your upper hand completely still.'});
+  const [selectedProfile, setSelectedProfile] = useState(0)
+  const [profiles, setProfiles] = useState({0:{id: 1, name: 'Test Breathing', inhale_duration: 3, exhale_duration: 3, hold_duration: 5, description: '1. Lie on your back with your knees slightly bent and your head on a pillow. \n 2. You may place a pillow under your knees for support. \n3. Place one hand on your upper chest and one hand below your rib cage, allowing you to feel the movement of your diaphragm. \n4. Slowly inhale through your nose, feeling your stomach pressing into your hand. \n5. Keep your other hand as still as possible. \n6. Exhale using pursed lips as you tighten your abdominal muscles, keeping your upper hand completely still.'}});
   const [circleText, setCircleText] = useState("Start");
   const [showText, setShowText] = useState(true);
   const [isHovering, setIsHovering] = useState(false);
@@ -147,7 +147,7 @@ const BreathingExercise = () => {
     setShowReminders(!showReminders);
   };
 
-  if (!selectedProfile) return <div>Loading...</div>;
+  // if (!selectedProfile) return <div>Loadinsssg...</div>;
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 relative">

@@ -31,18 +31,24 @@ import AdminSettings from './components/admin/AdminSettings';
 import AddBreathingProfile from './components/admin/AddBreathingProfile';
 import AddTrack from './components/admin/AddTrack';
 import FaceLoginRegistration from './components/FaceLoginRegistration';
+import FloatingPlayer from './components/FloatingPlayer';
+
 
 
 function App() {
+
   const location = useLocation();
   const hideNavBarRoutes = ['/employee/login', '/employee/facelogin', '/employee/facelogin_reg'];
   const shouldShowNavBar = !hideNavBarRoutes.includes(location.pathname);
 
   return (
     <RecoilRoot>
+      
+       
       {shouldShowNavBar && <NavBar />}
+      <FloatingPlayer />
       <Routes>
-
+      
         {/*EMPLOYEE URLs */}
         <Route path="/employee/login" element={<Login />} />
         <Route path="/employee/facelogin" element={<FaceLogin />} />
@@ -83,6 +89,7 @@ function App() {
         <Route path="/admin/breathing" element={<AddBreathingProfile />} />
         <Route path="/admin/track" element={<AddTrack />} />
       </Routes>
+   
     </RecoilRoot>
   );
 }

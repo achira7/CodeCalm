@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const StressDetectionForm = () => {
-  const [questions, setQuestions] = useState([]);
+  const [questions, setQuestions] = useState([{id: 6, question: 'How often you were stressed during the week?', affect: 'N', type: 'T', timestamp: '2024-06-16T10:24:06.102068Z'}]);
   const [formData, setFormData] = useState({});
   const [totalPoints, setTotalPoints] = useState(0);
   const [userData, setUserData] = useState({});
