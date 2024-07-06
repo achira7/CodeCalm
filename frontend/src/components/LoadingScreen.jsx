@@ -1,13 +1,11 @@
 import React from 'react';
 
 const LoadingScreen = () => {
+  const gif = "http://127.0.0.1:8000/media/assets/loading.gif";
   return (
     <div className="flex justify-center items-center h-screen bg-gray-100">
       <div className="text-center">
-        <div className="spinner-border animate-spin inline-block w-16 h-16 border-4 rounded-full text-blue-500 mb-4" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-        <p className="text-2xl font-semibold text-gray-700">Loading...</p>
+        <img src={gif} alt="Loading..." className="w-32 h-32 mb-4 mx-auto" />
       </div>
     </div>
   );

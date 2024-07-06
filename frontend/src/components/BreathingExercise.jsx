@@ -22,10 +22,15 @@ const BreathingExercise = () => {
   const [userID, setUserID] = useState("")
   const [showReminders, setShowReminders] = useState(false);
 
+  
+
+
   const fetchProfiles = async () => {
     try {
       const response = await axios.get("http://localhost:8000/api/breathing_profile/");
       setProfiles(response.data);
+      console.log(response.data)
+
       setSelectedProfile(Object.keys(response.data)[0]);
     } catch (e) {
       console.error(e);

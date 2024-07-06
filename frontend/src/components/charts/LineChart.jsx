@@ -7,7 +7,7 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 function LineChart({ data, period }) {
   const labels = period === 'weekly' 
     ? ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-    : Object.keys(data).map(day => `Day ${day}`);
+    : Object.keys(data).map(day => `${day}`);
 
   const chartData = {
     labels: labels,
@@ -43,7 +43,6 @@ function LineChart({ data, period }) {
       x: {
         title: {
           display: true,
-          text: 'Day'
         }
       },
       y: {

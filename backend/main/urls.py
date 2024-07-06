@@ -33,7 +33,9 @@ from main.views import (
     FaceRegisterView,
     check_face_login,
     start_face_registration,
-    complete_face_registration
+    complete_face_registration,
+    FocusDataView,
+    LatestStressFormDate,
 )
 
 urlpatterns = [
@@ -62,6 +64,9 @@ urlpatterns = [
     path('stress_questions/<int:pk>/', StressQuestionRetrieveUpdateDestroyView.as_view(), name='stress-question-retrieve-update-destroy'),
     path('stress_form/', SubmitStressFormView.as_view(), name='submit_stress_form'),
     path('stress_form/<int:user_id>/', StressFormDetail.as_view(), name='stress-form-detail'),
+    path('latest_stress_form/', LatestStressFormDate.as_view(), name='latest-stress-form-date'),
+
+
     path('team_emotion/', EmotionTeamDataView.as_view(), name='team_emotion'),
     path('report/', ReportGeneratedView.as_view(), name='report_generated_by'),
     
@@ -78,6 +83,8 @@ urlpatterns = [
 
     path('startfaceregister/', start_face_registration, name='start_face_registration'),
     path('completefaceregister/', complete_face_registration, name='complete_face_registration'),
+    path('focus/', FocusDataView.as_view(), name='focus_view'),
+
 
 
     

@@ -87,11 +87,16 @@ const Player = () => {
     }
   };
 
-  const logListeningData = async (user_id, duration) => {
+  const logListeningData = async (user_id, track_name, duration) => {
+    if (!user_id || !track_name || !duration) {
+      console.error("User, track name, and duration are required");
+      return;
+    }
+  
     try {
       await axios.post("http://localhost:8000/api/listening/", {
         user: user_id,
-        track_name: currentTrack.title,
+        track_name: track_name,
         duration: duration,
       });
     } catch (error) {
@@ -100,20 +105,20 @@ const Player = () => {
         error.response ? error.response.data : error.message
       );
     }
-  };
+  }
 
   useEffect(() => {
     let listeningStartTime = 0;
-
+  
     const handlePlaying = () => {
       listeningStartTime = audioRef.current.audio.current.currentTime;
     };
-
+  
     const handlePaused = async () => {
       const listeningEndTime = audioRef.current.audio.current.currentTime;
       const listeningDuration = listeningEndTime - listeningStartTime;
       if (listeningDuration > 0) {
-        await logListeningData(userID, listeningDuration);
+        await logListeningData(userID, currentTrack.title, listeningDuration);
       }
     };
 
@@ -121,13 +126,13 @@ const Player = () => {
     player.addEventListener("playing", handlePlaying);
     player.addEventListener("pause", handlePaused);
     player.addEventListener("ended", handlePaused);
-
+  
     return () => {
       player.removeEventListener("playing", handlePlaying);
       player.removeEventListener("pause", handlePaused);
       player.removeEventListener("ended", handlePaused);
     };
-  }, [currentTrackIndex, userID]);
+  }, [currentTrackIndex, userID, currentTrack.title]);
 
   useEffect(() => {
     const interval = setInterval(() => {

@@ -5,6 +5,7 @@ import { Navigate, Link } from "react-router-dom";
 import DoughnutChart from "./charts/DoughnutChart";
 import LineChart from "./charts/LineChart";
 import BarChart from "./charts/BarChart";
+import TwoValueBarChart from "./charts/TwoValueBarChart";
 
 import { FaArrowLeft, FaArrowRight, FaCalendarAlt } from "react-icons/fa";
 import { LuFileDown } from "react-icons/lu";
@@ -55,6 +56,13 @@ const EmployeeComponent = ({ id, role }) => {
   const [listeningView, setListeningView] = useState("daily");
   const [emotionView, setEmotionView] = useState("daily");
 
+  const [dailyFocusData, setDailyFocusData] = useState({});
+  const [weeklyFocusData, setWeeklyFocusData] = useState({});
+  const [monthlyFocusData, setMonthlyFocusData] = useState({});
+  const [focusedData, setFocusedData] = useState({});
+  const [focusChartError, setFocusChartError] = useState(null);
+  const [focusView, setFocusView] = useState("daily");
+
   const [dailyStressData, setDailyStressData] = useState({});
   const [weeklyStressData, setWeeklyStressData] = useState({});
   const [monthlyStressData, setMonthlyStressData] = useState({});
@@ -71,6 +79,8 @@ const EmployeeComponent = ({ id, role }) => {
   const [dateType, setDateType] = useState("daily"); // 'daily', 'weekly', 'monthly'
 
   const [selectedView, setSelectedView] = useState("daily");
+
+  console.log(dailyFocusData);
 
   const fetchUserDataWithID = async () => {
     try {
@@ -158,6 +168,31 @@ const EmployeeComponent = ({ id, role }) => {
     }
   };
 
+  const fetchFocusData = async (period) => {
+    try {
+      const response = await axios.get("http://localhost:8000/api/focus", {
+        params: { user_id: id, period: period },
+      });
+      const data = response.data.days || {};
+      const allZero = Object.values(data).every((value) => value === 0);
+      if (allZero) {
+        setFocusChartError("No Focus Data Recorded ⚠");
+      } else {
+        setFocusChartError(null);
+      }
+      if (period === "weekly") {
+        setWeeklyFocusData(data);
+      } else if (period === "monthly") {
+        setMonthlyFocusData(data);
+      } else if (period === "daily") {
+        setDailyFocusData(data);
+      }
+      //setFocusedData(data);
+    } catch (error) {
+      console.error("Error fetching focus data:", error);
+    }
+  };
+
   const fetchExerciseData = async (period) => {
     try {
       const response = await axios.get("http://localhost:8000/api/breathing/", {
@@ -222,8 +257,16 @@ const EmployeeComponent = ({ id, role }) => {
       fetchExerciseData(exerciseView);
       fetchListeningData(listeningView);
       fetchStressData(stressView);
+      fetchFocusData(focusView);
     }
-  }, [userData, exerciseView, listeningView, emotionView, stressView]);
+  }, [
+    userData,
+    exerciseView,
+    listeningView,
+    emotionView,
+    stressView,
+    focusView,
+  ]);
 
   const handleViewChange = (viewSetter, view, direction, viewsArray) => {
     const currentIndex = viewsArray.indexOf(view);
@@ -249,6 +292,10 @@ const EmployeeComponent = ({ id, role }) => {
   const stressViews = ["daily", "weekly", "monthly"];
   const isStressLeftDisabled = stressView === "daily";
   const isStressRightDisabled = stressView === "monthly";
+
+  const focusViews = ["daily", "weekly", "monthly"];
+  const isFocusLeftDisabled = focusView === "daily";
+  const isFocusRightDisabled = focusView === "monthly";
 
   const downloadPDF = async () => {
     /*await axios.post("http://localhost:8000/api/report/", {
@@ -293,16 +340,24 @@ const EmployeeComponent = ({ id, role }) => {
       });
   };
 
+  useEffect(() => {
+    if (userData.id) {
+      fetchFocusData(focusView);
+    }
+  }, [userData, focusView]);
+
   const handlePeriodChange = (period) => {
     setEmotionView(period);
     setStressView(period);
     setExerciseView(period);
     setListeningView(period);
+    setFocusView(period);
 
     fetchEmotionData(period);
     fetchStressData(period);
     fetchExerciseData(period);
     fetchListeningData(period);
+    fetchFocusData(period);
   };
 
   /*const [selectedDate, setSelectedDate] = useState(new Date());
@@ -440,6 +495,35 @@ const EmployeeComponent = ({ id, role }) => {
                     }[stressView]
                   }
                   period={stressView}
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Focus Data */}
+          <div className="max-w-sm w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
+            <div className="text-center">
+              <h5 className="text-xl font-semibold text-sky-900 inline-flex">
+                {focusView === "daily"
+                  ? "Daily Focus Data"
+                  : focusView === "weekly"
+                  ? "Weekly Focus Data"
+                  : "Monthly Focus Data"}
+              </h5>
+              {focusChartError ? (
+                <h2 className="text-xl text-gray-700 mt-4 flex-initial">
+                  {focusChartError}
+                </h2>
+              ) : (
+                <TwoValueBarChart
+                  data={
+                    {
+                      daily: dailyFocusData,
+                      weekly: weeklyFocusData,
+                      monthly: monthlyFocusData,
+                    }[focusView]
+                  }
+                  period={focusView}
                 />
               )}
             </div>

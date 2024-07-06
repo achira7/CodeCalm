@@ -5,9 +5,11 @@ import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Toolti
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 function BarChart({ data, period }) {
-  const labels = period === 'weekly'
-    ? ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-    : Object.keys(data).map(day => period === 'daily' ? day : `Day ${day}`);
+  const labels = period === 'daily'
+    ? Object.keys(data)
+    : period === 'weekly'
+      ? ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+      : Object.keys(data).map(day => `Day ${day}`);
 
   const chartData = {
     labels: labels,
