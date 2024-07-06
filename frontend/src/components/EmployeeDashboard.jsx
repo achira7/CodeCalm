@@ -28,7 +28,7 @@ const EmployeeDashboard = () => {
       }
     } catch (e) {
       console.error(e);
-      setNavigate(true);
+      // setNavigate(true);
     }
   };
 
