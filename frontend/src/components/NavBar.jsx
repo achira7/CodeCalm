@@ -8,9 +8,9 @@ import Messages from './Messages';
 import SettingsOverlay from './SettingsOverlay';
 import { Color } from '../theme/Colors';
 
-const baseUrl = 'http://localhost:8000/api/employee/';
-const assets = 'http://127.0.0.1:8000/media/assets/';
-const media = 'http://127.0.0.1:8000/media/';
+//const baseUrl = 'http://localhost:8000/api/employee/';
+//const assets = 'http://127.0.0.1:8000/media/assets/';
+//const media = 'http://127.0.0.1:8000/media/';
 
 const NavBar = () => {
   const navigate = useNavigate();
@@ -18,7 +18,7 @@ const NavBar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMessagesOpen, setIsMessagesOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [userData, setUserData] = useState({});
+  const [userData, setUserData] = useState({email: "e@e.com", employment_type: "full-time", first_name: "Achira", gender: "M", id: 18, is_staff: false, is_superuser: false, last_name: "Silva", password: " ", profile_picture: " ", team: "Test", work_location: "hybrid"});
   const [navLinks, setNavLinks] = useState([]);
 
   const location = useLocation();
@@ -29,11 +29,11 @@ const NavBar = () => {
 
   const fetchUserData = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/api/getuser/", {
-        withCredentials: true,
-      });
-      const user = response.data;
-      setUserData(user);
+      //const response = await axios.get("http://localhost:8000/api/getuser/", {
+        //withCredentials: true,
+      //});
+      //const user = response.data;
+      //setUserData(user);
 
       // if (user.is_superuser) {
       //   setNavLinks(adminLinks);
@@ -149,10 +149,10 @@ const NavBar = () => {
 
             {isDropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-md overflow-hidden shadow-lg z-10">
-                <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font google"><img src={`${media}/icons/profile-icon.png`} className="w-4 inline-flex mx-2"/> Profile </Link>
-                <button onClick={handleSettingsToggle} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font google"><img src={`${media}/icons/settings-icon.png`} className="w-4 inline-flex mx-2"/>Settings</button>
-                <button onClick={handleThemeMode} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font google"><img src={`${media}/icons/settings-icon.png`} className="w-4 inline-flex mx-2"/>Theme: {localStorage.getItem('darkMode') === 'true' ? 'Dark' : 'Light'}</button>
-                <button onClick={logoutUser} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font google"><img src={`${media}/icons/logout-icon.png`} className="w-4 inline-flex mx-2"/>Logout</button>
+                <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font google"><img src={` `} className="w-4 inline-flex mx-2"/> Profile </Link>
+                <button onClick={handleSettingsToggle} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font google"><img src={` `} className="w-4 inline-flex mx-2"/>Settings</button>
+                <button onClick={handleThemeMode} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font google"><img src={` `} className="w-4 inline-flex mx-2"/>Theme: {localStorage.getItem('darkMode') === 'true' ? 'Dark' : 'Light'}</button>
+                <button onClick={logoutUser} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font google"><img src={` `} className="w-4 inline-flex mx-2"/>Logout</button>
               </div>
             )}
           </li>
