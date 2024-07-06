@@ -517,9 +517,9 @@ const EmployeeComponent = ({ id, role }) => {
                     <div className="flex items-center justify-center">
                       <DoughnutChart {...emotions} />
 
-                      <div className="w-1/2 mb-28" id="highestEmotion">
+                      <div className="mb-24" id="highestEmotion">
                         <img
-                          className="w-15 h-15 mx-auto mt-4"
+                          className=""
                           // src={`http://127.0.0.1:8000/media/emojis/${highestEmotion.key}.png`}
                           src={testImage}
                           alt={highestEmotion.key}

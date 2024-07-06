@@ -35,16 +35,17 @@ const NavBar = () => {
       const user = response.data;
       setUserData(user);
 
-      if (user.is_superuser) {
-        setNavLinks(adminLinks);
-      } else if (user.is_staff) {
-        setNavLinks(supervisorLinks);
-      } else {
-        setNavLinks(employeeLinks);
-      }
+      // if (user.is_superuser) {
+      //   setNavLinks(adminLinks);
+      // } else if (user.is_staff) {
+      //   setNavLinks(supervisorLinks);
+      // } else {
+      //   setNavLinks(employeeLinks);
+      // }                                Enable this thing
     } catch (e) {
       console.error(e);
-      // navigate("/employee/login");  Remove this later
+      setNavLinks(supervisorLinks); // Remove this later added by senal
+      // navigate("/employee/login");  Enable this later - senal
     }
   }
 
