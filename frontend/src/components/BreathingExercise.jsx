@@ -13,13 +13,13 @@ const BreathingExercise = () => {
   const [countdown, setCountdown] = useState(0);
   const [showIntroText, setShowIntroText] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
-  const [profiles, setProfiles] = useState({});
+  const [profiles, setProfiles] = useState({id: 1, name: 'Test Breathing', inhale_duration: 3, exhale_duration: 3, hold_duration: 5, description: '1. Lie on your back with your knees slightly bent and your head on a pillow. \n 2. You may place a pillow under your knees for support. \n3. Place one hand on your upper chest and one hand below your rib cage, allowing you to feel the movement of your diaphragm. \n4. Slowly inhale through your nose, feeling your stomach pressing into your hand. \n5. Keep your other hand as still as possible. \n6. Exhale using pursed lips as you tighten your abdominal muscles, keeping your upper hand completely still.'});
   const [circleText, setCircleText] = useState("Start");
   const [showText, setShowText] = useState(true);
   const [isHovering, setIsHovering] = useState(false);
   const [circleColor, setCircleColor] = useState("#4ade80");
   const [elapsedTime, setElapsedTime] = useState(0);
-  const [userID, setUserID] = useState("")
+  const [userID, setUserID] = useState("18")
   const [showReminders, setShowReminders] = useState(false);
 
   const fetchProfiles = async () => {
