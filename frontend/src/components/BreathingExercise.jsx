@@ -19,10 +19,10 @@ const BreathingExercise = () => {
   const [isHovering, setIsHovering] = useState(false);
   const [circleColor, setCircleColor] = useState("#4ade80");
   const [elapsedTime, setElapsedTime] = useState(0);
-  const [userID, setUserID] = useState("18")
+  const [userID, setUserID] = useState(18)
   const [showReminders, setShowReminders] = useState(false);
 
-  const fetchProfiles = async () => {
+  /*const fetchProfiles = async () => {
     try {
       const response = await axios.get("http://localhost:8000/api/breathing_profile/");
       setProfiles(response.data);
@@ -30,22 +30,22 @@ const BreathingExercise = () => {
     } catch (e) {
       console.error(e);
     }
-  };
+  };*/
 
 
-  useEffect(() => {
+ /* useEffect(() => {
     (async () => {
       try {
         const response = await axios.get("http://localhost:8000/api/getuser/", {
           withCredentials: true,
         });
-        setUserID(response.data.id);
+        //setUserID(response.data.id);
       } catch (e) {
         console.error(e);
       }
     })();
     fetchProfiles();
-  }, []);
+  }, []);*/
 
   useEffect(() => {
     let countdownTimer;
@@ -117,7 +117,7 @@ const BreathingExercise = () => {
       setIsHovering(false);
       setCircleColor("#4ade80");
 
-      await axios.post(
+      /*await axios.post(
         "http://127.0.0.1:8000/api/breathing/",{
           user: userID,
           exercise_name: profiles[selectedProfile].name,
@@ -129,7 +129,7 @@ const BreathingExercise = () => {
             "Accept-Language": "en-US,en;q=0.8",
           },
         }
-      );
+      );*/
 
     } else {
       setCountdown(3);
