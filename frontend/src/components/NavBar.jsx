@@ -6,6 +6,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import Messages from './Messages';
 import SettingsOverlay from './SettingsOverlay';
+import { Color } from '../theme/Colors';
 
 const baseUrl = 'http://localhost:8000/api/employee/';
 const assets = 'http://127.0.0.1:8000/media/assets/';
@@ -19,6 +20,7 @@ const NavBar = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [userData, setUserData] = useState({});
   const [navLinks, setNavLinks] = useState([]);
+  const [userType, setUserType] = useState("")
 
   const location = useLocation();
 
@@ -36,10 +38,13 @@ const NavBar = () => {
 
       if (user.is_superuser) {
         setNavLinks(adminLinks);
+        setUserType("Admin")
       } else if (user.is_staff) {
         setNavLinks(supervisorLinks);
+        setUserType("Supervisor")
       } else {
         setNavLinks(employeeLinks);
+        setUserType("Employee")
       }
     } catch (e) {
       console.error(e);
@@ -72,7 +77,7 @@ const NavBar = () => {
     { id: 1, title: 'dashboard', link: '/employee/dashboard' },
     { id: 2, title: 'live camera', link: '/employee/livecam' },
     { id: 3, title: 'breathing exercise', link: '/employee/breathingexercise' },
-    { id: 4, title: 'Ambient white noise', link: '/employee/player' },
+    { id: 4, title: 'Audio Therapy', link: '/employee/player' },
     { id: 5, title: 'Self Stress Assess', link: '/employee/self_stress' },
     { id: 6, title: 'face login reg', link: '/employee/facelogin_reg' },
   ];
@@ -81,7 +86,7 @@ const NavBar = () => {
     { id: 1, title: 'dashboard', link: '/employee/dashboard' },
     { id: 2, title: 'live camera', link: '/employee/livecam' },
     { id: 3, title: 'breathing exercise', link: '/employee/breathingexercise' },
-    { id: 4, title: 'Ambient white noise', link: '/employee/player' },
+    { id: 4, title: 'Audio Therapy', link: '/employee/player' },
     { id: 5, title: 'team dashboard', link: '/supervisor/teamdashboard' },
   ];
 
@@ -95,14 +100,28 @@ const NavBar = () => {
 
   ];
 
+  const handleThemeMode = () => {
+    const currentMode = localStorage.getItem('darkMode');
+    if (currentMode === null) {
+      localStorage.setItem('darkMode', 'true');
+    } else if (currentMode === 'true') {
+      localStorage.setItem('darkMode', 'false');
+      navigate(0)
+    } else {
+      localStorage.setItem('darkMode', 'true');
+      navigate(0)
+    }
+  }
+
+
   return (
-    <div className='flex justify-between items-center w-full h-15 p-4 bg-sky-400 text-white sticky top-0 z-10 flex-initial'>
+    <div className={`flex justify-between items-center w-full h-15 p-4 ${Color.navBar} text-white sticky top-0 z-10 flex-initial`}>
       <div className="flex items-center hover:cursor-pointer">
         <img className="h-8 px-2 drop-shadow-md shadow-blue-600/50 hover:cursor-pointer" src={`${assets}codecalm-logo-colored.png`} alt="Logo" />
         <h1 className='text-2xl font-google font-bold drop-shadow-xl shadow-blue-600/50 hover:cursor-pointer'>CodeCalm</h1>
       </div>
 
-      <div className='flex justify-center w-full h-20 items-center fixed'>
+      <div className='flex justify-center w-full h-20 items-center fixed '>
         <ul className='flex'>
           {navLinks.map(({ id, title, link }) => (
             <li
@@ -129,14 +148,15 @@ const NavBar = () => {
           </li>
           <li>
             <button onClick={handleDropdownToggle} className="relative">
-              <img className="h-9 rounded-full border-2 border-white shadow-blue-600/50 transform hover:scale-110 transition-transform duration-300 cursor-pointer" src={userData.profile_picture ? userData.profile_picture : "http://127.0.0.1:8000/media/profilePictures/default.jpg"} alt="Profile" />
+              <img className="h-9 rounded-full border-2 border-white shadow-blue-600/50 transform hover:scale-110 transition-transform duration-300 cursor-pointer" src={userData.profile_picture ? userData.profile_picture : " "} alt="Profile" />
             </button>
 
             {isDropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-md overflow-hidden shadow-lg z-10">
-                <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font google"><img src={`${media}/icons/profile-icon.png`} className="w-4 inline-flex mx-2"/> Profile </Link>
-                <button onClick={handleSettingsToggle} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font google"><img src={`${media}/icons/settings-icon.png`} className="w-4 inline-flex mx-2"/>Settings</button>
-                <button onClick={logoutUser} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font google"><img src={`${media}/icons/logout-icon.png`} className="w-4 inline-flex mx-2"/>Logout</button>
+                <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font google"><img src={` `} className="w-4 inline-flex mx-2"/> Profile </Link>
+                <button onClick={handleSettingsToggle} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font google"><img src={` `} className="w-4 inline-flex mx-2"/>Settings</button>
+                <button onClick={handleThemeMode} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font google"><img src={` `} className="w-4 inline-flex mx-2"/>Theme: {localStorage.getItem('darkMode') === 'true' ? 'Dark' : 'Light'}</button>
+                <button onClick={logoutUser} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font google"><img src={` `} className="w-4 inline-flex mx-2"/>Logout</button>
               </div>
             )}
           </li>

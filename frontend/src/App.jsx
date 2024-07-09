@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useParams } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useParams, useLocation } from "react-router-dom";
 import { RecoilRoot } from 'recoil';
 
 import Login from "./components/Login";
@@ -31,21 +31,34 @@ import AdminSettings from './components/admin/AdminSettings';
 import AddBreathingProfile from './components/admin/AddBreathingProfile';
 import AddTrack from './components/admin/AddTrack';
 import FaceLoginRegistration from './components/FaceLoginRegistration';
+import FloatingPlayer from './components/FloatingPlayer';
+
 
 
 function App() {
+
+  const location = useLocation();
+  const hideNavBarRoutes = ['/employee/login/', '/employee/facelogin/', '/employee/facelogin_reg/'];
+  const shouldShowNavBar = !hideNavBarRoutes.includes(location.pathname);
+
+  console.log(location, location.pathname)
+
   return (
     <RecoilRoot>
-      <NavBar />
+      
+       
+      {shouldShowNavBar && <NavBar />}
+      <FloatingPlayer />
+      {shouldShowNavBar &&<LiveCam />}
       <Routes>
-
+      
         {/*EMPLOYEE URLs */}
         <Route path="/employee/login" element={<Login />} />
         <Route path="/employee/facelogin" element={<FaceLogin />} />
         {<Route path="/employee/dashboard" element={<EmployeeDashboard />} />}
         <Route path="/employee/player" element={<Player />} />
         <Route path="/employee/breathingexercise" element={<BreathingExercise />} />
-        <Route path="/employee/livecam" element={<LiveCam />} />
+        <Route path="/employee/livecam" />
         <Route path="/employee/self_stress" element={<StressDetectionForm />}/>
         
         <Route path="/employee/test" element={<Test />}/>
@@ -79,6 +92,7 @@ function App() {
         <Route path="/admin/breathing" element={<AddBreathingProfile />} />
         <Route path="/admin/track" element={<AddTrack />} />
       </Routes>
+   
     </RecoilRoot>
   );
 }

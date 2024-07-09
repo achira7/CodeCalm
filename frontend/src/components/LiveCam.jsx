@@ -154,8 +154,9 @@ const LiveCam = () => {
 
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
-      <div className="bg-white rounded-lg shadow-lg p-4 w-full max-w-xl">
+    <div>
+    <div className={`min-h-screen flex flex-col items-center justify-center bg-gray-100 ${ window.location.pathname.includes("/employee/livecam")? ' ': 'hidden'}`} > 
+      <div className={`bg-white rounded-lg shadow-lg p-4 w-full max-w-xl`}>
         <div className="relative">
           <Webcam
             audio={false}
@@ -194,7 +195,9 @@ const LiveCam = () => {
           </div>
         </div>
       </div>
-      <ToastContainer />
+      
+    </div>
+    <ToastContainer />
     </div>
   );
 };

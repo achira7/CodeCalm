@@ -17,6 +17,9 @@ import { useParams } from "react-router-dom";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
+import { Color } from "../theme/Colors";
+import { BtnColor } from "../theme/ButtonTheme";
+
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -79,8 +82,6 @@ const EmployeeComponent = ({ id, role }) => {
   const [dateType, setDateType] = useState("daily"); // 'daily', 'weekly', 'monthly'
 
   const [selectedView, setSelectedView] = useState("daily");
-
-  console.log(dailyFocusData);
 
   const fetchUserDataWithID = async () => {
     try {
@@ -149,7 +150,9 @@ const EmployeeComponent = ({ id, role }) => {
       const response = await axios.get("http://localhost:8000/api/stress", {
         params: { user_id: id, period: period },
       });
+
       const data = response.data.days || {};
+      console.log(data);
       const allZero = Object.values(data).every((value) => value === 0);
       if (allZero) {
         setStressChartError("No Data Stress Recorded ⚠");
@@ -385,24 +388,29 @@ const EmployeeComponent = ({ id, role }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto py-6">
+    <div className={`min-h-screen ${Color.background} `}>
+      <div className="container  mx-auto py-2 px-4 md:px-20 lg:px-12 xl:px-48">
         {/*Period Selection Buttons */}
-        <div className="flex justify-center my-4">
-          {["daily", "weekly", "monthly"].map((period) => (
-            <button
-              key={period}
-              className={`mx-2 px-4 py-2 rounded ${
-                emotionView === period
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 text-gray-800"
-              } hover:bg-blue-700 hover:text-white`}
-              onClick={() => handlePeriodChange(period)}
-            >
-              {period.charAt(0).toUpperCase() + period.slice(1)}
-            </button>
-          ))}
-          {/*<button>
+
+        <div className={` ${Color.outSideCard} rounded-xl px-6 py-6`}>
+          <div className="flex justify-between">
+            <div>
+              {["daily", "weekly", "monthly"].map((period) => (
+                <button
+                  key={period}
+                  className={`mx-2 px-4 py-2 rounded ${
+                    emotionView === period
+                      ? BtnColor.dashBoardBtnSelected
+                      : BtnColor.dashBoardBtnIdel
+                  } `}
+                  onClick={() => handlePeriodChange(period)}
+                >
+                  {period.charAt(0).toUpperCase() + period.slice(1)}
+                </button>
+              ))}
+            </div>
+
+            {/*<button>
             <FaCalendarAlt
               className="text-gray-400 cursor-pointer"
               title="Select Date"
@@ -419,227 +427,233 @@ const EmployeeComponent = ({ id, role }) => {
               style={{ left: "50%", transform: "translateX(-50%)" }}
             />
             </button>*/}
-        </div>
 
-        {(userRole === "Admin" || userRole === "Supervisor") && (
-          <button
-            className="bg-sky-500 text-white px-4 py-2 rounded-md mb-5 flex"
-            onClick={downloadPDF}
-            title="in PDF format"
+            <div>
+              {(userRole === "Admin" || userRole === "Supervisor") && (
+                <button
+                  className={`bg-sky-500  px-4 py-2 rounded-md mb-5 flex ${BtnColor.primary}`}
+                  onClick={downloadPDF}
+                  title="in PDF format"
+                >
+                  <LuFileDown /> Download Report
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div
+            className="grid grid-cols-1  lg:grid-cols-2 xl:grid-cols-2 gap-0 justify-center"
+            id="report-content"
           >
-            <LuFileDown /> Download Report
-          </button>
-        )}
+            {/* PIE CHART */}
+            <div className={`rounded-lg  ${Color.chartsBGText} m-4 p-6`}>
+              <div className="text-center flex-auto">
+                <h5 className="text-2xl font-semibold  mb-5">
+                  {emotionView === "daily"
+                    ? "Daily Emotions"
+                    : emotionView === "weekly"
+                    ? "Weekly Emotions"
+                    : emotionView === "monthly"
+                    ? "Monthly Emotions"
+                    : "Overall Emotions"}
+                </h5>
 
-        <div className="flex flex-wrap justify-center" id="report-content">
-          <div className="bg-white border border-gray-200 rounded-lg shadow-lg">
-            <div className="text-center p-3 md:p-5 flex-auto">
-              <h5 className="text-xl font-semibold text-sky-900 mb-5">
-                {emotionView === "daily"
-                  ? "Daily Emotions"
-                  : emotionView === "weekly"
-                  ? "Weekly Emotions"
-                  : emotionView === "monthly"
-                  ? "Monthly Emotions"
-                  : "Overall Emotions"}
-              </h5>
+                <button className=" hover:text-sky-600">
+                  <FaArrowRightArrowLeft size={20} />
+                </button>
 
-              <button>
-                <FaArrowRightArrowLeft />
-              </button>
+                {emotionChartError ? (
+                  <h2 className="text-xl  mt-4">{emotionChartError}</h2>
+                ) : (
+                  <div>
+                    <div className="flex items-center justify-center">
+                      <DoughnutChart {...emotions} />
 
-              {emotionChartError ? (
-                <h2 className="text-xl text-gray-700 mt-4 flex-initial">
-                  {emotionChartError}
-                </h2>
-              ) : (
-                <div>
-                  <div className="flex items-center justify-center">
-                    <DoughnutChart {...emotions} />
-
-                    <div className="w-1/2 mb-28" id="highestEmotion">
-                      <img
-                        className="w-15 h-15 mx-auto mt-4"
-                        src={`http://127.0.0.1:8000/media/emojis/${highestEmotion.key}.png`}
-                        alt={highestEmotion.key}
-                        title={`Highest emotion is: ${highestEmotion.key}`}
-                      />
+                      <div className="mb-24" id="highestEmotion">
+                        <img
+                          className=""
+                          // src={`http://127.0.0.1:8000/media/emojis/${highestEmotion.key}.png`}
+                          src={`http://127.0.0.1:8000/media/emojis/${highestEmotion.key}.png`}
+                          alt={highestEmotion.key}
+                          title={`Highest emotion is: ${highestEmotion.key}`}
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
 
-          {/* Stress Data */}
-          <div className="max-w-sm w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
-            <div className="text-center">
-              <h5 className="text-xl font-semibold text-sky-900 inline-flex">
-                {stressView === "daily"
-                  ? "Daily Stress Levels"
-                  : stressView === "weekly"
-                  ? "Weekly Stress Levels"
-                  : "Monthly Stress Levels"}
-              </h5>
-              {stressChartError ? (
-                <h2 className="text-xl text-gray-700 mt-4 flex-initial">
-                  {stressChartError}
-                </h2>
-              ) : (
-                <BarChart
-                  data={
-                    {
-                      daily: dailyStressData,
-                      weekly: weeklyStressData,
-                      monthly: monthlyStressData,
-                    }[stressView]
-                  }
-                  period={stressView}
-                />
-              )}
-            </div>
-          </div>
-
-          {/* Focus Data */}
-          <div className="max-w-sm w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
-            <div className="text-center">
-              <h5 className="text-xl font-semibold text-sky-900 inline-flex">
-                {focusView === "daily"
-                  ? "Daily Focus Data"
-                  : focusView === "weekly"
-                  ? "Weekly Focus Data"
-                  : "Monthly Focus Data"}
-              </h5>
-              {focusChartError ? (
-                <h2 className="text-xl text-gray-700 mt-4 flex-initial">
-                  {focusChartError}
-                </h2>
-              ) : (
-                <TwoValueBarChart
-                  data={
-                    {
-                      daily: dailyFocusData,
-                      weekly: weeklyFocusData,
-                      monthly: monthlyFocusData,
-                    }[focusView]
-                  }
-                  period={focusView}
-                />
-              )}
-            </div>
-          </div>
-
-          {/* Exercise Data */}
-          <div className="max-w-sm w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
-            <div className="text-center">
-              <h5 className="text-xl font-semibold text-sky-900 inline-flex">
-                {exerciseView === "daily"
-                  ? "Daily Breathing Exercise Usage"
-                  : exerciseView === "weekly"
-                  ? "Weekly Breathing Exercise Usage"
-                  : "Monthly Breathing Exercise Usage"}
-              </h5>
-              {breathingChartError ? (
-                <h2 className="text-xl text-gray-700 mt-4 flex-initial">
-                  {breathingChartError}
-                </h2>
-              ) : (
-                <LineChart
-                  data={
-                    {
-                      daily: dailyExerciseData,
-                      weekly: weeklyExerciseData,
-                      monthly: monthlyExerciseData,
-                    }[exerciseView]
-                  }
-                />
-              )}
-
-              {mostUsedExercise && (
-                <div className="mt-4">
-                  <h5 className="text-lg font-semibold text-sky-900 mb-5">
-                    {userData.first_name}'s Most Used Exercise:
-                  </h5>
-                  <p className="text-gray-700">
-                    {mostUsedExercise.exercise_name}
-                  </p>
-                  <p className="text-gray-700">
-                    Total Duration:{" "}
-                    {(mostUsedExercise.total_duration / 60.0).toFixed(2)}{" "}
-                    minutes
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Listening Data */}
-          <div className="max-w-sm w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
-            <div className="text-center">
-              <h5 className="text-xl font-semibold text-sky-900 mb-5">
-                {listeningView === "daily"
-                  ? "Daily Track Listening Usage"
-                  : listeningView === "weekly"
-                  ? "Weekly Track Listening Usage"
-                  : "Monthly Track Listening Usage"}
-              </h5>
-              {listeningChartError ? (
-                <h2 className="text-xl text-gray-700 mt-4 flex-initial">
-                  {listeningChartError}
-                </h2>
-              ) : (
-                <LineChart
-                  data={
-                    {
-                      daily: dailyListeningData,
-                      weekly: weeklyListeningData,
-                      monthly: monthlyListeningData,
-                    }[listeningView]
-                  }
-                />
-              )}
-
-              {mostListenedTrack && (
-                <div className="mt-4">
-                  <h5 className="text-lg font-semibold text-sky-900 mb-5">
-                    {userData.first_name}'s Most Listened Track:
-                  </h5>
-                  <p className="text-gray-700">
-                    {mostListenedTrack.track_name}
-                  </p>
-                  <p className="text-gray-700">
-                    Total Duration:{" "}
-                    {(mostListenedTrack.total_duration / 60).toFixed(2)} minutes
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-xl w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
-        <h5 className="text-xl font-semibold text-sky-900">
-          {userData.first_name}'s Dominant Emotion by Hour
-        </h5>
-        <div className="flex justify-between mt-4 w-full">
-          {Object.keys(hourlyEmotion).map((hour, index) => (
-            <div key={index} className="text-center ml-4 mr-4">
-              {hourlyEmotion[hour] ? (
-                <div>
-                  <img
-                    className="w-8 mx-auto"
-                    src={`http://127.0.0.1:8000/media/emojis/${hourlyEmotion[hour]}.png`}
-                    alt={hourlyEmotion[hour]}
-                    title={hourlyEmotion[hour]} // Adding the title attribute for the tooltip
+            {/* Stress Data */}
+            <div className={`${Color.chartsBGText} rounded-lg  m-4 p-6`}>
+              <div className="text-center">
+                <h5 className="text-2xl font-semibold  mb-5">
+                  {stressView === "daily"
+                    ? "Daily Stress Levels"
+                    : stressView === "weekly"
+                    ? "Weekly Stress Levels"
+                    : "Monthly Stress Levels"}
+                </h5>
+                {stressChartError ? (
+                  <h2 className="text-xl  mt-4">{stressChartError}</h2>
+                ) : (
+                  <BarChart
+                    data={
+                      {
+                        daily: dailyStressData,
+                        weekly: weeklyStressData,
+                        monthly: monthlyStressData,
+                      }[stressView]
+                    }
+                    period={stressView}
                   />
+                )}
+                <div className="mt-6">
+                  Use the filteration button on top to filter this result more.
+                  You can hover to view more details.
                 </div>
-              ) : (
-                <span className="text-xl"> - </span>
-              )}
-              <p className="text-sm text-gray-700">{hour.split(" ")[0]}</p>
+              </div>
             </div>
-          ))}
+
+                        {/* Focus Data */}
+                        <div className="max-w-sm w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
+              <div className="text-center">
+                <h5 className="text-xl font-semibold text-sky-900 inline-flex">
+                  {focusView === "daily"
+                    ? "Daily Focus Data"
+                    : focusView === "weekly"
+                    ? "Weekly Focus Data"
+                    : "Monthly Focus Data"}
+                </h5>
+                {focusChartError ? (
+                  <h2 className="text-xl text-gray-700 mt-4 flex-initial">
+                    {focusChartError}
+                  </h2>
+                ) : (
+                  <TwoValueBarChart
+                    data={
+                      {
+                        daily: dailyFocusData,
+                        weekly: weeklyFocusData,
+                        monthly: monthlyFocusData,
+                      }[focusView]
+                    }
+                    period={focusView}
+                  />
+                )}
+              </div>
+   
+            </div>
+            
+
+            {/* Exercise Data */}
+            <div className={` ${Color.chartsBGText}  rounded-lg  m-4 p-6`}>
+              <div className="text-center">
+                <h5 className="text-2xl font-semibold  mb-5">
+                  {exerciseView === "daily"
+                    ? "Daily Breathing Exercise Usage"
+                    : exerciseView === "weekly"
+                    ? "Weekly Breathing Exercise Usage"
+                    : "Monthly Breathing Exercise Usage"}
+                </h5>
+                {breathingChartError ? (
+                  <h2 className="text-xl  mt-4">{breathingChartError}</h2>
+                ) : (
+                  <LineChart
+                    data={
+                      {
+                        daily: dailyExerciseData,
+                        weekly: weeklyExerciseData,
+                        monthly: monthlyExerciseData,
+                      }[exerciseView]
+                    }
+                  />
+                )}
+
+                {mostUsedExercise && (
+                  <div className="mt-4">
+                    <h5 className="text-lg font-semibold  mb-2">
+                      {userData.first_name}'s Most Used Exercise:
+                    </h5>
+                    <p className="">{mostUsedExercise.exercise_name}</p>
+                    <p className="">
+                      Total Duration:{" "}
+                      {(mostUsedExercise.total_duration / 60.0).toFixed(2)}{" "}
+                      minutes
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+
+
+            {/* Listening Data */}
+            <div className={` ${Color.chartsBGText}   rounded-lg m-4 p-6 `}>
+              <div className="text-center">
+                <h5 className="text-2xl font-semibold  mb-5">
+                  {listeningView === "daily"
+                    ? "Daily Track Listening Usage"
+                    : listeningView === "weekly"
+                    ? "Weekly Track Listening Usage"
+                    : "Monthly Track Listening Usage"}
+                </h5>
+                {listeningChartError ? (
+                  <h2 className="text-xl  mt-4">{listeningChartError}</h2>
+                ) : (
+                  <LineChart
+                    data={
+                      {
+                        daily: dailyListeningData,
+                        weekly: weeklyListeningData,
+                        monthly: monthlyListeningData,
+                      }[listeningView]
+                    }
+                  />
+                )}
+
+                {mostListenedTrack && (
+                  <div className="mt-4">
+                    <h5 className="text-lg font-semibold mb-2">
+                      {userData.first_name}'s Most Listened Track:
+                    </h5>
+                    <p className="">{mostListenedTrack.track_name}</p>
+                    <p className="">
+                      Total Duration:{" "}
+                      {(mostListenedTrack.total_duration / 60).toFixed(2)}{" "}
+                      minutes
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* That emoji thing */}
+          <div className={` ${Color.chartsBGText}  rounded-lg mx-4 p-6`}>
+            <h5 className="text-xl font-semibold">
+              {userData.first_name}'s Dominant Emotion by Hour
+            </h5>
+            <div className="flex flex-wrap justify-center gap-10 mt-4 w-full">
+              {Object.keys(hourlyEmotion).map((hour, index) => (
+                <div key={index} className="text-center">
+                  {hourlyEmotion[hour] ? (
+                    <div>
+                      <img
+                        className="w-10"
+                        src={`http://127.0.0.1:8000/media/emojis/${hourlyEmotion[hour]}.png`}
+                        alt={hourlyEmotion[hour]}
+                        title={hourlyEmotion[hour]}
+                      />
+                    </div>
+                  ) : (
+                    <span className="text-xl"> - </span>
+                  )}
+                  <p className="text-sm">{hour.split(" ")[0]}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>

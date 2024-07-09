@@ -4,7 +4,6 @@ import { Bar } from "react-chartjs-2";
 const TwoValueBarChart = ({ data, period }) => {
   const labels = Object.keys(data).map(day => `${day}`);
   let focusedValues, notFocusedValues;
-
   if (period === "daily") {
     focusedValues = labels.map((key) => data[key].focused);
     notFocusedValues = labels.map((key) => data[key].unfocused);
@@ -18,7 +17,6 @@ const TwoValueBarChart = ({ data, period }) => {
     focusedValues = [];
     notFocusedValues = [];
   }
-
   const chartData = {
     labels: labels,
     datasets: [
@@ -38,7 +36,6 @@ const TwoValueBarChart = ({ data, period }) => {
       },
     ],
   };
-
   const options = {
     scales: {
       x: {
@@ -56,8 +53,6 @@ const TwoValueBarChart = ({ data, period }) => {
       },
     },
   };
-
   return <Bar data={chartData} options={options} />;
 };
-
 export default TwoValueBarChart;

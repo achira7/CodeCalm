@@ -374,7 +374,6 @@ class FaceRegisterView(APIView):
 
             FaceImage.objects.create(profile = profile, image = img) # ====== ERROR LINE ==========
 
-            print(profile)
 
             return Response({'message': 'Image saved successfully'}, status=status.HTTP_201_CREATED)
 
@@ -637,14 +636,6 @@ class EmotionDataView(APIView):
             if is_image_blurred(opencv_image):
                 return JsonResponse({'emo': 'Image is blurred. Please clear the webcam.', 'frq': 'none'})
 
-            # Perform gaze detection
-            gaze_status = check_user_focus(sharpened_image)
-
-            '''if gaze_status == 'User is focused':
-                Employee_Focus.objects.create(employee_id=userid, focus_data='F')
-            elif gaze_status in ['User is not focused']:
-                Employee_Focus.objects.create(employee_id=userid, focus_data='NF')'''
-
             # Perform emotion detection
             emotion = detectEmotion(opencv_image, sharpened_image)
 
@@ -655,15 +646,14 @@ class EmotionDataView(APIView):
                 'happy': -4,
                 'sad': 3,
                 'surprise': 1,
-                'neutral': 0
-            }
+                'neutral': 0}
 
             allowed_emotions = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
             if emotion in allowed_emotions:
                 # Create a new record in the Employee_Emotion model
                 Employee_Emotion.objects.create(employee_id=userid, emotion_data=emotion)
 
-                    # Get the stress weight for the detected emotion
+                # Get the stress weight for the detected emotion
                 stress_weight = stress_weights.get(emotion, 0)
     
                 # Create a new record in the Employee_Stress model
@@ -688,7 +678,7 @@ class EmotionDataView(APIView):
                 frq = "none"
 
             # Return the emotion, frequency, and gaze estimation
-            return JsonResponse({'emo': emotion, 'frq': frq, 'gaze': gaze_status})
+            return JsonResponse({'emo': emotion, 'frq': frq})
 
         except Exception as e:
             return JsonResponse({'emo': 'Error occurred', 'frq': 'none', 'gaze': 'Error'})
@@ -759,20 +749,29 @@ class EmotionDataView(APIView):
             start_time = datetime.combine(current_date, datetime.min.time()) + timedelta(hours=hour)
             end_time = start_time + timedelta(hours=1)
 
-            # Query to get the dominant emotion in the current hour
-            hourly_emotion = Employee_Emotion.objects.filter(**filter_params, time__gte=start_time, time__lt=end_time) \
-                                .values('emotion_data') \
-                                .annotate(count=Count('emotion_data')) \
-                                .order_by('-count') \
-                                .first()
+            #Query to get the dominant emotion in the current hour for daily period
+            if period == 'daily':
+                hourly_emotion = Employee_Emotion.objects.filter(**filter_params, time__gte=start_time, time__lt=end_time) \
+                                    .values('emotion_data') \
+                                    .annotate(count=Count('emotion_data')) \
+                                    .order_by('-count') \
+                                    .first()
+            # Query to get the dominant emotion in the current hour for weekly and monthly periods
+            else:
+                hourly_emotion = Employee_Emotion.objects.filter(**filter_params, time__hour=hour, time__gte=time_threshold) \
+                                    .values('emotion_data') \
+                                    .annotate(count=Count('emotion_data')) \
+                                    .order_by('-count') \
+                                    .first()
 
             if hourly_emotion:
                 dominant_emotion = hourly_emotion['emotion_data']
             else:
                 dominant_emotion = ''  # Default if no data is found
 
-            # Add the dominant emotion for the current hour to the dictionary
+            #Add the dominant emotion for the current hour to the dictionary
             hourly_dominant_emotions[f'{hour}:00 - {hour+1}:00'] = dominant_emotion
+        print(hourly_dominant_emotions)
 
         response_data = {
             'defaultEmotionValues': defaultEmotionValues,
@@ -830,7 +829,6 @@ class StressDataView(APIView):
                     days[hour_range] = record['total_stress']
             else:
                 days[str(record['day'])] = record['total_stress']
-        print("Stress -> ", days)
 
         return Response({
             "days": days,
@@ -993,7 +991,6 @@ class BreathingExerciseUsageView(APIView):
             **filter_params,
             timestamp__date__range=[start_date, end_date]
         ).values('exercise_name').annotate(total_duration=Sum('duration')).order_by('-total_duration').first()
-        print(days)
         return Response({
             "days": days,
             "most_used_exercise": most_used_exercise
@@ -1085,7 +1082,6 @@ class TrackListeningView(APIView):
             **filter_params,
             timestamp__date__range=[start_date, end_date]
         ).values('track_name').annotate(total_duration=Sum('duration')).order_by('-total_duration').first()
-        print(days)
         return Response({
             "days": days,
             "most_listened_track": most_listened_track
@@ -1709,12 +1705,11 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import face_recognition
 
-# Define 3D model points of facial landmarks
 model_points = np.array([
     (0.0, 0.0, 0.0),             # Nose tip
     (0.0, -330.0, -65.0),        # Chin
-    (-225.0, 170.0, -135.0),     # Left eye left corner
-    (225.0, 170.0, -135.0),      # Right eye right corner
+    (-225.0, 170.0, -135.0),     # Left eye 
+    (225.0, 170.0, -135.0),      # Right eye
     (-150.0, -150.0, -125.0),    # Left Mouth corner
     (150.0, -150.0, -125.0)      # Right mouth corner
 ], dtype=np.float32)
@@ -1723,22 +1718,22 @@ class FocusDataView(APIView):
     def get(self, request):
         user_id = request.GET.get('user_id')
         team_id = request.GET.get('team_id')
-        period = request.GET.get('period', 'all_time')  # Default to 'all_time' if not provided
+        period = request.GET.get('period', 'all_time') 
         today = now().date()
 
         if period == 'weekly':
-            start_date = today - timedelta(days=today.weekday())  # Start of the week (Monday)
-            end_date = start_date + timedelta(days=6)  # End of the week (Sunday)
+            start_date = today - timedelta(days=today.weekday())  #Start of the week (Monday)
+            end_date = start_date + timedelta(days=6)  #End of the week (Sunday)
             days = {day: {'F': 0, 'NF': 0} for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]}
         elif period == 'monthly':
             start_date = today.replace(day=1)  # Start of the month
             end_date = (today.replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)  # End of the month
             days_in_month = (end_date - start_date).days + 1
-            days = {f'Day {i}': {'F': 0, 'NF': 0} for i in range(1, days_in_month + 1)}  # Initialize days 1-31 (or the number of days in the month)
+            days = {f'Day {i}': {'F': 0, 'NF': 0} for i in range(1, days_in_month + 1)}  #Initialize days 1-31
         elif period == 'daily':
             start_date = today
             end_date = today
-            hours = range(8, 19, 1)  # 8:00 - 9:00, 10:00 - 11:00, ...
+            hours = range(8, 19, 1)  
             days = {f'{hour}:00 - {hour+1}:00': {'F': 0, 'NF': 0} for hour in hours}
         else:
             return Response({"error": "Invalid period specified"}, status=400)
@@ -1775,7 +1770,6 @@ class FocusDataView(APIView):
                 days[day_name][record['focus_data']] += record['total_count']
 
         response_data = {day: {"focused": data['F'], "unfocused": data['NF']} for day, data in days.items()}
-        print(days)
         return Response({
             "days": response_data,
         })
