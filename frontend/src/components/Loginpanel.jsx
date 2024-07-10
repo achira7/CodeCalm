@@ -25,7 +25,6 @@ const submitHandler = (event) => {
 
   console.log(loginFormData.email, loginFormData.password)
 
-  //submit data
   axios.post(baseUrl + '/api/', formData)
   .then (function (response){
     if (response.data.bool == false){

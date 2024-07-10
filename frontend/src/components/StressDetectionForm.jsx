@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import moment from "moment";
+import { Color } from "../theme/Colors";
+
 
 const StressDetectionForm = () => {
   const [questions, setQuestions] = useState([]);
@@ -49,7 +51,7 @@ const StressDetectionForm = () => {
       const initialFormData = response.data.reduce((acc, question) => {
         acc[question.id] = {
           affect: question.affect,
-          occurrence: "3", // Set default occurrence value as string for radio buttons
+          occurrence: "3", 
         };
         return acc;
       }, {});
@@ -145,22 +147,37 @@ const StressDetectionForm = () => {
   };
 
   return (
-    <div className="max-w-lg mx-auto mt-8 p-4 bg-white shadow-md rounded-md">
-      {shouldShow === false ? (
-        <p>User {userData.first_name} {userData.last_name} has submitted a report within this week.</p>
-      ) : (
-        <div>
-          <h2 className="text-xl font-bold mb-4">Weekly Stress Detection Form {lastSubmitDate}</h2>
-
-          <form onSubmit={handleSubmit}>
+    <div className="pb-10">
+    <div
+      className={`max-w-5xl mx-auto mt-8 p-4 pb-10 pt-8 shadow-md rounded-2xl ${Color.cardBox}`}
+    >
+      <div className="flex justify-center">
+        <h2 className="text-xl font-bold mb-4 text-center">
+          Weekly Stress Detection Form
+        </h2>
+      </div>
+      <div className="flex flex-col ">
+        <div className="flex justify-center w-full">
+          <div className="flex justify-center">
+            <img src="http://127.0.0.1:8000/media/stressForm/Forms.png/" className="w-[300px]" alt="form Image" />
+          </div>
+        </div>
+        <div className="flex justify-center mt-8 w-full px-10">
+          <form className="flex flex-col w-full" onSubmit={handleSubmit}>
             {questions.map(({ id, question, type, affect }) => (
-              <div key={id} className="mb-4 px-5 py-5">
-                <label htmlFor={`question-${id}`} className="block text-sm font-medium text-gray-700">
+              <div key={id} className="mb-4 py-5">
+                <label
+                  htmlFor={`question-${id}`}
+                  className="block font-medium"
+                >
                   {question}
                 </label>
                 <div className="mt-2">
                   {renderOptions(type).map((label, index) => (
-                    <label key={index} className="inline-flex items-center mr-4">
+                    <label
+                      key={index}
+                      className="inline-flex items-center mr-4"
+                    >
                       <input
                         type="radio"
                         id={`occurrence-${id}-${index}`}
@@ -177,23 +194,34 @@ const StressDetectionForm = () => {
               </div>
             ))}
             <div className="mb-4">
-              <label htmlFor="additionalComments" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="additionalComments"
+                className="block font-medium"
+              >
                 Additional Comments:
               </label>
               <textarea
                 id="additionalComments"
                 name="additionalComments"
                 value={formData.additionalComments || ""}
-                onChange={(e) => handleChange(e, "additionalComments", "additionalComments")}
-                className="mt-1 block w-full"
+                onChange={(e) =>
+                  handleChange(e, "additionalComments", "additionalComments")
+                }
+                className={`mt-1 block min-h-24 w-full rounded-xl ${Color.textFeild}`}
               />
             </div>
-            <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
-              Submit
-            </button>
+            <div className="flex justify-end mt-auto">
+              <button
+                type="submit"
+                className="px-4 text-black py-2 bg-blue-500 rounded-md hover:bg-blue-600"
+              >
+                Submit
+              </button>
+            </div>
           </form>
         </div>
-      )}
+      </div>
+    </div>
     </div>
   );
 };

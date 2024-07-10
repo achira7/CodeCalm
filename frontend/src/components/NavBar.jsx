@@ -21,6 +21,8 @@ const NavBar = () => {
   const [userData, setUserData] = useState({});
   const [navLinks, setNavLinks] = useState([]);
   const [userType, setUserType] = useState("")
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
 
   const location = useLocation();
 
@@ -92,11 +94,10 @@ const NavBar = () => {
 
   const adminLinks = [
     { id: 1, title: 'dashboard', link: '/admin/dashboard' },
-    { id: 2, title: 'settings', link: '/admin/settings' },
-    { id: 3, title: 'user management', link: '/admin/allemployees' },
-    { id: 4, title: 'admin test', link: '/admin/test' },
-    { id: 5, title: 'add breathing', link: '/admin/breathing' },
-    { id: 6, title: 'add track', link: '/admin/track' },
+    {/* id: 2, title: 'System Settings', link: '/admin/settings' */},
+    { id: 2, title: 'user management', link: '/admin/allemployees' },
+    { id: 3, title: 'add breathing', link: '/admin/breathing' },
+    { id: 4, title: 'add track', link: '/admin/track' },
 
   ];
 
@@ -113,6 +114,9 @@ const NavBar = () => {
     }
   }
 
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
 
   return (
     <div className={`flex justify-between items-center w-full h-15 p-4 ${Color.navBar} text-white sticky top-0 z-10 flex-initial`}>
@@ -121,20 +125,56 @@ const NavBar = () => {
         <h1 className='text-2xl font-google font-bold drop-shadow-xl shadow-blue-600/50 hover:cursor-pointer'>CodeCalm</h1>
       </div>
 
-      <div className='flex justify-center w-full h-20 items-center fixed '>
-        <ul className='flex'>
+      {/* Mobile Menu */}
+      <div className="lg:hidden flex items-center">
+        <button
+          onClick={toggleMenu}
+          className="text-white hover:text-gray-200 focus:outline-none">
+          <svg
+            className="h-8 w-8 fill-current"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor">
+            <path
+              fillRule="evenodd"
+              d="M3 5a1 1 0 0 1 2 0v10a1 1 0 1 1-2 0V5zm5-2a1 1 0 1 1 0 2h7a1 1 0 1 1 0 2H8a1 1 0 1 1 0-2zm7 9a1 1 0 1 0 0-2H8a1 1 0 1 0 0 2h7z"
+            />
+          </svg>
+        </button>
+
+        {isMenuOpen && (
+          <div className={` ${Color.navBarMob} absolute top-0 left-0 w-full  mt-16 py-2`}>
+            <ul className="flex flex-col items-center ">
+              {navLinks.map(({ id, title, link }) => (
+                <li key={id} className="my-2 hover:bg-sky-500 rounded-3xl">
+                  <Link
+                    to={link}
+                    className=" text-center block py-2 px-4"
+                    onClick={toggleMenu}>
+                    {title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+
+      {/* Desktop Menu */}
+      <div className="hidden lg:flex justify-center w-full h-20 items-center fixed">
+        <ul className="flex">
           {navLinks.map(({ id, title, link }) => (
             <li
               key={id}
-              className={`px-6 font-google font-semibold capitalize font-large hover:scale-105 hover:drop-shadow-xl duration-300 ${location.pathname === link ? 'text-green-300' : 'text-white'}`}>
-              <Link to={link} className='cursor-pointer drop-shadow-md shadow-blue-600/50'>{title}</Link>
+              className={`px-6 font-google font-semibold capitalize font-large hover:scale-105 hover:drop-shadow-xl duration-300 ${location.pathname === link ? 'text-emerald-300 text-bold bg-black/20 rounded-md' : 'text-white'}`}>
+              <Link to={link} className="cursor-pointer drop-shadow-md shadow-blue-600/50">{title}</Link>
             </li>
           ))}
         </ul>
       </div>
 
-      <div className='flex items-center space-x-4 mx-5'>
-        <ul className='flex space-x-4 items-center'>
+      <div className="flex items-center space-x-4 mx-5">
+        <ul className="flex space-x-4 items-center">
           <li onClick={handleMessagesToggle} title="Messages">
             <svg className="h-6 w-6 transform hover:scale-110 transition-transform duration-300 cursor-pointer" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
               <path d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.67Z" />
@@ -164,10 +204,10 @@ const NavBar = () => {
       </div>
 
       {isMessagesOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-20">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-">
           <div className="bg-white rounded-lg shadow-lg p-8 text-black">
             <Messages userData={userData} />
-            <button onClick={handleMessagesToggle} className="mt-4 px-4 py-2 bg-red-500 text-white rounded-md">Close</button>
+            <button onClick={handleMessagesToggle} className="mt-9 px-4 py-2 bg-red-500 text-white rounded-md">Close</button>
           </div>
         </div>
       )}
@@ -177,6 +217,6 @@ const NavBar = () => {
       )}
     </div>
   );
-}
+};
 
 export default NavBar;

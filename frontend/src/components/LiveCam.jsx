@@ -6,12 +6,17 @@ import "react-circular-progressbar/dist/styles.css";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+import { Color } from "../theme/Colors";
+import { BtnColor } from "../theme/ButtonTheme";
+
 const LiveCam = () => {
   const [userData, setUserData] = useState({});
   const [emotionResponseState, setEmotionResponseState] = useState("");
   const [emotionFrequency, setEmotionFrequency] = useState("");
   const [gaze, setGaze] = useState("");
   const [progress, setProgress] = useState(0);
+
+  const [focusLevel, setFocusLevel] = useState(null)
 
   const webcamRef = useRef(null);
   const intervalRef = useRef(null);
@@ -50,7 +55,7 @@ const LiveCam = () => {
         );
 
         if (response) {
-          const { emo, frq, gaze } = response.data;
+          const { emo, frq, gaze} = response.data;
           setEmotionResponseState(emo);
           setEmotionFrequency(frq);
           setGaze(gaze);
@@ -94,6 +99,8 @@ const LiveCam = () => {
       }
     };
 
+
+
     const postFocusImage = async (imageSrc) => {
       try {
         const formData = new FormData();
@@ -110,17 +117,29 @@ const LiveCam = () => {
             },
           }
         );
+        if (response.data) {
+          const focusData = response.data.text;
 
+          if (focusData === 'F') {
+            setFocusLevel("Focused");
+          } else if (focusData === 'NF') {
+            setFocusLevel("Not Focused");
+          } else {
+            setFocusLevel(focusData);
+          }
+        }
       } catch (error) {
         console.error("Error in POST request to focus API:", error);
       }
     };
+    
+    
 
     const captureAndPostImages = () => {
       if (webcamRef.current) {
         const imageSrc = webcamRef.current.getScreenshot();
-        postImage(imageSrc);  // Existing function for emotion
-        postFocusImage(imageSrc);  // New function for focus
+        postImage(imageSrc);  
+        postFocusImage(imageSrc);  
       }
     };
 
@@ -156,7 +175,7 @@ const LiveCam = () => {
   return (
     <div>
     <div className={`min-h-screen flex flex-col items-center justify-center bg-gray-100 ${ window.location.pathname.includes("/employee/livecam")? ' ': 'hidden'}`} > 
-      <div className={`bg-white rounded-lg shadow-lg p-4 w-full max-w-xl`}>
+      <div className={` ${Color.chartsBGText} rounded-lg shadow-lg p-4 w-full max-w-xl`}>
         <div className="relative">
           <Webcam
             audio={false}
@@ -181,6 +200,10 @@ const LiveCam = () => {
           <div className="flex flex-col items-center">
             <p className="text-gray-500 text-sm">Current Stress Level</p>
             <p className="text-lg font-semibold">{emotionFrequency}</p>
+          </div>
+          <div className="flex flex-col items-center">
+            <p className="text-gray-500 text-sm">Current Focus</p>
+            <p className="text-lg font-semibold">{focusLevel}</p>
           </div>
         </div>
         <div className="flex justify-center mt-4">

@@ -6,7 +6,7 @@ import AddTeam from "./AddTeam";
 const AllTeamsDashboard = () => {
   const [teams, setTeams] = useState([]);
   const [selectedTeam, setSelectedTeam] = useState("");
-  const [isOverlayOpen, setIsOverlayOpen] = useState(false); // State to manage overlay visibility
+  const [isOverlayOpen, setIsOverlayOpen] = useState(false); 
 
   useEffect(() => {
     axios
@@ -20,11 +20,11 @@ const AllTeamsDashboard = () => {
   }, []);
 
   const handleAddTeam = () => {
-    setIsOverlayOpen(true); // Open the overlay
+    setIsOverlayOpen(true); 
   };
 
   const handleCloseOverlay = () => {
-    setIsOverlayOpen(false); // Close the overlay
+    setIsOverlayOpen(false); 
   };
 
   return (

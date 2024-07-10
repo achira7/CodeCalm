@@ -32,7 +32,7 @@ export const EmployeeDashboardOverlay = () => {
   const [mostListenedTrack, setMostListenedTrack] = useState(null);
   const [exerciseView, setExerciseView] = useState("weekly");
   const [listeningView, setListeningView] = useState("weekly");
-  const [emotionView, setEmotionView] = useState("daily"); // Start with daily view
+  const [emotionView, setEmotionView] = useState("daily");
   const [hourlyEmotion, setHourlyEmotion] = useState([]);
 
   const fetchUserData = async (user_id) => {
@@ -61,7 +61,7 @@ export const EmployeeDashboardOverlay = () => {
       const hourlyEmotion = response.data.hourlyDominantEmotions;
       setEmotions(data);
       
-      setHourlyEmotion(hourlyEmotion); // Assuming you have a useState for hourly emotions
+      setHourlyEmotion(hourlyEmotion);
 
       const allZero = Object.values(data).every((value) => value === 0);
       if (allZero) {
@@ -393,7 +393,7 @@ export const EmployeeDashboardOverlay = () => {
                     className="w-8 h-8 mx-auto"
                     src={`http://127.0.0.1:8000/media/emojis/${hourlyEmotion[hour]}.png`}
                     alt={hourlyEmotion[hour]}
-                    title={hourlyEmotion[hour]} // Adding the title attribute for the tooltip
+                    title={hourlyEmotion[hour]} 
                   />
                 </div>
               ) : (

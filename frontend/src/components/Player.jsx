@@ -1,11 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import "react-h5-audio-player/lib/styles.css";
-// import AudioPlayer from "react-h5-audio-player";
 import { Color } from "../theme/Colors";
 import "tailwindcss/tailwind.css";
 import { playerState, tracksState } from "../atoms";
-import "./PlayerStyles.css"; // Import custom CSS for additional styling
+import "./PlayerStyles.css"; 
 import "react-circular-progressbar/dist/styles.css";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import "./noScroll.css"

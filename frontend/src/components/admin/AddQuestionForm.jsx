@@ -73,7 +73,7 @@ const StressQuestionForm = () => {
       setNewQuestion('');
       setNewAffect('P');
       setNewType('A');
-      fetchQuestions(); // Refresh the list of questions
+      fetchQuestions(); 
       toast.success('Question added successfully!');
     } catch (error) {
       console.error('There was an error adding the new question:', error);
@@ -107,7 +107,7 @@ const StressQuestionForm = () => {
       setNewQuestion('');
       setNewAffect('P');
       setNewType('A');
-      fetchQuestions(); // Refresh the list of questions
+      fetchQuestions(); 
       toast.success('Question edited successfully!');
     } catch (error) {
       console.error('There was an error editing the question:', error);

@@ -3,9 +3,10 @@ import { useRecoilState, useRecoilValue } from "recoil";
 import AudioPlayer from "react-h5-audio-player";
 import "react-h5-audio-player/lib/styles.css";
 import React, { useState, useRef, useEffect } from "react";
-import { Color } from "../theme/Colors"; // Assuming Color.outSideCard provides necessary styling for outer container
+import { Color } from "../theme/Colors"; 
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
+import axios from "axios";
 
 import { IoBanOutline } from "react-icons/io5";
 import { useExtractColor } from "react-extract-colors";
@@ -18,10 +19,8 @@ const FloatingPlayer = () => {
   const [userID, setUserID] = useState("");
   const audioRef = useRef(null);
   const imageRef = useRef(null);
-  //   const [dominantColor, setDominantColor] = useState("#b0cf00");
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
-
   const [duration, setDuration] = useState(0);
   const normalMode = `mt-10 p-8 lg:w-1/3 rounded-xl ${Color.playerBG}`;
   const floatMode =
@@ -29,6 +28,20 @@ const FloatingPlayer = () => {
   const { colors, dominantColor, darkerColor, lighterColor, loading, error } =
     useExtractColor(currentTrack.image);
   const gradient = `linear-gradient(135deg, ${dominantColor} 40%, ${lighterColor} 60%)`;
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const response = await axios.get("http://localhost:8000/api/getuser/", {
+          withCredentials: true,
+        });
+        setUserID(response.data.id);
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+  }, []);
+
 
   const handleNext = () => {
     setPlayer((prev) => ({
@@ -68,6 +81,28 @@ const FloatingPlayer = () => {
     }
   };
 
+  const logListeningData = async (user_id, track_name, duration) => {
+    console.log(user_id, track_name, duration)
+    if (!userID || !track_name || !duration) {
+        
+      console.error("User, track name, and duration are required");
+      return;
+    }
+
+    try {
+      await axios.post("http://localhost:8000/api/listening/", {
+        user: userID,
+        track_name: track_name,
+        duration: duration,
+      });
+    } catch (error) {
+      console.error(
+        "Error posting data: ",
+        error.response ? error.response.data : error.message
+      );
+    }
+  }
+
   useEffect(() => {
     const interval = setInterval(() => {
       if (player.isPlaying) {
@@ -88,7 +123,7 @@ const FloatingPlayer = () => {
       const listeningEndTime = audioRef.current.audio.current.currentTime;
       const listeningDuration = listeningEndTime - listeningStartTime;
       if (listeningDuration > 0) {
-        await logListeningData(userID, listeningDuration);
+        await logListeningData(userID, currentTrack.title, listeningDuration);
       }
     };
 
@@ -102,9 +137,10 @@ const FloatingPlayer = () => {
       player.removeEventListener("pause", handlePaused);
       player.removeEventListener("ended", handlePaused);
     };
-  }, [player.currentTrackIndex, userID]);
+  }, [player.currentTrackIndex, userID, currentTrack.title]);
 
-  console.log()
+
+  
 
   return (
     <div

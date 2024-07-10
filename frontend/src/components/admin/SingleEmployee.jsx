@@ -41,7 +41,7 @@ function SingleEmployee(props) {
             }
         } catch (error) {
             if (error.response) {
-                console.error('Error:', error.response.data); // Log error details for debugging
+                console.error('Error:', error.response.data); 
                 toast.error('Error updating employee: ' + error.response.data);
             } else {
                 console.error('Error:', error.message);
@@ -55,13 +55,12 @@ function SingleEmployee(props) {
             const response = await axios.delete(`http://127.0.0.1:8000/api/employee/${props.employee.id}/`);
             if (response.status === 204) {
                 toast.success('Employee deleted successfully');
-                // Optionally remove the employee from the list in the parent component
             } else {
                 toast.error('Failed to delete employee');
             }
         } catch (error) {
             if (error.response) {
-                console.error('Error:', error.response.data); // Log error details for debugging
+                console.error('Error:', error.response.data); 
                 toast.error('Error deleting employee: ' + error.response.data);
             } else {
                 console.error('Error:', error.message);

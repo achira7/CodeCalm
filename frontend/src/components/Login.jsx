@@ -96,7 +96,7 @@ const Login = () => {
     <ToastContainer />
     {/* Logo Text */}
     <div className="flex absolute top-4 left-4 text-4xl font-bold text-black">
-      <div>CodeCalm</div>
+      <div className="font-google text-sky-500 text-2xl">CodeCalm</div>
       <div className="flex items-center">
         {<img src={`${media}codecalm-logo-colored.png`} width={75} alt="logoImg" />}
       </div>
@@ -106,7 +106,7 @@ const Login = () => {
       className={`hidden md:flex lg:w-1/2 h-screen bg-cover justify-center ${Color.LoginleftSideBg} items-center`}
       // style={{ backgroundImage: `url(${loginBGImage})` }}
     >
-      <div className="bg-[url('../assets/login-page-backgroundimage.jpg')]">
+      <div>
         {<img src={"http://127.0.0.1:8000/media/login/login.png"} width={500} alt="Background" />}
       </div>
     </div>
@@ -171,7 +171,7 @@ const Login = () => {
 
           <button
             type="submit"
-            className={`w-32 h-10 rounded-lg ${BtnColor.primary}`}
+            className={`font-google font-semibold w-32 h-10 rounded-lg ${BtnColor.primary}`}
           >
             Login
           </button>

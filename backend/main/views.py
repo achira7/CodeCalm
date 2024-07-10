@@ -4,10 +4,6 @@ from django.contrib.auth import get_user_model
 
 import json
 
-#from distutils import dist, file_util
-from matplotlib.image import pil_to_array
-
-#from imp import load_module
 from .models import Employee_Emotion, Employee_Team, Employee_Focus, BreathingExerciseUsage, TrackListening, StressQuestion, StressDetectionForm, ReportGeneration, Employee_Stress, BreathingProfile, Track, Reminder, FaceLoginProfile, FaceImage
 
 from django.http import JsonResponse, StreamingHttpResponse
@@ -39,22 +35,18 @@ import base64
 from PIL import Image
 from django.db.models import Count
 
-from gazetimation import Gazetimation
 from django.utils import timezone
 from django.db.models import Count
 from rest_framework.response import Response
 from datetime import timedelta
 
 from django.contrib.auth import authenticate, login
-from rest_framework.permissions import AllowAny
 
 from django.http import JsonResponse
-from django.core.exceptions import ObjectDoesNotExist
 import mediapipe as mp
 
 from datetime import datetime, timedelta
 from django.db.models import Sum
-from collections import defaultdict
 from django.db.models.functions import ExtractHour, ExtractDay, ExtractWeekDay
 from rest_framework.views import APIView
 from django.utils.timezone import now
@@ -62,12 +54,8 @@ from django.db.models import Sum
 
 from django.db.models import Q
 
-from rest_framework import viewsets, permissions
-from .models import Message
 from rest_framework.response import Response
 
-from rest_framework import viewsets, permissions
-from .models import Message
 from rest_framework.response import Response
 
 from django.shortcuts import get_object_or_404
@@ -77,8 +65,8 @@ from rest_framework.exceptions import ValidationError
 
 from rest_framework import status 
 
-
-
+from pytz import timezone as pytz_timezone
+local_timezone = pytz_timezone('Asia/Colombo')
 
 User = get_user_model()
 
@@ -247,9 +235,6 @@ class TeamList(generics.ListAPIView):
     queryset = Employee_Team.objects.all()
     serializer_class = EmployeeTeamSerializer
 
-"""====================================================================================================="""
-
-
     
 def stringToRGB(base64_string):
     imgdata = base64.b64decode(str(base64_string))
@@ -263,16 +248,6 @@ def imageSharpen(image):
                        [-1, -1, -1]])
     return cv2.filter2D(image, -1, kernel)
 
-
-def gazeEstimation(img):
-    gz = Gazetimation()  # Initialize the Gazetimation class with device ID 0 (default webcam)
-    gaze = gz.run(img)  # Perform gaze estimation on the input image
-
-    # Check if the user is looking at the camera
-    if gaze['looking_prob'] > 0.5:
-        return "Concentrated"
-    else:
-        return "Not Concentrated"
 
 class WriteImage(APIView):
     @csrf_exempt
@@ -317,21 +292,15 @@ class FaceLoginView(APIView):
             format, imgstr = image_data.split('image/jpeg;base64,')
             opencv_image = stringToRGB(imgstr)
 
-            # Assuming that user's facial data is stored in their profile
             users = User.objects.all()
 
             for user in users:
                 try:
-                    # Get the path to the stored face image
                     stored_face_path = os.path.join(settings.MEDIA_ROOT, str(user.profile_picture))
 
-                    # Compare the captured face with the stored face data
                     result = DeepFace.verify(opencv_image, stored_face_path, enforce_detection=False)
 
                     if result['verified']:
-                        # Authenticate the user
-                        #user = authenticate(request, username=user.id, password=user.password)
-                        #if user is not None:
                             login(request, user)
                             response = JsonResponse({'message': 'Login successful'})
                             response.set_cookie('user_id', user.id, httponly=True)
@@ -372,7 +341,7 @@ class FaceRegisterView(APIView):
             
             img = ContentFile(opencv_image, name=f'{user_id}_{profile.face_images.count() + 1}.jpg')
 
-            FaceImage.objects.create(profile = profile, image = img) # ====== ERROR LINE ==========
+            FaceImage.objects.create(profile = profile, image = img) 
 
 
             return Response({'message': 'Image saved successfully'}, status=status.HTTP_201_CREATED)
@@ -412,87 +381,6 @@ def is_image_blurred(image, threshold=20):
     laplacian_var = cv2.Laplacian(gray_image, cv2.CV_64F).var()
     return laplacian_var < threshold
 
-
-
-
-
-def get_gaze_ratio(eye_points, landmarks, frame, gray):
-    eye_region = np.array([(landmarks[point][0], landmarks[point][1]) for point in eye_points], np.int32)
-
-    # Create a mask to isolate the eye region
-    height, width = gray.shape
-    mask = np.zeros((height, width), np.uint8)
-    cv2.polylines(mask, [eye_region], True, 255, 2)
-    cv2.fillPoly(mask, [eye_region], 255)
-    eye = cv2.bitwise_and(gray, gray, mask=mask)
-
-    # Find the coordinates of the eye region
-    min_x = np.min(eye_region[:, 0])
-    max_x = np.max(eye_region[:, 0])
-    min_y = np.min(eye_region[:, 1])
-    max_y = np.max(eye_region[:, 1])
-
-    gray_eye = eye[min_y: max_y, min_x: max_x]
-    _, threshold_eye = cv2.threshold(gray_eye, 70, 255, cv2.THRESH_BINARY)
-    
-    height, width = threshold_eye.shape
-    left_side_threshold = threshold_eye[0: height, 0: int(width / 2)]
-    left_side_white = cv2.countNonZero(left_side_threshold)
-    right_side_threshold = threshold_eye[0: height, int(width / 2): width]
-    right_side_white = cv2.countNonZero(right_side_threshold)
-
-    top_side_threshold = threshold_eye[0: int(height / 2), 0: width]
-    top_side_white = cv2.countNonZero(top_side_threshold)
-    bottom_side_threshold = threshold_eye[int(height / 2): height, 0: width]
-    bottom_side_white = cv2.countNonZero(bottom_side_threshold)
-
-    if left_side_white == 0 or right_side_white == 0:
-        gaze_ratio_horizontal = 1
-    else:
-        gaze_ratio_horizontal = right_side_white / left_side_white
-
-    if top_side_white == 0 or bottom_side_white == 0:
-        gaze_ratio_vertical = 1
-    else:
-        gaze_ratio_vertical = bottom_side_white / top_side_white
-
-    return gaze_ratio_horizontal, gaze_ratio_vertical
-
-def check_user_focus(frame):
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-    results = face_mesh.process(rgb_frame)
-
-    if results.multi_face_landmarks:
-        for face_landmarks in results.multi_face_landmarks:
-            landmarks = []
-            for i in range(468):
-                x = int(face_landmarks.landmark[i].x * frame.shape[1])
-                y = int(face_landmarks.landmark[i].y * frame.shape[0])
-                landmarks.append((x, y))
-
-            left_eye_ratio_horizontal, left_eye_ratio_vertical = get_gaze_ratio(
-                [33, 160, 158, 133, 153, 144], landmarks, frame, gray
-            )
-            right_eye_ratio_horizontal, right_eye_ratio_vertical = get_gaze_ratio(
-                [362, 385, 387, 263, 373, 380], landmarks, frame, gray
-            )
-
-            avg_gaze_ratio_horizontal = (left_eye_ratio_horizontal + right_eye_ratio_horizontal) / 2
-            avg_gaze_ratio_vertical = (left_eye_ratio_vertical + right_eye_ratio_vertical) / 2
-
-            # Adjust thresholds based on testing and requirements
-            horizontal_focus_range = (0.8, 1.2)
-            vertical_focus_range = (0.8, 1.2)
-
-            if horizontal_focus_range[0] <= avg_gaze_ratio_horizontal <= horizontal_focus_range[1] and \
-               vertical_focus_range[0] <= avg_gaze_ratio_vertical <= vertical_focus_range[1]:
-                return "User is focused"
-            else:
-                return "User is not focused"
-
-    return "No face detected"
 
 
 
@@ -541,20 +429,15 @@ class FaceLoginView(APIView):
                 return JsonResponse({'message': 'Image is blurred. Please clear the webcam.'})
         except:
             pass
-
-        # Assuming that user's facial data is stored in their profile
         users = User.objects.all()
 
         for user in users:
             try:
-                # Get the path to the stored face image
                 stored_face_path = os.path.join(settings.MEDIA_ROOT, str(user.profile_picture))
 
-                # Compare the captured face with the stored face data
                 result = DeepFace.verify(opencv_image, stored_face_path, enforce_detection=False)
 
                 if result['verified']:
-                    # Authenticate the user
                     user = authenticate(request, username=user.username, password=user.password)
                     if user is not None:
                         login(request, user)
@@ -602,18 +485,7 @@ def complete_face_registration(request):
         return Response({"message": "User not found"}, status=404)
     except FaceLoginProfile.DoesNotExist:
         return Response({"message": "Registration not started"}, status=400)
-    
 
-
-"""
-===============================================================================================================================
-===============================================================================================================================
-===============================================================================================================================
-===============================================================================================================================
-===============================================================================================================================
-===============================================================================================================================
-
-"""
         
 
 class EmotionDataView(APIView):
@@ -636,60 +508,73 @@ class EmotionDataView(APIView):
             if is_image_blurred(opencv_image):
                 return JsonResponse({'emo': 'Image is blurred. Please clear the webcam.', 'frq': 'none'})
 
-            # Perform emotion detection
-            emotion = detectEmotion(opencv_image, sharpened_image)
+            try:
+                face_locations = face_recognition.face_locations(opencv_image)
+                if face_locations:
+                    for face_location in face_locations:
+                        top, right, bottom, left = face_location
+                        
+                        face_image = opencv_image[top:bottom, left:right]
 
-            stress_weights = {
-                'angry': 4,
-                'disgust': 3,
-                'fear': 4,
-                'happy': -4,
-                'sad': 3,
-                'surprise': 1,
-                'neutral': 0}
+                        #emotion detection using DeepFace
+                        emotion = detectEmotion(face_image, sharpened_image)
 
-            allowed_emotions = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
-            if emotion in allowed_emotions:
-                # Create a new record in the Employee_Emotion model
-                Employee_Emotion.objects.create(employee_id=userid, emotion_data=emotion)
+                        stress_weights = {
+                            'angry': 4,
+                            'disgust': 3,
+                            'fear': 4,
+                            'happy': -4,
+                            'sad': 3,
+                            'surprise': 1,
+                            'neutral': 0
+                        }
 
-                # Get the stress weight for the detected emotion
-                stress_weight = stress_weights.get(emotion, 0)
-    
-                # Create a new record in the Employee_Stress model
-                Employee_Stress.objects.create(employee_id=userid, stress_data=stress_weight)
+                        allowed_emotions = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
+                        if emotion in allowed_emotions:
+                            # Create a new record in the Employee_Emotion model
+                            Employee_Emotion.objects.create(employee_id=userid, emotion_data=emotion)
 
-                # Calculate the timestamp for one minute ago
-                one_minute_ago = timezone.now() - timedelta(minutes=1)
+                            # Get the stress weight for the detected emotion
+                            stress_weight = stress_weights.get(emotion, 0)
 
-                # Count the number of negative emotions in the last minute for this user
-                negative_emotions_count = Employee_Emotion.objects.filter(
-                    employee_id=userid,
-                    emotion_data__in=['sad', 'angry', 'disgust', 'fear'],
-                    time__gte=one_minute_ago
-                ).count()
+                            # Create a new record in the Employee_Stress model
+                            Employee_Stress.objects.create(employee_id=userid, stress_data=stress_weight)
 
-                # Check if the count of negative emotions is 2 or more
-                if negative_emotions_count >= 2:
-                    frq = "You seem to be stressed!"
-                else:
-                    frq = "none"
-            else:
-                frq = "none"
+                            # Calculate the timestamp for one minute ago
+                            one_minute_ago = timezone.now() - timedelta(minutes=1)
 
-            # Return the emotion, frequency, and gaze estimation
-            return JsonResponse({'emo': emotion, 'frq': frq})
+                            # Count the number of negative emotions in the last minute for this user
+                            negative_emotions_count = Employee_Emotion.objects.filter(
+                                employee_id=userid,
+                                emotion_data__in=['sad', 'angry', 'disgust', 'fear'],
+                                time__gte=one_minute_ago
+                            ).count()
+
+                            # Check if the count of negative emotions is 2 or more
+                            if negative_emotions_count >= 3:
+                                frq = "You seem to be stressed!"
+                            else:
+                                frq = "none"
+                        else:
+                            frq = "none"
+
+                        # Return the emotion and frequency
+                        return JsonResponse({'emo': emotion, 'frq': frq})
+
+                return JsonResponse({'emo': 'No face detected', 'frq': 'none'})
+
+            except Exception as e:
+                return JsonResponse({'emo': 'Error occurred 1', 'frq': 'none'})
 
         except Exception as e:
-            return JsonResponse({'emo': 'Error occurred', 'frq': 'none', 'gaze': 'Error'})
+            return JsonResponse({'emo': 'Error occurred', 'frq': 'none'})
         
     def get(self, request):
         defaultEmotionValues = {'angry': 0, 'disgust': 0, 'fear': 0, 'happy': 0, 'sad': 0, 'surprise': 0, 'neutral': 0}
         user_id = request.GET.get('user_id')
         team_id = request.GET.get('team_id')
-        period = request.GET.get('period', 'all_time')  # Default to 'all_time' if not provided
+        period = request.GET.get('period', 'all_time') 
 
-        # Check if user_id or team_id is provided in the request
         if not user_id and not team_id:
             return JsonResponse({'error': 'User ID or Team ID is required'}, status=400)
 
@@ -703,7 +588,7 @@ class EmotionDataView(APIView):
         else:
             time_threshold = None
 
-        # Initialize filter parameters
+        #Initialize filter parameters
         filter_params = {}
         if user_id and user_id != 'none':
             filter_params['employee_id'] = user_id
@@ -736,27 +621,22 @@ class EmotionDataView(APIView):
             if key in emotion_counts_dict:
                 defaultEmotionValues[key] += emotion_counts_dict[key]
 
-        # Initialize the hourly dominant emotion dictionary
         hourly_dominant_emotions = {}
 
-        # Get the current date and define the start and end hours
         current_date = datetime.now().date()
         start_hour = 7
         end_hour = 18
 
-        # Loop through each hour from 7 AM to 6 PM
         for hour in range(start_hour, end_hour + 1):
             start_time = datetime.combine(current_date, datetime.min.time()) + timedelta(hours=hour)
             end_time = start_time + timedelta(hours=1)
 
-            #Query to get the dominant emotion in the current hour for daily period
             if period == 'daily':
                 hourly_emotion = Employee_Emotion.objects.filter(**filter_params, time__gte=start_time, time__lt=end_time) \
                                     .values('emotion_data') \
                                     .annotate(count=Count('emotion_data')) \
                                     .order_by('-count') \
                                     .first()
-            # Query to get the dominant emotion in the current hour for weekly and monthly periods
             else:
                 hourly_emotion = Employee_Emotion.objects.filter(**filter_params, time__hour=hour, time__gte=time_threshold) \
                                     .values('emotion_data') \
@@ -767,9 +647,8 @@ class EmotionDataView(APIView):
             if hourly_emotion:
                 dominant_emotion = hourly_emotion['emotion_data']
             else:
-                dominant_emotion = ''  # Default if no data is found
+                dominant_emotion = ''  
 
-            #Add the dominant emotion for the current hour to the dictionary
             hourly_dominant_emotions[f'{hour}:00 - {hour+1}:00'] = dominant_emotion
         print(hourly_dominant_emotions)
 
@@ -780,27 +659,28 @@ class EmotionDataView(APIView):
 
         return Response(response_data)
 
-
 class StressDataView(APIView):
     def get(self, request):
         user_id = request.GET.get('user')
         team_id = request.GET.get('team_id')
         period = request.GET.get('period')
         today = now().date()
+        local_tz = local_timezone 
 
         if period == 'weekly':
-            start_date = today - timedelta(days=today.weekday())  # Start of the week (Monday)
-            end_date = start_date + timedelta(days=6)  # End of the week (Sunday)
-            days = {str(i): 0 for i in range(1, 8)}  # Initialize days 1-7 (Monday-Sunday)
+            start_date = today - timedelta(days=today.weekday())  
+            end_date = start_date + timedelta(days=6) 
+            days = {day: 0 for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]}
         elif period == 'monthly':
-            start_date = today.replace(day=1)  # Start of the month
-            end_date = (today.replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)  # End of the month
+            start_date = today.replace(day=1)  
+            end_date = (today.replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)  
             days_in_month = (end_date - start_date).days + 1
-            days = {str(i): 0 for i in range(1, days_in_month + 1)}  # Initialize days 1-31 (or the number of days in the month)
+            days = {f'Day {i}': 0 for i in range(1, days_in_month + 1)} 
         elif period == 'daily':
             start_date = today
             end_date = today
-            days = {f'{hour}:00 - {hour+1}:00': 0 for hour in range(7, 19)}  # Initialize hours 7:00 - 18:00
+            hours = range(7, 19, 1)  
+            days = {f'{hour}:00 - {hour+1}:00': 0 for hour in hours}
         else:
             return Response({"error": "Invalid period specified"}, status=400)
 
@@ -820,15 +700,23 @@ class StressDataView(APIView):
             timestamp__date__range=[start_date, end_date]
         ).annotate(
             day=ExtractHour('timestamp') if period == 'daily' else (ExtractDay('timestamp') if period == 'monthly' else ExtractWeekDay('timestamp'))
-        ).values('day').annotate(total_stress=Sum('stress_data'))
+        ).values('timestamp', 'day').annotate(total_stress=Sum('stress_data'))
 
         for record in stress_records:
+            timestamp = record['timestamp']
+            local_time = timestamp.astimezone(local_tz)
             if period == 'daily':
-                hour_range = f"{record['day']}:00 - {record['day'] + 1}:00"
+                hour = local_time.hour
+                hour_range = f"{hour}:00 - {hour + 1}:00"
                 if hour_range in days:
                     days[hour_range] = record['total_stress']
+            elif period == 'weekly':
+                adjusted_day = (record['day'] + 5) % 7 
+                weekday_name = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][adjusted_day]
+                days[weekday_name] = record['total_stress']
             else:
-                days[str(record['day'])] = record['total_stress']
+                day_name = f"Day {record['day']}"
+                days[day_name] = record['total_stress']
 
         return Response({
             "days": days,
@@ -849,10 +737,8 @@ class EmployeeEmotionDataView(APIView):
                                     .order_by('emotion_data') \
                                     .values_list('emotion_data', 'count')
 
-        # Convert the queryset to a dictionary
         emotion_counts_dict = dict(emotion_counts_list)
 
-        # Update defaultEmotionValues with the fetched emotion counts
         for key in defaultEmotionValues:
             if key in emotion_counts_dict:
                 defaultEmotionValues[key] += emotion_counts_dict[key]
@@ -869,11 +755,9 @@ class WeeklyEmployeeEmotionDataView(APIView):
         # Get the current date and time
         now = timezone.now()
 
-        # Calculate the start and end dates of the current week (assuming week starts on Monday)
         start_of_week = now - timedelta(days=now.weekday())
         end_of_week = start_of_week + timedelta(days=6)
 
-        # Fetch emotion data for all employees during the current week
         emotion_counts_list = Employee_Emotion.objects.filter(
             time__date__range=[start_of_week.date(), end_of_week.date()]
         ).values('emotion_data') \
@@ -881,10 +765,8 @@ class WeeklyEmployeeEmotionDataView(APIView):
         .order_by('emotion_data') \
         .values_list('emotion_data', 'count')
 
-        # Convert the queryset to a dictionary
         emotion_counts_dict = dict(emotion_counts_list)
 
-        # Update defaultEmotionValues with the fetched emotion counts
         for key in defaultEmotionValues:
             if key in emotion_counts_dict:
                 defaultEmotionValues[key] += emotion_counts_dict[key]
@@ -910,7 +792,6 @@ class EmployeeTeamView(APIView):
             if Employee_Team.objects.filter(name=name).exists():
                 raise ValidationError({"name": "A team with this name already exists."})
 
-            # Create a new team instance using the create_team class method
             new_team = Employee_Team.create_team(name=name, description=description)
 
             return Response({"message": "Team created successfully"}, status=status.HTTP_201_CREATED)
@@ -921,7 +802,6 @@ class EmployeeTeamView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
 
-
 class BreathingExerciseUsageView(APIView):
     @csrf_exempt
     def post(self, request):
@@ -931,27 +811,26 @@ class BreathingExerciseUsageView(APIView):
 
         BreathingExerciseUsage.objects.create(employee_id=id, exercise_name=exercise_name, duration=duration)
         return Response(status=status.HTTP_201_CREATED)
-
-
     def get(self, request):
         user_id = request.GET.get('user')
         team_id = request.GET.get('team_id')
         period = request.GET.get('period')
         today = now().date()
+        local_tz = local_timezone
 
         if period == 'weekly':
-            start_date = today - timedelta(days=today.weekday())  # Start of the week (Monday)
-            end_date = start_date + timedelta(days=6)  # End of the week (Sunday)
+            start_date = today - timedelta(days=today.weekday())  
+            end_date = start_date + timedelta(days=6) 
             days = {day: 0 for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]}
         elif period == 'monthly':
-            start_date = today.replace(day=1)  # Start of the month
-            end_date = (today.replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)  # End of the month
+            start_date = today.replace(day=1) 
+            end_date = (today.replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)  
             days_in_month = (end_date - start_date).days + 1
-            days = {f'Day {i}': 0 for i in range(1, days_in_month + 1)}  # Initialize days 1-31 (or the number of days in the month)
+            days = {f'Day {i}': 0 for i in range(1, days_in_month + 1)}  
         elif period == 'daily':
             start_date = today
             end_date = today
-            hours = range(8, 19, 1)  # 8:00 - 9:00, 10:00 - 11:00, ...
+            hours = range(8, 19, 1)  
             days = {f'{hour}:00 - {hour+1}:00': 0 for hour in hours}
         else:
             return Response({"error": "Invalid period specified"}, status=400)
@@ -972,49 +851,48 @@ class BreathingExerciseUsageView(APIView):
             timestamp__date__range=[start_date, end_date]
         ).annotate(
             day=ExtractHour('timestamp') if period == 'daily' else (ExtractDay('timestamp') if period == 'monthly' else ExtractWeekDay('timestamp'))
-        ).values('day').annotate(total_duration=Sum('duration'))
+        ).values('timestamp', 'day').annotate(total_duration=Sum('duration'))
 
         for record in usage_records:
+            timestamp = record['timestamp']
+            local_time = timestamp.astimezone(local_tz)
             if period == 'daily':
-                hour = record['day']
+                hour = local_time.hour
                 hour_range = f"{hour}:00 - {hour + 1}:00"
                 if hour_range in days:
                     days[hour_range] = record['total_duration']
             elif period == 'weekly':
-                weekday_name = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][record['day'] - 1]
+                adjusted_day = (record['day'] + 5) % 7  
+                weekday_name = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][adjusted_day]
                 days[weekday_name] = record['total_duration']
             else:
-                day_name = f"{record['day']}"
+                day_name = f"Day {record['day']}"
                 days[day_name] = record['total_duration']
 
         most_used_exercise = BreathingExerciseUsage.objects.filter(
             **filter_params,
             timestamp__date__range=[start_date, end_date]
         ).values('exercise_name').annotate(total_duration=Sum('duration')).order_by('-total_duration').first()
+        
         return Response({
             "days": days,
             "most_used_exercise": most_used_exercise
         })
-
-
+    
 class TrackListeningView(APIView):
     @csrf_exempt
     def post(self, request):
         try:
-            # Extract and validate request data
             user_id = request.data.get('user')
             track_name = request.data.get('track_name')
             duration = request.data.get('duration')
 
-            # Validate required fields
             if user_id is None or track_name is None or duration is None:
                 return Response({"error": "User, track name, and duration are required"}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Validate duration value
             if duration <= 10:
                 return Response({"error": "Duration must be greater than 10"}, status=status.HTTP_400_BAD_REQUEST)
             else:
-                # Create the TrackListening object
                 TrackListening.objects.create(employee_id=user_id, track_name=track_name, duration=duration)
                 return Response({"message": "Track listening recorded successfully"}, status=status.HTTP_201_CREATED)
 
@@ -1029,20 +907,21 @@ class TrackListeningView(APIView):
         team_id = request.GET.get('team_id')
         period = request.GET.get('period')
         today = now().date()
+        local_tz = local_timezone  
 
         if period == 'weekly':
-            start_date = today - timedelta(days=today.weekday())  # Start of the week (Monday)
-            end_date = start_date + timedelta(days=6)  # End of the week (Sunday)
+            start_date = today - timedelta(days=today.weekday())  
+            end_date = start_date + timedelta(days=6)  
             days = {day: 0 for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]}
         elif period == 'monthly':
-            start_date = today.replace(day=1)  # Start of the month
-            end_date = (today.replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)  # End of the month
+            start_date = today.replace(day=1)  
+            end_date = (today.replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)  
             days_in_month = (end_date - start_date).days + 1
-            days = {f'Day {i}': 0 for i in range(1, days_in_month + 1)}  # Initialize days 1-31 (or the number of days in the month)
+            days = {f'Day {i}': 0 for i in range(1, days_in_month + 1)}  
         elif period == 'daily':
             start_date = today
             end_date = today
-            hours = range(8, 19, 1) 
+            hours = range(8, 19, 1)  
             days = {f'{hour}:00 - {hour+1}:00': 0 for hour in hours}
         else:
             return Response({"error": "Invalid period specified"}, status=400)
@@ -1063,16 +942,19 @@ class TrackListeningView(APIView):
             timestamp__date__range=[start_date, end_date]
         ).annotate(
             day=ExtractHour('timestamp') if period == 'daily' else (ExtractDay('timestamp') if period == 'monthly' else ExtractWeekDay('timestamp'))
-        ).values('day').annotate(total_duration=Sum('duration'))
+        ).values('timestamp', 'day').annotate(total_duration=Sum('duration'))
 
         for record in usage_records:
+            timestamp = record['timestamp']
+            local_time = timestamp.astimezone(local_tz)
             if period == 'daily':
-                hour = record['day']
+                hour = local_time.hour
                 hour_range = f"{hour}:00 - {hour + 1}:00"
                 if hour_range in days:
                     days[hour_range] = record['total_duration']
             elif period == 'weekly':
-                weekday_name = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][record['day'] - 1]
+                adjusted_day = (record['day'] + 5) % 7 
+                weekday_name = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][adjusted_day]
                 days[weekday_name] = record['total_duration']
             else:
                 day_name = f"Day {record['day']}"
@@ -1082,22 +964,21 @@ class TrackListeningView(APIView):
             **filter_params,
             timestamp__date__range=[start_date, end_date]
         ).values('track_name').annotate(total_duration=Sum('duration')).order_by('-total_duration').first()
+
         return Response({
             "days": days,
             "most_listened_track": most_listened_track
         })
-
+    
 class EmotionTeamDataView(APIView):
     def get(self, request):
         defaultEmotionValues = {'angry': 0, 'disgust': 0, 'fear': 0, 'happy': 0, 'sad': 0, 'surprise': 0, 'neutral': 0}
         team_id = request.GET.get('team_id')
-        period = request.GET.get('period', 'all_time')  # Default to 'all_time' if not provided
+        period = request.GET.get('period', 'all_time')  
 
-        # Check if team_id is provided in the request
         if not team_id:
             return JsonResponse({'error': 'Team ID is required'}, status=400)
 
-        # Define the time filter based on the period
         if period == 'daily':
             time_threshold = datetime.now() - timedelta(days=1)
         elif period == 'weekly':
@@ -1107,7 +988,6 @@ class EmotionTeamDataView(APIView):
         else:
             time_threshold = None
 
-        # Initialize filter parameters
         users = User.objects.filter(team=team_id)
         user_ids = users.values_list('id', flat=True)
         filter_params = {'employee_id__in': user_ids}
@@ -1125,28 +1005,22 @@ class EmotionTeamDataView(APIView):
                                         .order_by('emotion_data') \
                                         .values_list('emotion_data', 'count')
 
-        # Convert the queryset to a dictionary
         emotion_counts_dict = dict(emotion_counts_list)
 
-        # Update defaultEmotionValues with the fetched emotion counts
         for key in defaultEmotionValues:
             if key in emotion_counts_dict:
                 defaultEmotionValues[key] += emotion_counts_dict[key]
 
-        # Initialize the hourly dominant emotion dictionary
         hourly_dominant_emotions = {}
 
-        # Get the current date and define the start and end hours
         current_date = datetime.now().date()
         start_hour = 7
         end_hour = 18
 
-        # Loop through each hour from 7 AM to 6 PM
         for hour in range(start_hour, end_hour + 1):
             start_time = datetime.combine(current_date, datetime.min.time()) + timedelta(hours=hour)
             end_time = start_time + timedelta(hours=1)
 
-            # Query to get the dominant emotion in the current hour
             hourly_emotion = Employee_Emotion.objects.filter(**filter_params, time__gte=start_time, time__lt=end_time) \
                                   .values('emotion_data') \
                                   .annotate(count=Count('emotion_data')) \
@@ -1156,9 +1030,8 @@ class EmotionTeamDataView(APIView):
             if hourly_emotion:
                 dominant_emotion = hourly_emotion['emotion_data']
             else:
-                dominant_emotion = ''  # Default if no data is found
+                dominant_emotion = ''  
 
-            # Add the dominant emotion for the current hour to the dictionary
             hourly_dominant_emotions[f'{hour}:00 - {hour+1}:00'] = dominant_emotion
         
         response_data = {
@@ -1174,7 +1047,6 @@ class TeamDetection(APIView):
     @staticmethod
     def get_stress_score(user):
         try:
-            # Get the latest form submitted by the user
             latest_form = StressDetectionForm.objects.filter(user=user).order_by('-submitted_at').first()
             
             if latest_form:
@@ -1190,17 +1062,14 @@ class TeamDetection(APIView):
         if not team:
             return Response({'error': 'Team is required'}, status=400)
 
-        # Retrieve team members
         team_members = list(User.objects.filter(team=team).values('id', 'first_name', 'last_name', 'email', 'profile_picture', 'is_staff'))
         
         if not team_members:
             return Response({'team_members': 'No Team Members Yet'})
 
-        # Iterate over each team member
         for member in team_members:
             stress_info = self.get_stress_score(member['id'])
 
-            # Add additional info to each team member's dictionary
             member.update({
                 'emotion': 'happy',
                 'stress': 'low',
@@ -1217,7 +1086,6 @@ class TeamDetection(APIView):
 class StressFormDetail(APIView):
     def get(self, request, user_id):
         try:
-            # Assuming we fetch the most recent form
             form = StressDetectionForm.objects.filter(user_id=user_id).latest('submitted_at')
             data = {
                 'answers': form.answers,
@@ -1282,7 +1150,6 @@ class StressQuestionListCreateView(generics.ListCreateAPIView):
 class StressQuestionRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = StressQuestion.objects.all()
     serializer_class = StressQuestionSerializer
-
 
 
 class SaveSettingsView(APIView):
@@ -1400,309 +1267,6 @@ class ReminderCreateView(generics.CreateAPIView):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-
-
-
-
-
-
-
-
-
-
-
-class XXXEmotionDataView(APIView):    
-    def get(self, request):
-        defaultEmotionValues = {'angry': 0, 'disgust': 0, 'fear': 0, 'happy': 0, 'sad': 0, 'surprise': 0, 'neutral': 0}
-        user_id = request.GET.get('user_id')
-        team_id = request.GET.get('team_id')
-        period = request.GET.get('period', datetime.now().strftime('%Y-%m-%d'))  # Default to today's date if not provided
-
-        # Check if user_id or team_id is provided in the request
-        if not user_id and not team_id:
-            return JsonResponse({'error': 'User ID or Team ID is required'}, status=400)
-
-        # Determine the time filter based on the period format
-        try:
-            if '-' in period:
-                if len(period) == 10:  # Exact date
-                    time_threshold_start = datetime.strptime(period, '%Y-%m-%d')
-                    time_threshold_end = time_threshold_start + timedelta(days=1)
-                elif len(period) == 7:  # Exact month
-                    time_threshold_start = datetime.strptime(period, '%Y-%m')
-                    next_month = time_threshold_start.replace(day=28) + timedelta(days=4)  # Ensure we go to the next month
-                    time_threshold_end = next_month - timedelta(days=next_month.day - 1)
-                elif 'W' in period:  # Exact week
-                    year, week = map(int, period.split('-W'))
-                    time_threshold_start = datetime.strptime(f'{year}-W{week}-1', '%Y-W%W-%w')
-                    time_threshold_end = time_threshold_start + timedelta(days=7)
-                else:
-                    raise ValueError("Invalid period format")
-            else:
-                raise ValueError("Invalid period format")
-        except ValueError:
-            return JsonResponse({'error': 'Invalid period format'}, status=400)
-
-        # Initialize filter parameters
-        filter_params = {}
-        if user_id and user_id != 'none':
-            filter_params['employee_id'] = user_id
-        elif team_id:
-            if team_id == 'all':
-                users = User.objects.all()
-            else:
-                users = User.objects.filter(team=team_id)
-            user_ids = users.values_list('id', flat=True)
-            filter_params['employee_id__in'] = user_ids
-
-        # Apply the time threshold to the query
-        emotion_counts_list = Employee_Emotion.objects.filter(**filter_params, time__gte=time_threshold_start, time__lt=time_threshold_end) \
-                                    .values('emotion_data') \
-                                    .annotate(count=Count('emotion_data')) \
-                                    .order_by('emotion_data') \
-                                    .values_list('emotion_data', 'count')
-
-        # Convert the queryset to a dictionary
-        emotion_counts_dict = dict(emotion_counts_list)
-
-        # Update defaultEmotionValues with the fetched emotion counts
-        for key in defaultEmotionValues:
-            if key in emotion_counts_dict:
-                defaultEmotionValues[key] += emotion_counts_dict[key]
-
-        # Initialize the hourly dominant emotion dictionary
-        hourly_dominant_emotions = {}
-
-        # Get the current date and define the start and end hours
-        current_date = time_threshold_start.date()
-        start_hour = 7
-        end_hour = 18
-
-        # Loop through each hour from 7 AM to 6 PM
-        for hour in range(start_hour, end_hour + 1):
-            start_time = datetime.combine(current_date, datetime.min.time()) + timedelta(hours=hour)
-            end_time = start_time + timedelta(hours=1)
-
-            # Query to get the dominant emotion in the current hour
-            hourly_emotion = Employee_Emotion.objects.filter(**filter_params, time__gte=start_time, time__lt=end_time) \
-                                .values('emotion_data') \
-                                .annotate(count=Count('emotion_data')) \
-                                .order_by('-count') \
-                                .first()
-
-            if hourly_emotion:
-                dominant_emotion = hourly_emotion['emotion_data']
-            else:
-                dominant_emotion = ''  # Default if no data is found
-
-            # Add the dominant emotion for the current hour to the dictionary
-            hourly_dominant_emotions[f'{hour}:00 - {hour+1}:00'] = dominant_emotion
-
-        response_data = {
-            'defaultEmotionValues': defaultEmotionValues,
-            'hourlyDominantEmotions': hourly_dominant_emotions
-        }
-
-        return Response(response_data)
-    
-
-class XXXTrackListeningView(APIView):    
-        def get(self, request):
-            user_id = request.GET.get('user')
-            team_id = request.GET.get('team_id')
-            period = request.GET.get('period', datetime.now().strftime('%Y-%m-%d'))  # Default to today's date if not provided
-
-            try:
-                if '-' in period:
-                    if len(period) == 10:  # Exact date
-                        start_date = datetime.strptime(period, '%Y-%m-%d').date()
-                        end_date = start_date
-                        days = {f'{hour}:00 - {hour+1}:00': 0 for hour in range(7, 19)}  # Initialize hours 7:00 - 18:00
-                    elif len(period) == 7:  # Exact month
-                        start_date = datetime.strptime(period, '%Y-%m').date()
-                        next_month = start_date.replace(day=28) + timedelta(days=4)  # Ensure we go to the next month
-                        end_date = (next_month - timedelta(days=next_month.day)).replace(day=1)
-                        days_in_month = (end_date - start_date).days + 1
-                        days = {str(i): 0 for i in range(1, days_in_month + 1)}  # Initialize days 1-31 (or the number of days in the month)
-                    elif 'W' in period:  # Exact week
-                        year, week = map(int, period.split('-W'))
-                        start_date = datetime.strptime(f'{year}-W{week}-1', '%Y-W%W-%w').date()
-                        end_date = start_date + timedelta(days=6)
-                        days = {str(i): 0 for i in range(1, 8)}  # Initialize days 1-7 (Monday-Sunday)
-                    else:
-                        raise ValueError("Invalid period format")
-                else:
-                    raise ValueError("Invalid period format")
-            except ValueError:
-                return JsonResponse({'error': 'Invalid period format'}, status=400)
-
-            filter_params = {}
-            if user_id and user_id != 'none':
-                filter_params['employee_id'] = user_id
-            elif team_id:
-                if team_id == 'all':
-                    users = User.objects.all()
-                else:
-                    users = User.objects.filter(team=team_id)
-                user_ids = users.values_list('id', flat=True)
-                filter_params['employee_id__in'] = user_ids
-
-            usage_records = TrackListening.objects.filter(
-                **filter_params,
-                timestamp__date__range=[start_date, end_date]
-            ).annotate(
-                day=ExtractHour('timestamp') if len(period) == 10 else (ExtractDay('timestamp') if len(period) == 7 else ExtractWeekDay('timestamp'))
-            ).values('day').annotate(total_duration=Sum('duration'))
-
-            for record in usage_records:
-                if len(period) == 10:
-                    hour_range = f"{record['day']}:00 - {record['day'] + 1}:00"
-                    if hour_range in days:
-                        days[hour_range] = record['total_duration']
-                else:
-                    days[str(record['day'])] = record['total_duration']
-
-            most_listened_track = TrackListening.objects.filter(
-                **filter_params,
-                timestamp__date__range=[start_date, end_date]
-            ).values('track_name').annotate(total_duration=Sum('duration')).order_by('-total_duration').first()
-
-            return Response({
-                "days": days,
-                "most_listened_track": most_listened_track
-            })
-
-class XXXBreathingExerciseUsageView(APIView):
-    def get(self, request):
-        user_id = request.GET.get('user')
-        team_id = request.GET.get('team_id')
-        period = request.GET.get('period', datetime.now().strftime('%Y-%m-%d'))  # Default to today's date if not provided
-
-        try:
-            if '-' in period:
-                if len(period) == 10:  # Exact date
-                    start_date = datetime.strptime(period, '%Y-%m-%d').date()
-                    end_date = start_date
-                    days = {f'{hour}:00 - {hour+1}:00': 0 for hour in range(7, 19)}  # Initialize hours 7:00 - 18:00
-                elif len(period) == 7:  # Exact month
-                    start_date = datetime.strptime(period, '%Y-%m').date()
-                    next_month = start_date.replace(day=28) + timedelta(days=4)  # Ensure we go to the next month
-                    end_date = (next_month - timedelta(days=next_month.day)).replace(day=1)
-                    days_in_month = (end_date - start_date).days + 1
-                    days = {str(i): 0 for i in range(1, days_in_month + 1)}  # Initialize days 1-31 (or the number of days in the month)
-                elif 'W' in period:  # Exact week
-                    year, week = map(int, period.split('-W'))
-                    start_date = datetime.strptime(f'{year}-W{week}-1', '%Y-W%W-%w').date()
-                    end_date = start_date + timedelta(days=6)
-                    days = {str(i): 0 for i in range(1, 8)}  # Initialize days 1-7 (Monday-Sunday)
-                else:
-                    raise ValueError("Invalid period format")
-            else:
-                raise ValueError("Invalid period format")
-        except ValueError:
-            return JsonResponse({'error': 'Invalid period format'}, status=400)
-
-        filter_params = {}
-        if user_id and user_id != 'none':
-            filter_params['employee_id'] = user_id
-        elif team_id:
-            if team_id == 'all':
-                users = User.objects.all()
-            else:
-                users = User.objects.filter(team=team_id)
-            user_ids = users.values_list('id', flat=True)
-            filter_params['employee_id__in'] = user_ids
-
-        usage_records = BreathingExerciseUsage.objects.filter(
-            **filter_params,
-            timestamp__date__range=[start_date, end_date]
-        ).annotate(
-            day=ExtractHour('timestamp') if len(period) == 10 else (ExtractDay('timestamp') if len(period) == 7 else ExtractWeekDay('timestamp'))
-        ).values('day').annotate(total_duration=Sum('duration'))
-
-        for record in usage_records:
-            if len(period) == 10:
-                hour_range = f"{record['day']}:00 - {record['day'] + 1}:00"
-                if hour_range in days:
-                    days[hour_range] = record['total_duration']
-            else:
-                days[str(record['day'])] = record['total_duration']
-
-        most_used_exercise = BreathingExerciseUsage.objects.filter(
-            **filter_params,
-            timestamp__date__range=[start_date, end_date]
-        ).values('exercise_name').annotate(total_duration=Sum('duration')).order_by('-total_duration').first()
-
-        return Response({
-            "days": days,
-            "most_used_exercise": most_used_exercise
-        })
-    
-class XXXStressDataView(APIView):
-    def get(self, request):
-        user_id = request.GET.get('user')
-        team_id = request.GET.get('team_id')
-        period = request.GET.get('period', datetime.now().strftime('%Y-%m-%d'))  # Default to today's date if not provided
-
-        try:
-            if '-' in period:
-                if len(period) == 10:  # Exact date
-                    start_date = datetime.strptime(period, '%Y-%m-%d').date()
-                    end_date = start_date
-                    days = {f'{hour}:00 - {hour+1}:00': 0 for hour in range(7, 19)}  # Initialize hours 7:00 - 18:00
-                elif len(period) == 7:  # Exact month
-                    start_date = datetime.strptime(period, '%Y-%m').date()
-                    next_month = start_date.replace(day=28) + timedelta(days=4)  # Ensure we go to the next month
-                    end_date = (next_month - timedelta(days=next_month.day)).replace(day=1)
-                    days_in_month = (end_date - start_date).days + 1
-                    days = {str(i): 0 for i in range(1, days_in_month + 1)}  # Initialize days 1-31 (or the number of days in the month)
-                elif 'W' in period:  # Exact week
-                    year, week = map(int, period.split('-W'))
-                    start_date = datetime.strptime(f'{year}-W{week}-1', '%Y-W%W-%w').date()
-                    end_date = start_date + timedelta(days=6)
-                    days = {str(i): 0 for i in range(1, 8)}  # Initialize days 1-7 (Monday-Sunday)
-                else:
-                    raise ValueError("Invalid period format")
-            else:
-                raise ValueError("Invalid period format")
-        except ValueError:
-            return JsonResponse({'error': 'Invalid period format'}, status=400)
-
-        filter_params = {}
-        if user_id and user_id != 'none':
-            filter_params['employee_id'] = user_id
-        elif team_id:
-            if team_id == 'all':
-                users = User.objects.all()
-            else:
-                users = User.objects.filter(team=team_id)
-            user_ids = users.values_list('id', flat=True)
-            filter_params['employee_id__in'] = user_ids
-
-        stress_records = Employee_Stress.objects.filter(
-            **filter_params,
-            timestamp__date__range=[start_date, end_date]
-        ).annotate(
-            day=ExtractHour('timestamp') if len(period) == 10 else (ExtractDay('timestamp') if len(period) == 7 else ExtractWeekDay('timestamp'))
-        ).values('day').annotate(total_stress=Sum('stress_data'))
-
-        for record in stress_records:
-            if len(period) == 10:
-                hour_range = f"{record['day']}:00 - {record['day'] + 1}:00"
-                if hour_range in days:
-                    days[hour_range] = record['total_stress']
-            else:
-                days[str(record['day'])] = record['total_stress']
-
-        return Response({
-            "days": days,
-        })
-
-# views.py
-import cv2
-import numpy as np
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 import face_recognition
 
 model_points = np.array([
@@ -1718,22 +1282,23 @@ class FocusDataView(APIView):
     def get(self, request):
         user_id = request.GET.get('user_id')
         team_id = request.GET.get('team_id')
-        period = request.GET.get('period', 'all_time') 
+        period = request.GET.get('period', 'all_time')
         today = now().date()
+        local_tz = local_timezone   
 
         if period == 'weekly':
-            start_date = today - timedelta(days=today.weekday())  #Start of the week (Monday)
-            end_date = start_date + timedelta(days=6)  #End of the week (Sunday)
+            start_date = today - timedelta(days=today.weekday())  
+            end_date = start_date + timedelta(days=6)  
             days = {day: {'F': 0, 'NF': 0} for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]}
         elif period == 'monthly':
-            start_date = today.replace(day=1)  # Start of the month
-            end_date = (today.replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)  # End of the month
+            start_date = today.replace(day=1)  
+            end_date = (today.replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1) 
             days_in_month = (end_date - start_date).days + 1
-            days = {f'Day {i}': {'F': 0, 'NF': 0} for i in range(1, days_in_month + 1)}  #Initialize days 1-31
+            days = {f'Day {i}': {'F': 0, 'NF': 0} for i in range(1, days_in_month + 1)}  
         elif period == 'daily':
             start_date = today
             end_date = today
-            hours = range(8, 19, 1)  
+            hours = range(8, 19, 1) 
             days = {f'{hour}:00 - {hour+1}:00': {'F': 0, 'NF': 0} for hour in hours}
         else:
             return Response({"error": "Invalid period specified"}, status=400)
@@ -1754,16 +1319,19 @@ class FocusDataView(APIView):
             time__date__range=[start_date, end_date]
         ).annotate(
             day=ExtractHour('time') if period == 'daily' else (ExtractDay('time') if period == 'monthly' else ExtractWeekDay('time'))
-        ).values('day', 'focus_data').annotate(total_count=Count('focus_data'))
+        ).values('time', 'day', 'focus_data').annotate(total_count=Count('focus_data'))
 
         for record in usage_records:
+            timestamp = record['time']
+            local_time = timestamp.astimezone(local_tz)
             if period == 'daily':
-                hour = record['day']
+                hour = local_time.hour
                 hour_range = f"{hour}:00 - {hour + 1}:00"
                 if hour_range in days:
                     days[hour_range][record['focus_data']] += record['total_count']
             elif period == 'weekly':
-                weekday_name = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][record['day'] - 1]
+                adjusted_day = (record['day'] + 5) % 7  
+                weekday_name = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][adjusted_day]
                 days[weekday_name][record['focus_data']] += record['total_count']
             else:
                 day_name = f"Day {record['day']}"
@@ -1781,84 +1349,87 @@ class FocusDataView(APIView):
 
         if not image_data or not userid:
             return JsonResponse({'focused': False, 'text': 'Missing frame or user_id'})
-
+        
         try:
             format, imgstr = image_data.split('image/jpeg;base64,')
             opencv_image = stringToRGB(imgstr)
-            frame = opencv_image  # Using the decoded image directly
 
-            # Detect face
-            face_locations = face_recognition.face_locations(frame)
-            if face_locations:
-                for face_location in face_locations:
-                    # Extract the facial landmarks
-                    face_landmarks = face_recognition.face_landmarks(frame, [face_location])
-                    if face_landmarks:
-                        landmarks = face_landmarks[0]
+            if is_image_dark(opencv_image):
+                return JsonResponse({'text': 'Webcam cover is closed or image is too dark'})
 
-                        # Extract 2D coordinates of the facial landmarks
-                        image_points = np.array([
-                            landmarks['nose_tip'][2],    # Nose tip
-                            landmarks['chin'][8],        # Chin
-                            landmarks['left_eye'][0],    # Left eye left corner
-                            landmarks['right_eye'][3],   # Right eye right corner
-                            landmarks['top_lip'][0],     # Left Mouth corner
-                            landmarks['top_lip'][6]      # Right mouth corner
-                        ], dtype=np.float32)
+            elif is_image_blurred(opencv_image):
+                return JsonResponse({'text': 'Image is blurred. Please clear the webcam.'})
+            else:
+                try:
+                    face_locations = face_recognition.face_locations(opencv_image)
+                    if face_locations:
+                        for face_location in face_locations:
+                            # Extract the facial landmarks
+                            face_landmarks = face_recognition.face_landmarks(opencv_image, [face_location])
+                            if face_landmarks:
+                                landmarks = face_landmarks[0]
 
-                        # Camera matrix
-                        focal_length = frame.shape[1]
-                        center = (frame.shape[1] // 2, frame.shape[0] // 2)
-                        camera_matrix = np.array([
-                            [focal_length, 0, center[0]],
-                            [0, focal_length, center[1]],
-                            [0, 0, 1]
-                        ], dtype=np.float32)
+                                # Extract 2D coordinates of the facial landmarks
+                                image_points = np.array([
+                                    landmarks['nose_tip'][2],    # Nose tip
+                                    landmarks['chin'][8],        # Chin
+                                    landmarks['left_eye'][0],    # Left eye left corner
+                                    landmarks['right_eye'][3],   # Right eye right corner
+                                    landmarks['top_lip'][0],     # Left Mouth corner
+                                    landmarks['top_lip'][6]      # Right mouth corner
+                                ], dtype=np.float32)
 
-                        # Assuming no lens distortion
-                        dist_coeffs = np.zeros((4, 1))
+                                # Camera matrix
+                                focal_length = opencv_image.shape[1]
+                                center = (opencv_image.shape[1] // 2, opencv_image.shape[0] // 2)
+                                camera_matrix = np.array([
+                                    [focal_length, 0, center[0]],
+                                    [0, focal_length, center[1]],
+                                    [0, 0, 1]
+                                ], dtype=np.float32)
 
-                        # SolvePnP to find the rotation and translation vectors
-                        success, rotation_vector, translation_vector = cv2.solvePnP(
-                            model_points, image_points, camera_matrix, dist_coeffs, flags=cv2.SOLVEPNP_ITERATIVE)
+                                dist_coeffs = np.zeros((4, 1))
 
-                        # Project a 3D point (0, 0, 1000.0) onto the image plane to draw a line indicating the head pose
-                        (nose_end_point2D, jacobian) = cv2.projectPoints(
-                            np.array([(0.0, 0.0, 1000.0)]), rotation_vector, translation_vector, camera_matrix, dist_coeffs)
+                                #SolvePnP to find the rotation and translation vectors
+                                success, rotation_vector, translation_vector = cv2.solvePnP(
+                                    model_points, image_points, camera_matrix, dist_coeffs, flags=cv2.SOLVEPNP_ITERATIVE)
 
-                        # Draw the nose line
-                        p1 = (int(image_points[0][0]), int(image_points[0][1]))
-                        p2 = (int(nose_end_point2D[0][0][0]), int(nose_end_point2D[0][0][1]))
-                        cv2.line(frame, p1, p2, (255, 0, 0), 2)
+                                #Project a 3D point (0, 0, 1000.0) onto the image plane to draw a line indicating the head pose
+                                (nose_end_point2D, jacobian) = cv2.projectPoints(
+                                    np.array([(0.0, 0.0, 1000.0)]), rotation_vector, translation_vector, camera_matrix, dist_coeffs)
 
-                        # Calculate angles from rotation vector
-                        rvec_matrix = cv2.Rodrigues(rotation_vector)[0]
-                        proj_matrix = np.hstack((rvec_matrix, translation_vector))
-                        eulerAngles = cv2.decomposeProjectionMatrix(proj_matrix)[6]
-                        yaw = eulerAngles[1]
+                                #Draw the nose line
+                                p1 = (int(image_points[0][0]), int(image_points[0][1]))
+                                p2 = (int(nose_end_point2D[0][0][0]), int(nose_end_point2D[0][0][1]))
+                                cv2.line(opencv_image, p1, p2, (255, 0, 0), 2)
 
-                        # Assume focused if the yaw angle is within -10 to +10 degrees (adjust as needed)
-                        focused = -25 < yaw < 25
+                                rvec_matrix = cv2.Rodrigues(rotation_vector)[0]
+                                proj_matrix = np.hstack((rvec_matrix, translation_vector))
+                                eulerAngles = cv2.decomposeProjectionMatrix(proj_matrix)[6]
+                                yaw = eulerAngles[1]
 
-                        # Simple gaze detection (based on eye landmarks)
-                        left_eye_center = np.mean(landmarks['left_eye'], axis=0).astype(int)
-                        right_eye_center = np.mean(landmarks['right_eye'], axis=0).astype(int)
-                        gaze_direction = (left_eye_center[0] + right_eye_center[0]) / 2  # Simplified
+                                focused = -25 < yaw < 25
 
-                        gaze_focused = 0.3 * frame.shape[1] < gaze_direction < 0.7 * frame.shape[1]  # Adjust as needed
+                                #Simple gaze detection (based on eye landmarks)
+                                left_eye_center = np.mean(landmarks['left_eye'], axis=0).astype(int)
+                                right_eye_center = np.mean(landmarks['right_eye'], axis=0).astype(int)
+                                gaze_direction = (left_eye_center[0] + right_eye_center[0]) / 2  # Simplified
 
-                        # Return focused status based on both head pose and gaze direction
-                        if focused and gaze_focused:
-                            focus_status = 'User is focused'
-                        else:
-                            focus_status = 'User is not focused'
+                                gaze_focused = 0.3 * opencv_image.shape[1] < gaze_direction < 0.7 * opencv_image.shape[1]  # Adjust as needed
 
-                        # Save to the database
-                        focus_data = 'F' if focus_status == 'User is focused' else 'NF'
-                        Employee_Focus.objects.create(employee_id=userid, focus_data=focus_data)
+                                if focused and gaze_focused:
+                                    focus_status = 'F'
+                                    Employee_Focus.objects.create(employee_id=userid, focus_data='F')
+                                else:
+                                    focus_status = 'NF'
+                                    Employee_Focus.objects.create(employee_id=userid, focus_data='NF')
 
-                        return JsonResponse({'focused': focused and gaze_focused, 'text': focus_status})
-            return JsonResponse({'focused': False, 'text': 'No face detected'})
-
-        except Exception as e:
+                                print(focus_status)
+                                return JsonResponse({'text': focus_status})
+                    
+                    return JsonResponse({'focused': False, 'text': 'No face detected'})
+                
+                except Exception as e:
+                    return JsonResponse({'focused': False, 'text': 'error'})
+        except:
             return JsonResponse({'focused': False, 'text': 'error'})

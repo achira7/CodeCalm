@@ -11,8 +11,6 @@
   }
 
 
- 
- /* Tooltip text */
 .tooltip .tooltiptext {
   visibility: hidden;
   width: 120px;
@@ -22,12 +20,10 @@
   padding: 5px 0;
   border-radius: 6px;
  
-  /* Position the tooltip text - see examples below! */
   position: absolute;
   z-index: 1;
 }
 
-/* Show the tooltip text when you mouse over the tooltip container */
 .tooltip:hover .tooltiptext {
   visibility: visible;
 }
@@ -42,15 +38,15 @@
   text-align: center;
   border-radius: 50%;
   padding: 2rem;
-  width: 200px; /* Adjust width as needed */
-  height: 200px; /* Adjust height as needed */
+  width: 200px; 
+  height: 200px; 
   position: absolute;
 
 }
 
 #highestEmotion h2 {
   font-size: 1.25rem;
-  color: #0c4a6e; /* text-sky-900 */
+  color: #0c4a6e;
   text-transform: capitalize;
   margin-bottom: 1rem;
 }
@@ -62,6 +58,6 @@
 }
 
 #highestEmotion p {
-  color: #4b5563; /* text-gray-700 */
+  color: #4b5563; 
   margin-top: 1rem;
 }

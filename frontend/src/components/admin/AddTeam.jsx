@@ -35,7 +35,7 @@ const AddTeam = ({ onSuccess, onError }) => {
               className="w-full px-3 py-2 text-sm leading-tight text-gray-700 border rounded shadow appearance-none focus:outline-none focus:shadow-outline"
               type="text"
               name="name"
-              value={name}  // Bind the input to the state
+              value={name}  
               placeholder="Team Name"
               onChange={(e) => setName(e.target.value)}
               required
@@ -46,7 +46,7 @@ const AddTeam = ({ onSuccess, onError }) => {
             <textarea
               className="w-full px-3 py-2 text-sm leading-tight text-gray-700 border rounded shadow appearance-none focus:outline-none focus:shadow-outline"
               name="description"
-              value={description}  // Bind the input to the state
+              value={description} 
               placeholder="Team Description"
               onChange={(e) => setDescription(e.target.value)}
             />

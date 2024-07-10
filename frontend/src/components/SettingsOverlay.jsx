@@ -1,4 +1,3 @@
-// SettingsOverlay.js
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
@@ -7,7 +6,6 @@ const SettingsOverlay = ({ userData, onClose }) => {
   const [notifications, setNotifications] = useState(userData.notifications || false);
 
   useEffect(() => {
-    // Apply the dark mode if enabled
     if (darkMode) {
       document.documentElement.classList.add('dark');
     } else {

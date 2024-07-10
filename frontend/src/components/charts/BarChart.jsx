@@ -64,10 +64,10 @@ function BarChart({ data, period }) {
           color: Color.chartText
         },
         ticks: {
-          color: Color.chartText,  // Change the color of the x-axis labels
+          color: Color.chartText,  
         },
         grid: {
-          color: Color.chartGrids,  // Change the color of the x-axis grid lines
+          color: Color.chartGrids,  
         },
         beginAtZero: true,
       },

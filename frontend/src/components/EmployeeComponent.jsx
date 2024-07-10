@@ -79,7 +79,7 @@ const EmployeeComponent = ({ id, role }) => {
   const [goBackText, setGoBackText] = useState("");
 
   const [specificPeriod, setSpecificPeriod] = useState(null);
-  const [dateType, setDateType] = useState("daily"); // 'daily', 'weekly', 'monthly'
+  const [dateType, setDateType] = useState("daily");
 
   const [selectedView, setSelectedView] = useState("daily");
 
@@ -144,7 +144,6 @@ const EmployeeComponent = ({ id, role }) => {
       setChartError("An error occurred!");
     }
   };
-
   const fetchStressData = async (period) => {
     try {
       const response = await axios.get("http://localhost:8000/api/stress", {
@@ -318,8 +317,8 @@ const EmployeeComponent = ({ id, role }) => {
 
         pdf.addImage(imgData, "PNG", 0, 20, imgWidth, imgHeight);
 
-        pdf.setFont("helvetica"); // Set font to helvetica
-        pdf.setFontSize(10); // Set font size to 16
+        pdf.setFont("helvetica");
+        pdf.setFontSize(10);
         pdf.setTextColor(0, 0, 255);
 
         pdf
@@ -363,17 +362,6 @@ const EmployeeComponent = ({ id, role }) => {
     fetchFocusData(period);
   };
 
-  /*const [selectedDate, setSelectedDate] = useState(new Date());
-
-  const handleDateChange = (date) => {
-    setSelectedDate(date);
-    // Fetch data based on the selected date
-    fetchEmotionData(emotionView, date);
-    fetchStressData(stressView, date);
-    fetchExerciseData(exerciseView, date);
-    fetchListeningData(listeningView, date);
-  };*/
-
   const getDatePickerType = (view) => {
     switch (view) {
       case "daily":
@@ -409,24 +397,6 @@ const EmployeeComponent = ({ id, role }) => {
                 </button>
               ))}
             </div>
-
-            {/*<button>
-            <FaCalendarAlt
-              className="text-gray-400 cursor-pointer"
-              title="Select Date"
-              onClick={() =>
-                document.getElementById("emotionDateInput").focus()
-              }
-            />
-            <DatePicker
-              selected={selectedDate}
-              onChange={handleDateChange}
-              dateFormat={getDatePickerType(emotionView)}
-              id="emotionDateInput"
-              className="absolute mt-2"
-              style={{ left: "50%", transform: "translateX(-50%)" }}
-            />
-            </button>*/}
 
             <div>
               {(userRole === "Admin" || userRole === "Supervisor") && (
@@ -515,10 +485,10 @@ const EmployeeComponent = ({ id, role }) => {
               </div>
             </div>
 
-                        {/* Focus Data */}
-                        <div className="max-w-sm w-full px-4 py-4 m-5 bg-white border border-gray-200 rounded-lg shadow-lg">
+            {/* Focus Data */}
+            <div className={` ${Color.chartsBGText}   rounded-lg m-4 p-6 `}>
               <div className="text-center">
-                <h5 className="text-xl font-semibold text-sky-900 inline-flex">
+                <h5 className="text-2xl font-semibold  mb-5">
                   {focusView === "daily"
                     ? "Daily Focus Data"
                     : focusView === "weekly"
@@ -526,9 +496,7 @@ const EmployeeComponent = ({ id, role }) => {
                     : "Monthly Focus Data"}
                 </h5>
                 {focusChartError ? (
-                  <h2 className="text-xl text-gray-700 mt-4 flex-initial">
-                    {focusChartError}
-                  </h2>
+                  <h2 className="text-xl  mt-4">{listeningChartError}</h2>
                 ) : (
                   <TwoValueBarChart
                     data={
@@ -542,9 +510,7 @@ const EmployeeComponent = ({ id, role }) => {
                   />
                 )}
               </div>
-   
             </div>
-            
 
             {/* Exercise Data */}
             <div className={` ${Color.chartsBGText}  rounded-lg  m-4 p-6`}>
@@ -585,8 +551,6 @@ const EmployeeComponent = ({ id, role }) => {
                 )}
               </div>
             </div>
-
-
 
             {/* Listening Data */}
             <div className={` ${Color.chartsBGText}   rounded-lg m-4 p-6 `}>
@@ -629,7 +593,7 @@ const EmployeeComponent = ({ id, role }) => {
             </div>
           </div>
 
-          {/* That emoji thing */}
+          {/* Emotion based on Hours */}
           <div className={` ${Color.chartsBGText}  rounded-lg mx-4 p-6`}>
             <h5 className="text-xl font-semibold">
               {userData.first_name}'s Dominant Emotion by Hour

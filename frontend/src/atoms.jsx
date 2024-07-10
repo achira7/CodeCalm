@@ -18,11 +18,6 @@ export const userIdAtom = atom({
   effects_UNSTABLE: [localStorageEffect('userId')],
 });
 
-/*export const userIdAtom = atom({
-  key: 'userIdAtom',
-  default: '',
-});*/
-
 export const userFirstNameAtom = atom({
   key: 'userFirstNameAtom',
   default: '',
