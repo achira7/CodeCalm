@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Color } from "../../theme/Colors";
 
 const AddBreathingProfile = () => {
   const [name, setName] = useState("");
@@ -122,7 +123,8 @@ const AddBreathingProfile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="flex justify-center">
+    <div className={`min-h-screen  w-full lg:w-2/3 ${Color.background} `} >
       <div className="container mx-auto py-6">
         <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-6 mb-6">
           <h2 className="text-xl font-semibold text-sky-900 mb-4">
@@ -235,6 +237,7 @@ const AddBreathingProfile = () => {
         </div>
       </div>
       <ToastContainer />
+    </div>
     </div>
   );
 };

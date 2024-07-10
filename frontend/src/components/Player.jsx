@@ -82,7 +82,7 @@ const Player = () => {
       >
         {player.isFloating ? "Switch to Normal Mode" : "Switch to Floating Mode"}
       </button>
-      <div className="h-screen overflow-y-hidden">
+      <div className="overflow-y-hidden">
 
       </div>
     </div>

@@ -32,6 +32,7 @@ import AddBreathingProfile from './components/admin/AddBreathingProfile';
 import AddTrack from './components/admin/AddTrack';
 import FaceLoginRegistration from './components/FaceLoginRegistration';
 import FloatingPlayer from './components/FloatingPlayer';
+import { Color } from './theme/Colors';
 
 
 
@@ -42,6 +43,7 @@ function App() {
   const shouldShowNavBar = !hideNavBarRoutes.includes(location.pathname);
 
   return (
+    <div className={` ${Color.background} `} style={{ minHeight: '100vh' }}>
     <RecoilRoot>
       
        
@@ -91,6 +93,7 @@ function App() {
       </Routes>
    
     </RecoilRoot>
+    </div>
   );
 }
 

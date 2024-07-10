@@ -4,6 +4,7 @@ import "tailwindcss/tailwind.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { FaPlay, FaPause, FaTrash } from "react-icons/fa";
+import { Color } from "../../theme/Colors";
 
 const AddTrack = () => {
   const [title, setTitle] = useState("");
@@ -84,13 +85,14 @@ const AddTrack = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto py-6">
-        <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-6 mb-6">
-          <h2 className="text-xl font-semibold text-sky-900 mb-4">Add a Track</h2>
+    <div className="flex justify-center">
+    <div className={`min-h-screen w-full lg:w-2/3 `}>
+      <div className={`container mx-auto py-6`} >
+        <div className={ `bg-white border border-gray-200 rounded-lg shadow-lg p-6 mb-6 ${Color.textFeild} `} >
+          <h2 className="text-xl font-semibold mb-4">Add a Track</h2>
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
-              <label className="block text-gray-700">Title</label>
+              <label className="block ">Title</label>
               <input
                 id="title"
                 type="text"
@@ -102,7 +104,7 @@ const AddTrack = () => {
               />
             </div>
             <div className="mb-4">
-              <label className="block text-gray-700">Artist</label>
+              <label className="block ">Artist</label>
               <input
                 id="artist"
                 type="text"
@@ -114,7 +116,7 @@ const AddTrack = () => {
               />
             </div>
             <div className="mb-4">
-              <label className="block text-gray-700">Audio File</label>
+              <label className="block ">Audio File</label>
               <input
                 id="audioSrc"
                 type="file"
@@ -125,7 +127,7 @@ const AddTrack = () => {
               />
             </div>
             <div className="mb-4">
-              <label className="block text-gray-700">Image File</label>
+              <label className="block ">Image File</label>
               <input
                 id="image"
                 type="file"
@@ -181,6 +183,7 @@ const AddTrack = () => {
         </div>
       </div>
       <ToastContainer />
+    </div>
     </div>
   );
 };

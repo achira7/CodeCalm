@@ -1,4 +1,3 @@
-// NavBar.js
 import React, { useState, useEffect } from 'react';
 import "@fontsource/inter";
 import 'typeface-inter';
@@ -8,10 +7,6 @@ import Messages from './Messages';
 import SettingsOverlay from './SettingsOverlay';
 import { Color } from '../theme/Colors';
 
-//const baseUrl = 'http://localhost:8000/api/employee/';
-//const assets = 'http://127.0.0.1:8000/media/assets/';
-//const media = 'http://127.0.0.1:8000/media/';
-
 const NavBar = () => {
   const navigate = useNavigate();
   const [profilePicture, setProfilePicture] = useState('');
@@ -20,8 +15,13 @@ const NavBar = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [userData, setUserData] = useState({email: "e@e.com", employment_type: "full-time", first_name: "Achira", gender: "M", id: 18, is_staff: false, is_superuser: false, last_name: "Silva", password: " ", profile_picture: " ", team: "Test", work_location: "hybrid"});
   const [navLinks, setNavLinks] = useState([]);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const location = useLocation();
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
 
   useEffect(() => {
     fetchUserData();
@@ -29,7 +29,9 @@ const NavBar = () => {
 
   const fetchUserData = async () => {
     try {
-      //const response = await axios.get("http://localhost:8000/api/getuser/", {
+      // Replace with your API call to fetch user data
+      setNavLinks(employeeLinks); // For demonstration, using employeeLinks
+       //const response = await axios.get("http://localhost:8000/api/getuser/", {
         //withCredentials: true,
       //});
       //const user = response.data;
@@ -40,26 +42,26 @@ const NavBar = () => {
       // } else if (user.is_staff) {
       //   setNavLinks(supervisorLinks);
       // } else {
-      setNavLinks(employeeLinks);
-      // }                                Enable this thing
+        setNavLinks(employeeLinks);
+        // }                                Enable this thing
     } catch (e) {
       //console.error(e);
       //setNavLinks(supervisorLinks); // Remove this later added by senal
       // navigate("/employee/login");  Enable this later - senal
     }
-  }
+  };
 
   const handleDropdownToggle = () => {
     setIsDropdownOpen(!isDropdownOpen);
-  }
+  };
 
   const handleMessagesToggle = () => {
     setIsMessagesOpen(!isMessagesOpen);
-  }
+  };
 
   const handleSettingsToggle = () => {
     setIsSettingsOpen(!isSettingsOpen);
-  }
+  };
 
   const handleThemeMode = () => {
     const currentMode = localStorage.getItem('darkMode');
@@ -67,12 +69,12 @@ const NavBar = () => {
       localStorage.setItem('darkMode', 'true');
     } else if (currentMode === 'true') {
       localStorage.setItem('darkMode', 'false');
-      navigate(0)
+      navigate(0); // Refresh page or update state to reflect theme change
     } else {
       localStorage.setItem('darkMode', 'true');
-      navigate(0)
+      navigate(0); // Refresh page or update state to reflect theme change
     }
-  }
+  };
 
   const logoutUser = async () => {
     try {
@@ -81,17 +83,17 @@ const NavBar = () => {
     } catch (error) {
       console.error('Error logging out:', error);
     }
-  }
+  };
 
   const employeeLinks = [
     { id: 1, title: 'dashboard', link: '/employee/dashboard' },
-    { id: 2, title: 'live camera', link: '/employee/livecam' },
+    { id: 2, title: 'live cam', link: '/employee/livecam' },
     { id: 3, title: 'breathing exercise', link: '/employee/breathingexercise' },
-    { id: 4, title: 'Ambient white noise', link: '/employee/player' },
+    { id: 4, title: 'White noise', link: '/employee/player' },
     { id: 5, title: 'Self Stress Assess', link: '/employee/self_stress' },
     { id: 6, title: 'face login reg', link: '/employee/facelogin_reg' },
   ];
-
+  
   const supervisorLinks = [
     { id: 1, title: 'dashboard', link: '/employee/dashboard' },
     { id: 2, title: 'live camera', link: '/employee/livecam' },
@@ -117,20 +119,56 @@ const NavBar = () => {
         <h1 className='text-2xl font-google font-bold drop-shadow-xl shadow-blue-600/50 hover:cursor-pointer'>CodeCalm</h1>
       </div>
 
-      <div className='flex justify-center w-full h-20 items-center fixed '>
-        <ul className='flex'>
+      {/* Mobile Menu */}
+      <div className="lg:hidden flex items-center">
+        <button
+          onClick={toggleMenu}
+          className="text-white hover:text-gray-200 focus:outline-none">
+          <svg
+            className="h-8 w-8 fill-current"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor">
+            <path
+              fillRule="evenodd"
+              d="M3 5a1 1 0 0 1 2 0v10a1 1 0 1 1-2 0V5zm5-2a1 1 0 1 1 0 2h7a1 1 0 1 1 0 2H8a1 1 0 1 1 0-2zm7 9a1 1 0 1 0 0-2H8a1 1 0 1 0 0 2h7z"
+            />
+          </svg>
+        </button>
+
+        {isMenuOpen && (
+          <div className={` ${Color.navBarMob} absolute top-0 left-0 w-full  mt-16 py-2`}>
+            <ul className="flex flex-col items-center ">
+              {navLinks.map(({ id, title, link }) => (
+                <li key={id} className="my-2 hover:bg-sky-500 rounded-3xl">
+                  <Link
+                    to={link}
+                    className=" text-center block py-2 px-4"
+                    onClick={toggleMenu}>
+                    {title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+
+      {/* Desktop Menu */}
+      <div className="hidden lg:flex justify-center w-full h-20 items-center fixed">
+        <ul className="flex">
           {navLinks.map(({ id, title, link }) => (
             <li
               key={id}
-              className={`px-6 font-google font-semibold capitalize font-large hover:scale-105 hover:drop-shadow-xl duration-300 ${location.pathname === link ? 'text-green-300' : 'text-white'}`}>
-              <Link to={link} className='cursor-pointer drop-shadow-md shadow-blue-600/50'>{title}</Link>
+              className={`px-6 font-google font-semibold capitalize font-large hover:scale-105 hover:drop-shadow-xl duration-300 ${location.pathname === link ? 'text-black text-bold bg-black/20 rounded-xl' : 'text-white'}`}>
+              <Link to={link} className="cursor-pointer drop-shadow-md shadow-blue-600/50">{title}</Link>
             </li>
           ))}
         </ul>
       </div>
 
-      <div className='flex items-center space-x-4 mx-5'>
-        <ul className='flex space-x-4 items-center'>
+      <div className="flex items-center space-x-4 mx-5">
+        <ul className="flex space-x-4 items-center">
           <li onClick={handleMessagesToggle} title="Messages">
             <svg className="h-6 w-6 transform hover:scale-110 transition-transform duration-300 cursor-pointer" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
               <path d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.67Z" />
@@ -160,7 +198,7 @@ const NavBar = () => {
       </div>
 
       {isMessagesOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-20">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-">
           <div className="bg-white rounded-lg shadow-lg p-8 text-black">
             <Messages userData={userData} />
             <button onClick={handleMessagesToggle} className="mt-4 px-4 py-2 bg-red-500 text-white rounded-md">Close</button>
@@ -173,6 +211,6 @@ const NavBar = () => {
       )}
     </div>
   );
-}
+};
 
 export default NavBar;
