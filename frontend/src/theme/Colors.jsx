@@ -6,11 +6,16 @@ export const ColorSet01 = {
     main300 : "bg-sky-300",
     main400 : "bg-sky-400",
     main500 : "bg-black",
+    breathTitle : 'text-sky-500',
+
+    breathBox : "bg-white border-white",
 
     textColor : "text-black",
 
+    breathingEx : "bg-sky-200",
     outSideCard : "bg-gray-200",
     cardBGText : "bg-white text-black",
+    breathInfo : "bg-gray-100 text-black",
     chartsBGText : "bg-white text-black",
     background : "bg-white",
 
@@ -29,11 +34,16 @@ export const ColorSet02 = {
     outSideCard : "bg-gray-700/30",
     cardBGText : "bg-gray-700 text-white",
     chartsBGText : "bg-gray-700 text-white",
-
+    breathingEx : "bg-sky-900",
     textColor : "text-white",
+
+    breathTitle : 'text-white',
+
+    breathBox : "bg-gray-700 border-gray-700",
 
     background : "bg-gray-800",
     LoginleftSideBg: 'bg-gray-500',
+    breathInfo : "bg-gray-700 text-white",
     LoginrightSideBg: 'bg-gray-800',
     chartText : 'white',
     chartGrids : 'rgba(7, 142, 196, 0.507)',
