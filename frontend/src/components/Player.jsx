@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
-import AudioPlayer from "react-h5-audio-player";
 import "react-h5-audio-player/lib/styles.css";
-//import tracks from "../Tracks";
+import { Color } from "../theme/Colors";
 import "tailwindcss/tailwind.css";
-import "./PlayerStyles.css"; // Import custom CSS for additional styling
-import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
+import { playerState, tracksState } from "../atoms";
+import "./PlayerStyles.css"; 
 import "react-circular-progressbar/dist/styles.css";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import "./noScroll.css"
 
 const Player = () => {
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
@@ -16,16 +17,20 @@ const Player = () => {
   const [dominantColor, setDominantColor] = useState("#000");
   const [progress, setProgress] = useState(0);
   const [userID, setUserID] = useState("");
-  //const [tracks, setTracks] = useState({})
+  const [player, setPlayer] = useRecoilState(playerState);
 
-  //const currentTrack = tracks[currentTrackIndex];
+  const tracks = useRecoilValue(tracksState);
+  const setTracks = useSetRecoilState(tracksState);
+
+  // const [tracks, setTracks] = useState({})
+
+  // const currentTrack = tracks[currentTrackIndex];
   const audioRef = useRef(null);
   const imageRef = useRef(null);
 
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
-  const [tracks, setTracks] = useState([]); // Change from object to array
 
   const currentTrack = tracks.length > 0 ? tracks[currentTrackIndex] : {};
 
@@ -47,35 +52,15 @@ const Player = () => {
       try {
         const response = await axios.get("http://localhost:8000/api/tracks/");
         setTracks(response.data);
+        console.log(response.data)
       } catch (error) {
         console.error("Error fetching tracks: ", error);
       }
     };
-  
+
     fetchTracks();
   }, []);
 
-  const handleNext = () => {
-    setCurrentTrackIndex((currentTrackIndex + 1) % tracks.length);
-  };
-
-  const handlePrevious = () => {
-    setCurrentTrackIndex(
-      (currentTrackIndex - 1 + tracks.length) % tracks.length
-    );
-  };
-
-  const toggleRepeat = () => {
-    setIsRepeat(!isRepeat);
-  };
-
-  const toggleLoop = () => {
-    setIsLoop(!isLoop);
-  };
-
-  const handlePlayPause = () => {
-    setIsPlaying(!audioRef.current.audio.current.paused);
-  };
 
   const updateProgress = () => {
     if (audioRef.current && audioRef.current.audio.current) {
@@ -87,11 +72,16 @@ const Player = () => {
     }
   };
 
-  const logListeningData = async (user_id, duration) => {
+  const logListeningData = async (user_id, track_name, duration) => {
+    if (!user_id || !track_name || !duration) {
+      console.error("User, track name, and duration are required");
+      return;
+    }
+
     try {
       await axios.post("http://localhost:8000/api/listening/", {
         user: user_id,
-        track_name: currentTrack.title,
+        track_name: track_name,
         duration: duration,
       });
     } catch (error) {
@@ -100,7 +90,7 @@ const Player = () => {
         error.response ? error.response.data : error.message
       );
     }
-  };
+  }
 
   useEffect(() => {
     let listeningStartTime = 0;
@@ -113,21 +103,23 @@ const Player = () => {
       const listeningEndTime = audioRef.current.audio.current.currentTime;
       const listeningDuration = listeningEndTime - listeningStartTime;
       if (listeningDuration > 0) {
-        await logListeningData(userID, listeningDuration);
+        await logListeningData(userID, currentTrack.title, listeningDuration);
       }
     };
 
-    const player = audioRef.current.audio.current;
-    player.addEventListener("playing", handlePlaying);
-    player.addEventListener("pause", handlePaused);
-    player.addEventListener("ended", handlePaused);
+    if (audioRef.current && audioRef.current.audio.current) {
+      const player = audioRef.current.audio.current;
+      player.addEventListener("playing", handlePlaying);
+      player.addEventListener("pause", handlePaused);
+      player.addEventListener("ended", handlePaused);
 
-    return () => {
-      player.removeEventListener("playing", handlePlaying);
-      player.removeEventListener("pause", handlePaused);
-      player.removeEventListener("ended", handlePaused);
-    };
-  }, [currentTrackIndex, userID]);
+      return () => {
+        player.removeEventListener("playing", handlePlaying);
+        player.removeEventListener("pause", handlePaused);
+        player.removeEventListener("ended", handlePaused);
+      };
+    }
+  }, [currentTrackIndex, userID, currentTrack.title]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -145,64 +137,30 @@ const Player = () => {
     return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
   };
 
-  return (
-    <div className="p-4 flex flex-col items-center">
-      <div className="relative mb-8">
-        <div
-          className={`circle-content ${
-            isPlaying ? "breathing" : ""
-          } circle-border`}
-          style={{ "--dominant-color": dominantColor }}
-        >
-          <div className="relative" style={{ width: "250px", height: "250px" }}>
-            <CircularProgressbar
-              strokeWidth={2}
-              value={progress}
-              size={10}
-              styles={buildStyles({
-                pathColor: "rgb(1, 161, 219)",
-                trailColor: "#d6d6d6",
-                strokeLinecap: "butt",
-                pathTransitionDuration: 0.5,
-              })}
-            />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <img
-                ref={imageRef}
-                src={`http://127.0.0.1:8000${currentTrack.image}`}
-                alt={currentTrack.title}
-                className={`w-56 h-56 rounded-full ${
-                  isPlaying ? "spinning" : "paused"
-                }`}
-              />
-            </div>
-          </div>
-          <h2 className="text-white text-center song-title">
-            {currentTrack.title}
-            <div className="py-2 bg-white rounded-md shadow-md">
-              {formatTime(currentTime)} / {formatTime(duration)}
-            </div>
-          </h2>
-        </div>
-      </div>
+  useEffect(() => {
+    const currentPath = window.location.pathname;
+    if (currentPath.includes('/employee/player')) {
+      console.log('Current path includes "/employee/player"');
+      setPlayer((prev) => ({ ...prev, isFloating: false }))
+      // setPlayer(false)
+    } else {
+      console.log('Current path does not include "/employee/player"');
+      setPlayer((prev) => ({ ...prev, isFloating: true }))
+      // setPlayer(true)
+    }
+  }, [])
 
-      <AudioPlayer
-        autoPlay={false}
-        ref={audioRef}
-        src={`http://127.0.0.1:8000${currentTrack.audioSrc}` }
-        onPlay={handlePlayPause}
-        onPause={handlePlayPause}
-        onEnded={handleNext}
-        layout="horizontal"
-        showJumpControls={true}
-        showSkipControls={true}
-        onClickNext={handleNext}
-        onClickPrevious={handlePrevious}
-        customProgressBarSection={[]}
-        loop={isLoop}
-        className="custom-audio-player"
-        style={{ width: "700px" }}
-      />
+  return (
+    <div className={`${Color.background} flex flex-col items-center`}>
+      <button
+        onClick={() => setPlayer((prev) => ({ ...prev, isFloating: !prev.isFloating }))}
+        className="mt-4 bg-blue-500 text-white px-4 py-2 rounded"
+      >
+        {player.isFloating ? "Switch to Normal Mode" : "Switch to Floating Mode"}
+      </button>
+      {/*<div className="h-screen overflow-y-hidden">
+
+  </div>*/}
     </div>
   );
 };

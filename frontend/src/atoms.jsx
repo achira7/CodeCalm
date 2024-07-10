@@ -18,11 +18,6 @@ export const userIdAtom = atom({
   effects_UNSTABLE: [localStorageEffect('userId')],
 });
 
-/*export const userIdAtom = atom({
-  key: 'userIdAtom',
-  default: '',
-});*/
-
 export const userFirstNameAtom = atom({
   key: 'userFirstNameAtom',
   default: '',
@@ -58,3 +53,18 @@ export const mediaRootAtom = atom({
   default: 'http://127.0.0.1:8000/media/',
 });
 
+
+//Music plater stuff
+export const playerState = atom({
+  key: "playerState",
+  default: {
+    isFloating: false,
+    currentTrackIndex: 0,
+    isPlaying: false,
+  },
+});
+
+export const tracksState = atom({
+  key: "tracksState",
+  default: [],
+});

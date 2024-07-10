@@ -22,7 +22,7 @@ function SingleTeamMember(props) {
   const [mostListenedTrack, setMostListenedTrack] = useState(null);
   const [exerciseView, setExerciseView] = useState("weekly");
   const [listeningView, setListeningView] = useState("weekly");
-  const [emotionView, setEmotionView] = useState("daily"); // Start with daily view
+  const [emotionView, setEmotionView] = useState("daily"); 
   const [hourlyEmotion, setHourlyEmotion] = useState([]);
 
   const [maxValue, setmaxValue] = useState("");

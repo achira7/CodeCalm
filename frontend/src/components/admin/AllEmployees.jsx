@@ -11,7 +11,7 @@ const AllEmployees = () => {
 
     useEffect(() => {
         fetchEmployees();
-    }, [searchQuery, activeTab]); // Fetch employees whenever searchQuery or activeTab changes
+    }, [searchQuery, activeTab]); 
 
     const fetchEmployees = () => {
         axios.get('http://127.0.0.1:8000/api/employeelist', {

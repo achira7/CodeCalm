@@ -1,8 +1,8 @@
 import React, { useRef, useState, useEffect } from "react";
 import Webcam from "react-webcam";
 import axios from "axios";
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { FaCamera } from "react-icons/fa";
 
 const FaceLoginRegistration = ({ userId }) => {
@@ -21,7 +21,7 @@ const FaceLoginRegistration = ({ userId }) => {
     "Look to your right",
     "Look up",
     "Look down",
-    "Wear your glasses (if applicable)"
+    "Wear your glasses (if applicable)",
   ];
 
   const fetchUserData = async () => {
@@ -34,7 +34,7 @@ const FaceLoginRegistration = ({ userId }) => {
     } catch (e) {
       console.error(e);
     }
-  }
+  };
 
   useEffect(() => {
     fetchUserData();
@@ -57,7 +57,7 @@ const FaceLoginRegistration = ({ userId }) => {
       if (response.data.message === "Registration started successfully") {
         toast.success("Registration started successfully");
         setRegistrationStarted(true);
-      } else if (response.data.message === "Resume Registration"){
+      } else if (response.data.message === "Resume Registration") {
         setRegistrationStarted(true);
         toast.success(response.data.message);
       }
@@ -78,8 +78,8 @@ const FaceLoginRegistration = ({ userId }) => {
   const saveImage = async () => {
     try {
       const formData = new FormData();
-        formData.append("image", capturedImage);
-        formData.append("user_id", userData.id);
+      formData.append("image", capturedImage);
+      formData.append("user_id", userData.id);
 
       const response = await axios.post(
         "http://localhost:8000/api/faceregister/",
@@ -138,7 +138,9 @@ const FaceLoginRegistration = ({ userId }) => {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="container mx-auto py-6">
         <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-6 mb-6">
-          <h2 className="text-xl font-semibold text-sky-900 mb-4">Face Registration</h2>
+          <h2 className="text-xl font-semibold text-sky-900 mb-4">
+            Face Registration
+          </h2>
           {!registrationStarted ? (
             <button
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full"
@@ -158,7 +160,9 @@ const FaceLoginRegistration = ({ userId }) => {
                     screenshotFormat="image/jpeg"
                     className="mb-4 rounded-lg"
                   />
-                  <p className="text-blue-500 mb-4">{prompts[currentPromptIndex]}</p>
+                  <p className="text-blue-500 mb-4">
+                    {prompts[currentPromptIndex]}
+                  </p>
                   <button
                     className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full flex items-center justify-center mb-4"
                     onClick={captureImage}
@@ -169,7 +173,11 @@ const FaceLoginRegistration = ({ userId }) => {
                 </>
               ) : (
                 <>
-                  <img src={capturedImage} alt="Captured" className="mb-4 rounded-lg" />
+                  <img
+                    src={capturedImage}
+                    alt="Captured"
+                    className="mb-4 rounded-lg"
+                  />
                   <div className="flex space-x-4">
                     <button
                       className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-full"
@@ -185,16 +193,18 @@ const FaceLoginRegistration = ({ userId }) => {
                     </button>
 
                     <button
-  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full"
-  onClick={() => {
-    const link = document.createElement('a');
-    link.href = capturedImage;
-    link.download = `captured_image_${currentPromptIndex + 1}.jpg`;
-    link.click();
-  }}
->
-  Download Image
-</button>
+                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full"
+                      onClick={() => {
+                        const link = document.createElement("a");
+                        link.href = capturedImage;
+                        link.download = `captured_image_${
+                          currentPromptIndex + 1
+                        }.jpg`;
+                        link.click();
+                      }}
+                    >
+                      Download Image
+                    </button>
                   </div>
                 </>
               )}

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import React, { useEffect, useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import AddTeam from "./AddTeam"; // Import AddTeam component 
+import AddTeam from "./AddTeam"; 
 
 const baseUrl = "http://127.0.0.1:8000/api/register/";
 
@@ -23,7 +23,7 @@ function SupervisorRegister() {
 
   const [selectedTeam, setSelectedTeam] = useState("");
   const [teams, setTeams] = useState([]);
-  const [isOverlayOpen, setIsOverlayOpen] = useState(false); // State to manage overlay visibility
+  const [isOverlayOpen, setIsOverlayOpen] = useState(false); 
   
   const navigate = useNavigate();
 
@@ -88,11 +88,11 @@ function SupervisorRegister() {
   );
 
   const handleAddTeam = () => {
-    setIsOverlayOpen(true); // Open the overlay
+    setIsOverlayOpen(true);
   };
 
   const handleCloseOverlay = () => {
-    setIsOverlayOpen(false); // Close the overlay
+    setIsOverlayOpen(false); 
   };
 
   return (

@@ -15,6 +15,8 @@ const AddTrack = () => {
   const [currentPlayingIndex, setCurrentPlayingIndex] = useState(null);
   const audioRefs = useRef([]);
 
+  console.log(tracks)
+
   useEffect(() => {
     const fetchTracks = async () => {
       try {
