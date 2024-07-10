@@ -10,12 +10,15 @@ export const ColorSet01 = {
     breathTitle : 'text-sky-500',
 
     breathBox : "bg-white border-white",
-    textFeild : "bg-white text-black",
+    
     textColor : "text-black",
 
     breathingEx : "bg-sky-200",
     outSideCard : "bg-gray-200",
-    cardBox: "bg-gray-200 text-black",
+
+    cardBox: "bg-sky-100 text-black",
+    textFeild : "bg-white text-black",
+
     cardBGText : "bg-white text-black",
     breathInfo : "bg-gray-100 text-black",
     chartsBGText : "bg-white text-black",

@@ -124,15 +124,15 @@ const AddBreathingProfile = () => {
 
   return (
     <div className="flex justify-center">
-    <div className={`min-h-screen  w-full lg:w-2/3 ${Color.background} `} >
+    <div className={`min-h-screen  w-full lg:w-2/3  `} >
       <div className="container mx-auto py-6">
-        <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-6 mb-6">
-          <h2 className="text-xl font-semibold text-sky-900 mb-4">
+        <div className={` ${Color.cardBox} rounded-lg shadow-lg p-6 mb-6`}>
+          <h2 className="text-xl font-semibold mb-4">
             Add a Breathing Exercise Profile
           </h2>
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
-              <label className="block text-gray-700">Name:</label>
+              <label className="block ">Name:</label>
               <input
                 type="text"
                 min="1"
@@ -140,12 +140,12 @@ const AddBreathingProfile = () => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                className={`w-full px-3 py-2  rounded-md ${Color.textFeild} `}
                 placeholder="Give a meaningful unique name"
               />
             </div>
             <div className="mb-4">
-              <label className="block text-gray-700">Inhale Duration:</label>
+              <label className="block ">Inhale Duration:</label>
               <input
                 type="number"
                 placeholder="in seconds"
@@ -154,12 +154,12 @@ const AddBreathingProfile = () => {
                 value={inhaleDuration || ""}
                 onChange={(e) => setInhaleDuration(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                className={`w-full px-3 py-2  rounded-md ${Color.textFeild} `}
               />
               {renderWarning(inhaleDuration)}
             </div>
             <div className="mb-4">
-              <label className="block text-gray-700">Exhale Duration:</label>
+              <label className="block ">Exhale Duration:</label>
               <input
                 type="number"
                 placeholder="in seconds"
@@ -168,12 +168,12 @@ const AddBreathingProfile = () => {
                 value={exhaleDuration || ""}
                 onChange={(e) => setExhaleDuration(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                className={`w-full px-3 py-2 rounded-md ${Color.textFeild} `}
               />
               {renderWarning(exhaleDuration)}
             </div>
             <div className="mb-4">
-              <label className="block text-gray-700">Hold Duration:</label>
+              <label className="block ">Hold Duration:</label>
               <input
                 type="number"
                 placeholder="in seconds"
@@ -182,22 +182,22 @@ const AddBreathingProfile = () => {
                 required
                 min="0"
                 max="10"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                className={`w-full px-3 py-2  rounded-md ${Color.textFeild} `}
               />
               {renderWarning(holdDuration)}
             </div>
             <div className="mb-4">
-              <label className="block text-gray-700">Description:</label>
+              <label className="block ">Description:</label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                className={`w-full px-3 py-2  rounded-md ${Color.textFeild} `}
                 placeholder="Type instructions to perform the breathing exercise here."
               />
             </div>
             <button
               type="submit"
-              className="bg-blue-500 text-white px-4 py-2 rounded-md"
+              className="bg-blue-500  px-4 py-2 rounded-md"
             >
               {editProfileId ? "Update Profile" : "Add Profile"}
             </button>
@@ -207,7 +207,7 @@ const AddBreathingProfile = () => {
           {profiles.map((profile) => (
             <div
               key={profile.id}
-              className="bg-white border border-gray-200 rounded-lg shadow-lg p-4 mb-4"
+              className="bg-white  rounded-lg shadow-lg p-4 mb-4"
             >
               <h3 className="font-semibold text-xl">{profile.name}</h3>
               <p className="py-1">
