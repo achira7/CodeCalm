@@ -4,10 +4,7 @@ import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import './BreathingExercise.css';
 import Reminders from "./Reminders";
-import { FaClock } from 'react-icons/fa';
 import { Color } from "../theme/Colors";
-
-//import { checkReminders } from './notificationService';
 
 const BreathingExercise = () => {
   const [breathing, setBreathing] = useState(false);
@@ -163,7 +160,6 @@ const BreathingExercise = () => {
             <p className={`text-3xl font-bold ${Color.breathTitle} `}>
               Breathing Exercise
             </p>
-            <p className={`text-sm ${Color.breathTitle}`}>Apx: 5 Mins</p>
           </div>
           <div>
             <select

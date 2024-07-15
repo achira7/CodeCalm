@@ -3,7 +3,6 @@ import axios from "axios";
 import moment from "moment";
 import { Color } from "../theme/Colors";
 
-
 const StressDetectionForm = () => {
   const [questions, setQuestions] = useState([]);
   const [formData, setFormData] = useState({});
@@ -62,13 +61,20 @@ const StressDetectionForm = () => {
   };
 
   const handleChange = (e, id, field) => {
-    setFormData({
-      ...formData,
-      [id]: {
-        ...formData[id],
+    if (id === "additionalComments") {
+      setFormData({
+        ...formData,
         [field]: e.target.value,
-      },
-    });
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [id]: {
+          ...formData[id],
+          [field]: e.target.value,
+        },
+      });
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -208,6 +214,7 @@ const StressDetectionForm = () => {
                   handleChange(e, "additionalComments", "additionalComments")
                 }
                 className={`mt-1 block min-h-24 w-full rounded-xl ${Color.textFeild}`}
+                style={{ padding: "10px" }} 
               />
             </div>
             <div className="flex justify-end mt-auto">

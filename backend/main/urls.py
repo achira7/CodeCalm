@@ -36,6 +36,11 @@ from main.views import (
     complete_face_registration,
     FocusDataView,
     LatestStressFormDate,
+    ExactBreathingExerciseUsageView,
+    ExactTrackListeningView,
+    ExactEmotionDataView,
+    ExactStressDataView,
+    ExactFocusDataView
 )
 
 urlpatterns = [
@@ -45,8 +50,23 @@ urlpatterns = [
     path('facelogin/', FaceLoginView.as_view()),
     path('logout/', LogoutAPIView.as_view()),
     path('writeimage/', WriteImage.as_view()),
+
+    #Detections
     path('emotions/', EmotionDataView.as_view()),
+    path('exact_emotions/', ExactEmotionDataView.as_view()),
+
     path('stress/', StressDataView.as_view()),
+    path('exact_stress/', ExactStressDataView.as_view()),
+
+    path('breathing/', BreathingExerciseUsageView.as_view()),
+    path('exact_breathing/', ExactBreathingExerciseUsageView.as_view()),
+
+    path('listening/', TrackListeningView.as_view()),
+    path('exact_listening/', ExactTrackListeningView.as_view()),
+
+    path('focus/', FocusDataView.as_view(), name='focus_view'),
+    path('exact_focus/', ExactFocusDataView.as_view(), name='exact_focus_view'),
+
 
     path('g/', GetUserWithIDView.as_view()),
     path('getallemotions/', EmployeeEmotionDataView.as_view()),
@@ -55,11 +75,10 @@ urlpatterns = [
     path('teamlist/', TeamList.as_view()),
     path('employeelist/', EmployeeList.as_view()),
     path('employee/<int:pk>/', EmployeeDetail.as_view()),
-    path('breathing/', BreathingExerciseUsageView.as_view()),
-    path('listening/', TrackListeningView.as_view()),
+
+    
+
     path('team_detections/', TeamDetection.as_view(), name='team_detections'),
-    #path('messages/', MessageListCreateView.as_view(), name='message-list-create'),
-    #path('messages/<int:pk>/', MessageDetailView.as_view(), name='message-detail'),
     path('stress_questions/', StressQuestionListCreateView.as_view(), name='stress-question-list-create'),
     path('stress_questions/<int:pk>/', StressQuestionRetrieveUpdateDestroyView.as_view(), name='stress-question-retrieve-update-destroy'),
     path('stress_form/', SubmitStressFormView.as_view(), name='submit_stress_form'),
@@ -83,11 +102,6 @@ urlpatterns = [
 
     path('startfaceregister/', start_face_registration, name='start_face_registration'),
     path('completefaceregister/', complete_face_registration, name='complete_face_registration'),
-    path('focus/', FocusDataView.as_view(), name='focus_view'),
-
-
-
     
-
 ]
 

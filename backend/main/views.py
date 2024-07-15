@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 import json
 
 from .models import Employee_Emotion, Employee_Team, Employee_Focus, BreathingExerciseUsage, TrackListening, StressQuestion, StressDetectionForm, ReportGeneration, Employee_Stress, BreathingProfile, Track, Reminder, FaceLoginProfile, FaceImage
+from django.utils.timezone import now, localtime
 
 from django.http import JsonResponse, StreamingHttpResponse
 from rest_framework.views import APIView
@@ -64,6 +65,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.exceptions import ValidationError
 
 from rest_framework import status 
+from datetime import time
 
 from pytz import timezone as pytz_timezone
 local_timezone = pytz_timezone('Asia/Colombo')
@@ -143,7 +145,6 @@ class GetUserView(APIView):
             return Response({'error': 'User ID not provided'}, status=status.HTTP_400_BAD_REQUEST)
         
 
-
 class GetUserWithIDView(APIView):
     def get(self, request):
             user_id = request.query_params.get('user_id')
@@ -156,50 +157,42 @@ class GetUserWithIDView(APIView):
                 return Response({'error': 'User ID not provided'}, status=status.HTTP_400_BAD_REQUEST)
             
 
-
 class LoginAPIView(APIView):
     @csrf_exempt
     def post(self, request):
-        email = request.data['email']
-        password = request.data['password']
+        email = request.data.get('email')
+        password = request.data.get('password')
 
         user = User.objects.filter(email=email).first()
 
-        if user is None:
+        if user is None or not user.check_password(password):
             raise exceptions.AuthenticationFailed('Invalid username or password')
-        response = Response({
-            'message': 'Invalid username or password',
-            'is_staff': '',
-            'is_superuser': ''
-        }, status=status.HTTP_200_OK)
 
-        if not user.check_password(password):
-            raise exceptions.AuthenticationFailed('Invalid username or password')
-        response = Response({
-            'message': 'Invalid username or password',
-            'is_staff': '',
-            'is_superuser': ''
-        }, status=status.HTTP_200_OK)
-        
         response = Response({
             'message': 'Login successful',
             'is_staff': user.is_staff,
             'is_superuser': user.is_superuser
         }, status=status.HTTP_200_OK)
         
-        response.set_cookie('user_id', user.id, httponly=True)
+        response.set_cookie(
+            key='user_id', 
+            value=user.id, 
+            httponly=True, 
+            secure=True,  
+            samesite='Lax'  
+        )
         
         return response
-
-
 
 class LogoutAPIView(APIView):
     @csrf_exempt
     def post(self, request):
-        request.COOKIES.get('user_id') 
-        response = Response()
-
-        response.delete_cookie('user_id')
+        response = Response({
+            'message': 'Logout successful'
+        }, status=status.HTTP_200_OK)
+        
+        response.delete_cookie('user_id', path='/', domain='localhost')  
+        
         return response
     
 from . import serializers 
@@ -493,6 +486,7 @@ class EmotionDataView(APIView):
     def post(self, request):
         image_data = request.data.get('frame')
         userid = request.data.get('user_id')
+        
 
         if not image_data or not userid:
             return JsonResponse({'emo': 'Missing frame or user_id', 'frq': 'none'})
@@ -537,13 +531,10 @@ class EmotionDataView(APIView):
                             # Get the stress weight for the detected emotion
                             stress_weight = stress_weights.get(emotion, 0)
 
-                            # Create a new record in the Employee_Stress model
                             Employee_Stress.objects.create(employee_id=userid, stress_data=stress_weight)
 
-                            # Calculate the timestamp for one minute ago
                             one_minute_ago = timezone.now() - timedelta(minutes=1)
 
-                            # Count the number of negative emotions in the last minute for this user
                             negative_emotions_count = Employee_Emotion.objects.filter(
                                 employee_id=userid,
                                 emotion_data__in=['sad', 'angry', 'disgust', 'fear'],
@@ -568,27 +559,27 @@ class EmotionDataView(APIView):
 
         except Exception as e:
             return JsonResponse({'emo': 'Error occurred', 'frq': 'none'})
-        
+
     def get(self, request):
         defaultEmotionValues = {'angry': 0, 'disgust': 0, 'fear': 0, 'happy': 0, 'sad': 0, 'surprise': 0, 'neutral': 0}
         user_id = request.GET.get('user_id')
         team_id = request.GET.get('team_id')
-        period = request.GET.get('period', 'all_time') 
+        period = request.GET.get('period', 'all_time')
 
         if not user_id and not team_id:
             return JsonResponse({'error': 'User ID or Team ID is required'}, status=400)
 
         # Define the time filter based on the period
         if period == 'daily':
-            time_threshold = datetime.now() - timedelta(days=1)
+            time_threshold = now() - timedelta(days=1)
         elif period == 'weekly':
-            time_threshold = datetime.now() - timedelta(weeks=1)
+            time_threshold = now() - timedelta(weeks=1)
         elif period == 'monthly':
-            time_threshold = datetime.now() - timedelta(days=30)
+            time_threshold = now() - timedelta(days=30)
         else:
             time_threshold = None
 
-        #Initialize filter parameters
+        # Initialize filter parameters
         filter_params = {}
         if user_id and user_id != 'none':
             filter_params['employee_id'] = user_id
@@ -623,12 +614,12 @@ class EmotionDataView(APIView):
 
         hourly_dominant_emotions = {}
 
-        current_date = datetime.now().date()
+        current_date = now().date()
         start_hour = 7
         end_hour = 18
 
         for hour in range(start_hour, end_hour + 1):
-            start_time = datetime.combine(current_date, datetime.min.time()) + timedelta(hours=hour)
+            start_time = local_timezone.localize(datetime.combine(current_date, time(hour=hour)))
             end_time = start_time + timedelta(hours=1)
 
             if period == 'daily':
@@ -647,11 +638,100 @@ class EmotionDataView(APIView):
             if hourly_emotion:
                 dominant_emotion = hourly_emotion['emotion_data']
             else:
-                dominant_emotion = ''  
+                dominant_emotion = ''
 
             hourly_dominant_emotions[f'{hour}:00 - {hour+1}:00'] = dominant_emotion
+        print(defaultEmotionValues)
         print(hourly_dominant_emotions)
+        response_data = {
+            'defaultEmotionValues': defaultEmotionValues,
+            'hourlyDominantEmotions': hourly_dominant_emotions
+        }
 
+        return Response(response_data)
+
+
+class ExactEmotionDataView(APIView):
+    def get(self, request):
+        defaultEmotionValues = {'angry': 0, 'disgust': 0, 'fear': 0, 'happy': 0, 'sad': 0, 'surprise': 0, 'neutral': 0}
+        user_id = request.GET.get('user_id')
+        team_id = request.GET.get('team_id')
+        period = request.GET.get('period')
+        exact_period = request.GET.get('exact_period')
+
+        if not exact_period:
+            return Response({"error": "Exact period not specified"}, status=400)
+
+        try:
+            if period == 'daily':
+                start_date = end_date = datetime.strptime(exact_period, '%Y-%m-%d').date()
+            elif period == 'weekly':
+                year, week = map(int, exact_period.split('-W'))
+                start_date = datetime.strptime(f'{year} {week} 1', '%Y %W %w').date()
+                end_date = start_date + timedelta(days=6)
+            elif period == 'monthly':
+                year, month = map(int, exact_period.split('-'))
+                start_date = datetime(year, month, 1).date()
+                end_date = (start_date.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+            else:
+                return Response({"error": "Invalid period specified"}, status=400)
+        except ValueError:
+            return Response({"error": "Invalid exact period format"}, status=400)
+
+        # Initialize filter parameters
+        filter_params = {}
+        if user_id and user_id != 'none':
+            filter_params['employee_id'] = user_id
+        elif team_id:
+            if team_id == 'all':
+                users = User.objects.all()
+            else:
+                users = User.objects.filter(team=team_id)
+            user_ids = users.values_list('id', flat=True)
+            filter_params['employee_id__in'] = user_ids
+
+        emotion_counts_list = Employee_Emotion.objects.filter(
+            **filter_params,
+            time__date__range=[start_date, end_date]
+        ).values('emotion_data').annotate(count=Count('emotion_data')).order_by('emotion_data').values_list('emotion_data', 'count')
+
+        # Convert the queryset to a dictionary
+        emotion_counts_dict = dict(emotion_counts_list)
+
+        # Update defaultEmotionValues with the fetched emotion counts
+        for key in defaultEmotionValues:
+            if key in emotion_counts_dict:
+                defaultEmotionValues[key] += emotion_counts_dict[key]
+
+        hourly_dominant_emotions = {}
+        current_date = now().date()
+        start_hour = 7
+        end_hour = 18
+
+        for hour in range(start_hour, end_hour + 1):
+            start_time = local_timezone.localize(datetime.combine(current_date, time(hour=hour)))
+            end_time = start_time + timedelta(hours=1)
+
+            if period == 'daily':
+                hourly_emotion = Employee_Emotion.objects.filter(
+                    **filter_params,
+                    time__gte=start_time,
+                    time__lt=end_time
+                ).values('emotion_data').annotate(count=Count('emotion_data')).order_by('-count').first()
+            else:
+                hourly_emotion = Employee_Emotion.objects.filter(
+                    **filter_params,
+                    time__hour=hour,
+                    time__date__range=[start_date, end_date]
+                ).values('emotion_data').annotate(count=Count('emotion_data')).order_by('-count').first()
+
+            if hourly_emotion:
+                dominant_emotion = hourly_emotion['emotion_data']
+            else:
+                dominant_emotion = ''
+
+            hourly_dominant_emotions[f'{hour}:00 - {hour+1}:00'] = dominant_emotion
+        print(defaultEmotionValues, hourly_dominant_emotions)
         response_data = {
             'defaultEmotionValues': defaultEmotionValues,
             'hourlyDominantEmotions': hourly_dominant_emotions
@@ -709,24 +789,91 @@ class StressDataView(APIView):
                 hour = local_time.hour
                 hour_range = f"{hour}:00 - {hour + 1}:00"
                 if hour_range in days:
-                    days[hour_range] = record['total_stress']
+                    days[hour_range] += record['total_stress']
             elif period == 'weekly':
                 adjusted_day = (record['day'] + 5) % 7 
                 weekday_name = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][adjusted_day]
-                days[weekday_name] = record['total_stress']
+                days[weekday_name] += record['total_stress']
             else:
                 day_name = f"Day {record['day']}"
-                days[day_name] = record['total_stress']
+                days[day_name] += record['total_stress']
 
         return Response({
             "days": days,
         })
 
-    
+class ExactStressDataView(APIView):
+    def get(self, request):
+        user_id = request.GET.get('user')
+        team_id = request.GET.get('team_id')
+        period = request.GET.get('period')
+        exact_period = request.GET.get('exact_period')
+        local_tz = local_timezone
+
+        if not exact_period:
+            return Response({"error": "Exact period not specified"}, status=400)
+
+        try:
+            if period == 'daily':
+                start_date = end_date = datetime.strptime(exact_period, '%Y-%m-%d').date()
+                hours = range(7, 19, 1)
+                days = {f'{hour}:00 - {hour+1}:00': 0 for hour in hours}
+            elif period == 'weekly':
+                year, week = map(int, exact_period.split('-W'))
+                start_date = datetime.strptime(f'{year} {week} 1', '%Y %W %w').date()
+                end_date = start_date + timedelta(days=6)
+                days = {day: 0 for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]}
+            elif period == 'monthly':
+                year, month = map(int, exact_period.split('-'))
+                start_date = datetime(year, month, 1).date()
+                end_date = (start_date.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+                days_in_month = (end_date - start_date).days + 1
+                days = {f'Day {i}': 0 for i in range(1, days_in_month + 1)}
+            else:
+                return Response({"error": "Invalid period specified"}, status=400)
+        except ValueError:
+            return Response({"error": "Invalid exact period format"}, status=400)
+
+        filter_params = {}
+        if user_id and user_id != 'none':
+            filter_params['employee_id'] = user_id
+        elif team_id:
+            if team_id == 'all':
+                users = User.objects.all()
+            else:
+                users = User.objects.filter(team=team_id)
+            user_ids = users.values_list('id', flat=True)
+            filter_params['employee_id__in'] = user_ids
+
+        stress_records = Employee_Stress.objects.filter(
+            **filter_params,
+            timestamp__date__range=[start_date, end_date]
+        ).annotate(
+            day=ExtractHour('timestamp') if period == 'daily' else (ExtractDay('timestamp') if period == 'monthly' else ExtractWeekDay('timestamp'))
+        ).values('timestamp', 'day').annotate(total_stress=Sum('stress_data'))
+
+        for record in stress_records:
+            timestamp = record['timestamp']
+            local_time = timestamp.astimezone(local_tz)
+            if period == 'daily':
+                hour = local_time.hour
+                hour_range = f"{hour}:00 - {hour + 1}:00"
+                if hour_range in days:
+                    days[hour_range] += record['total_stress']
+            elif period == 'weekly':
+                adjusted_day = (record['day'] + 5) % 7 
+                weekday_name = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][adjusted_day]
+                days[weekday_name] += record['total_stress']
+            else:
+                day_name = f"Day {record['day']}"
+                days[day_name] += record['total_stress']
+
+        return Response({
+            "days": days,
+        })   
 
 class EmployeeEmotionDataView(APIView):
     def get(self, request):
-        # Initialize default emotion values
         defaultEmotionValues = {
             'angry': 0, 'disgust': 0, 'fear': 0, 'happy': 0, 'sad': 0, 'surprise': 0, 'neutral': 0
         }
@@ -747,12 +894,10 @@ class EmployeeEmotionDataView(APIView):
     
 class WeeklyEmployeeEmotionDataView(APIView):
     def get(self, request):
-        # Initialize default emotion values
         defaultEmotionValues = {
             'angry': 0, 'disgust': 0, 'fear': 0, 'happy': 0, 'sad': 0, 'surprise': 0, 'neutral': 0
         }
 
-        # Get the current date and time
         now = timezone.now()
 
         start_of_week = now - timedelta(days=now.weekday())
@@ -801,7 +946,7 @@ class EmployeeTeamView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-
+"""==================== BREATHING EXERCISE ======================="""  
 class BreathingExerciseUsageView(APIView):
     @csrf_exempt
     def post(self, request):
@@ -811,6 +956,7 @@ class BreathingExerciseUsageView(APIView):
 
         BreathingExerciseUsage.objects.create(employee_id=id, exercise_name=exercise_name, duration=duration)
         return Response(status=status.HTTP_201_CREATED)
+    
     def get(self, request):
         user_id = request.GET.get('user')
         team_id = request.GET.get('team_id')
@@ -879,6 +1025,82 @@ class BreathingExerciseUsageView(APIView):
             "most_used_exercise": most_used_exercise
         })
     
+class ExactBreathingExerciseUsageView(APIView):
+    def get(self, request):
+        user_id = request.GET.get('user_id')
+        team_id = request.GET.get('team_id')
+        period = request.GET.get('period')
+        exact_period = request.GET.get('exact_period')
+        local_tz = local_timezone
+
+        if not exact_period:
+            return Response({"error": "Exact period not specified"}, status=400)
+
+        try:
+            if period == 'daily':
+                start_date = end_date = datetime.strptime(exact_period, '%Y-%m-%d').date()
+                hours = range(8, 19, 1)  
+                days = {f'{hour}:00 - {hour+1}:00': 0 for hour in hours}
+            elif period == 'weekly':
+                year, week = map(int, exact_period.split('-W'))
+                start_date = datetime.strptime(f'{year} {week} 1', '%Y %W %w').date()
+                end_date = start_date + timedelta(days=6)
+                days = {day: 0 for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]}
+            elif period == 'monthly':
+                year, month = map(int, exact_period.split('-'))
+                start_date = datetime(year, month, 1).date()
+                end_date = (start_date.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+                days_in_month = (end_date - start_date).days + 1
+                days = {f'Day {i}': 0 for i in range(1, days_in_month + 1)}
+            else:
+                return Response({"error": "Invalid period specified"}, status=400)
+        except ValueError:
+            return Response({"error": "Invalid exact period format"}, status=400)
+        filter_params = {}
+        if user_id and user_id != 'none':
+            filter_params['employee_id'] = user_id
+        elif team_id:
+            if team_id == 'all':
+                users = User.objects.all()
+            else:
+                users = User.objects.filter(team=team_id)
+            user_ids = users.values_list('id', flat=True)
+            filter_params['employee_id__in'] = user_ids
+
+        usage_records = BreathingExerciseUsage.objects.filter(
+            **filter_params,
+            timestamp__date__range=[start_date, end_date]
+        ).annotate(
+            day=ExtractHour('timestamp') if period == 'daily' else (ExtractDay('timestamp') if period == 'monthly' else ExtractWeekDay('timestamp'))
+        ).values('timestamp', 'day').annotate(total_duration=Sum('duration'))
+
+        for record in usage_records:
+            timestamp = record['timestamp']
+            local_time = timestamp.astimezone(local_tz)
+            if period == 'daily':
+                hour = local_time.hour
+                hour_range = f"{hour}:00 - {hour + 1}:00"
+                if hour_range in days:
+                    days[hour_range] = record['total_duration']
+            elif period == 'weekly':
+                adjusted_day = (record['day'] + 5) % 7  
+                weekday_name = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][adjusted_day]
+                days[weekday_name] = record['total_duration']
+            else:
+                day_name = f"Day {record['day']}"
+                days[day_name] = record['total_duration']
+
+        most_used_exercise = BreathingExerciseUsage.objects.filter(
+            **filter_params,
+            timestamp__date__range=[start_date, end_date]
+        ).values('exercise_name').annotate(total_duration=Sum('duration')).order_by('-total_duration').first()
+        
+        return Response({
+            "days": days,
+            "most_used_exercise": most_used_exercise
+        })
+    
+"""==================== TRACK LISTENING ======================="""   
 class TrackListeningView(APIView):
     @csrf_exempt
     def post(self, request):
@@ -969,7 +1191,84 @@ class TrackListeningView(APIView):
             "days": days,
             "most_listened_track": most_listened_track
         })
-    
+
+class ExactTrackListeningView(APIView):
+ def get(self, request):
+        user_id = request.GET.get('user_id')
+        team_id = request.GET.get('team_id')
+        period = request.GET.get('period')
+        exact_period = request.GET.get('exact_period')
+        local_tz = local_timezone
+
+
+        if not exact_period:
+            return Response({"error": "Exact period not specified"}, status=400)
+
+        try:
+            if period == 'daily':
+                start_date = end_date = datetime.strptime(exact_period, '%Y-%m-%d').date()
+                hours = range(8, 19, 1)  
+                days = {f'{hour}:00 - {hour+1}:00': 0 for hour in hours}
+            elif period == 'weekly':
+                year, week = map(int, exact_period.split('-W'))
+                start_date = datetime.strptime(f'{year} {week} 1', '%Y %W %w').date()
+                end_date = start_date + timedelta(days=6)
+                days = {day: 0 for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]}
+            elif period == 'monthly':
+                year, month = map(int, exact_period.split('-'))
+                start_date = datetime(year, month, 1).date()
+                end_date = (start_date.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+                days_in_month = (end_date - start_date).days + 1
+                days = {f'Day {i}': 0 for i in range(1, days_in_month + 1)}
+            else:
+                return Response({"error": "Invalid period specified"}, status=400)
+        except ValueError:
+            return Response({"error": "Invalid exact period format"}, status=400)
+
+        filter_params = {}
+        if user_id and user_id != 'none':
+            filter_params['employee_id'] = user_id
+        elif team_id:
+            if team_id == 'all':
+                users = User.objects.all()
+            else:
+                users = User.objects.filter(team=team_id)
+            user_ids = users.values_list('id', flat=True)
+            filter_params['employee_id__in'] = user_ids
+
+        usage_records = TrackListening.objects.filter(
+            **filter_params,
+            timestamp__date__range=[start_date, end_date]
+        ).annotate(
+            day=ExtractHour('timestamp') if period == 'daily' else (ExtractDay('timestamp') if period == 'monthly' else ExtractWeekDay('timestamp'))
+        ).values('timestamp', 'day').annotate(total_duration=Sum('duration'))
+
+        for record in usage_records:
+            timestamp = record['timestamp']
+            local_time = timestamp.astimezone(local_tz)
+            if period == 'daily':
+                hour = local_time.hour
+                hour_range = f"{hour}:00 - {hour + 1}:00"
+                if hour_range in days:
+                    days[hour_range] = record['total_duration']
+            elif period == 'weekly':
+                adjusted_day = (record['day'] + 5) % 7  
+                weekday_name = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][adjusted_day]
+                days[weekday_name] = record['total_duration']
+            else:
+                day_name = f"Day {record['day']}"
+                days[day_name] = record['total_duration']
+
+        most_listened_track = TrackListening.objects.filter(
+            **filter_params,
+            timestamp__date__range=[start_date, end_date]
+        ).values('track_name').annotate(total_duration=Sum('duration')).order_by('-total_duration').first()
+        
+        return Response({
+            "days": days,
+            "most_listened_track": most_listened_track
+        })
+
 class EmotionTeamDataView(APIView):
     def get(self, request):
         defaultEmotionValues = {'angry': 0, 'disgust': 0, 'fear': 0, 'happy': 0, 'sad': 0, 'surprise': 0, 'neutral': 0}
@@ -1433,3 +1732,74 @@ class FocusDataView(APIView):
                     return JsonResponse({'focused': False, 'text': 'error'})
         except:
             return JsonResponse({'focused': False, 'text': 'error'})
+
+class ExactFocusDataView(APIView):
+    def get(self, request):
+        user_id = request.GET.get('user_id')
+        team_id = request.GET.get('team_id')
+        period = request.GET.get('period')
+        exact_period = request.GET.get('exact_period')
+        local_tz = local_timezone 
+
+        if not exact_period:
+            return Response({"error": "Exact period not specified"}, status=400)
+
+        try:
+            if period == 'daily':
+                start_date = end_date = datetime.strptime(exact_period, '%Y-%m-%d').date()
+                hours = range(8, 19, 1) 
+                days = {f'{hour}:00 - {hour+1}:00': {'F': 0, 'NF': 0} for hour in hours}
+            elif period == 'weekly':
+                year, week = map(int, exact_period.split('-W'))
+                start_date = datetime.strptime(f'{year} {week} 1', '%Y %W %w').date()
+                end_date = start_date + timedelta(days=6)
+                days = {day: {'F': 0, 'NF': 0} for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]}
+            elif period == 'monthly':
+                year, month = map(int, exact_period.split('-'))
+                start_date = datetime(year, month, 1).date()
+                end_date = (start_date.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+                days_in_month = (end_date - start_date).days + 1
+                days = {f'Day {i}': {'F': 0, 'NF': 0} for i in range(1, days_in_month + 1)} 
+            else:
+                return Response({"error": "Invalid period specified"}, status=400)
+        except ValueError:
+            return Response({"error": "Invalid exact period format"}, status=400)
+
+        filter_params = {}
+        if user_id and user_id != 'none':
+            filter_params['employee_id'] = user_id
+        elif team_id:
+            if team_id == 'all':
+                users = User.objects.all()
+            else:
+                users = User.objects.filter(team=team_id)
+            user_ids = users.values_list('id', flat=True)
+            filter_params['employee_id__in'] = user_ids
+
+        usage_records = Employee_Focus.objects.filter(
+            **filter_params,
+            time__date__range=[start_date, end_date]
+        ).annotate(
+            day=ExtractHour('time') if period == 'daily' else (ExtractDay('time') if period == 'monthly' else ExtractWeekDay('time'))
+        ).values('time', 'day', 'focus_data').annotate(total_count=Count('focus_data'))
+
+        for record in usage_records:
+            timestamp = record['time']
+            local_time = timestamp.astimezone(local_tz)
+            if period == 'daily':
+                hour = local_time.hour
+                hour_range = f"{hour}:00 - {hour + 1}:00"
+                if hour_range in days:
+                    days[hour_range][record['focus_data']] += record['total_count']
+            elif period == 'weekly':
+                adjusted_day = (record['day'] + 5) % 7 
+                weekday_name = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][adjusted_day]
+                days[weekday_name][record['focus_data']] += record['total_count']
+            else:
+                day_name = f"Day {record['day']}"
+                days[day_name][record['focus_data']] += record['total_count']
+
+        response_data = {day: {"focused": data['F'], "unfocused": data['NF']} for day, data in days.items()}
+        return Response({
+            "days": response_data,
+        })

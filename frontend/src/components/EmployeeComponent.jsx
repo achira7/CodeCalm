@@ -23,6 +23,8 @@ import { BtnColor } from "../theme/ButtonTheme";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
+import EmotionCompare from "./compare/EmotionCompare";
+
 const pfp = "http://127.0.0.1:8000/media/profilePictures/default.jpg";
 const icons = "http://127.0.0.1:8000/media/icons";
 
@@ -82,6 +84,11 @@ const EmployeeComponent = ({ id, role }) => {
   const [dateType, setDateType] = useState("daily");
 
   const [selectedView, setSelectedView] = useState("daily");
+
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [periodForExact, setPeriodForExact] = useState("daily");
+
+  const [calType, setCalType] = useState("date");
 
   const fetchUserDataWithID = async () => {
     try {
@@ -151,7 +158,6 @@ const EmployeeComponent = ({ id, role }) => {
       });
 
       const data = response.data.days || {};
-      console.log(data);
       const allZero = Object.values(data).every((value) => value === 0);
       if (allZero) {
         setStressChartError("No Data Stress Recorded ⚠");
@@ -242,6 +248,121 @@ const EmployeeComponent = ({ id, role }) => {
       setMostListenedTrack(response.data.most_listened_track || null);
     } catch (error) {
       console.error("Error fetching listening data:", error);
+    }
+  };
+
+  //EXACT PERIOD FUNCTIONS
+  const fetchExactBreathingData = async (period, exact_period) => {
+    try {
+      const response = await axios.get(
+        "http://localhost:8000/api/exact_breathing/",
+        {
+          params: { user_id: id, period: period, exact_period: exact_period },
+        }
+      );
+      const data = response.data.days || {};
+      if (period === "daily") {
+        setDailyExerciseData(data);
+      } else if (period === "weekly") {
+        setWeeklyExerciseData(data);
+      } else if (period === "monthly") {
+        setMonthlyExerciseData(data);
+      }
+      console.log(data);
+    } catch (error) {
+      console.error("Error fetching exact breathing data:", error);
+    }
+  };
+
+  const fetchExactListeningData = async (period, exact_period) => {
+    try {
+      const response = await axios.get(
+        "http://localhost:8000/api/exact_listening/",
+        {
+          params: { user_id: id, period: period, exact_period: exact_period },
+        }
+      );
+      const data = response.data.days || {};
+      if (period === "daily") {
+        setDailyListeningData(data);
+      } else if (period === "weekly") {
+        setWeeklyListeningData(data);
+      } else if (period === "monthly") {
+        setMonthlyListeningData(data);
+      }
+      console.log(data);
+    } catch (error) {
+      console.error("Error fetching exact listening data:", error);
+    }
+  };
+
+  const fetchExactEmotionData = async (period, exact_period) => {
+    try {
+      const response = await axios.get(
+        "http://localhost:8000/api/exact_emotions/",
+        {
+          params: { user_id: id, period: period, exact_period: exact_period },
+        }
+      );
+      const data = response.data.defaultEmotionValues;
+      const hourlyEmotion = response.data.hourlyDominantEmotions;
+      setEmotions(data);
+      setHourlyEmotion(hourlyEmotion);
+
+      if (period === "daily") {
+        setDailyListeningData(data);
+      } else if (period === "weekly") {
+        setWeeklyListeningData(data);
+      } else if (period === "monthly") {
+        setMonthlyListeningData(data);
+      }
+      console.log(data);
+    } catch (error) {
+      console.error("Error fetching exact listening data:", error);
+    }
+  };
+
+  const fetchExactStressData = async (period, exact_period) => {
+    try {
+      const response = await axios.get(
+        "http://localhost:8000/api/exact_stress/",
+        {
+          params: { user_id: id, period: period, exact_period: exact_period },
+        }
+      );
+      const data = response.data.days || {};
+      if (period === "daily") {
+        setDailyStressData(data);
+      } else if (period === "weekly") {
+        setWeeklyStressData(data);
+      } else if (period === "monthly") {
+        setMonthlyStressData(data);
+      }
+      console.log(data);
+    } catch (error) {
+      console.error("Error fetching exact listening data:", error);
+    }
+  };
+
+  const fetchExactFocusData = async (period, exact_period) => {
+    try {
+      const response = await axios.get(
+        "http://localhost:8000/api/exact_focus/",
+        {
+          params: { user_id: id, period: period, exact_period: exact_period },
+        }
+      );
+      const data = response.data.days || {};
+      if (period === "daily") {
+        setDailyFocusData(data);
+      } else if (period === "weekly") {
+        setWeeklyFocusData(data);
+      } else if (period === "monthly") {
+        setMonthlyFocusData(data);
+      }
+      console.log(data);
+    } catch (error) {
+      console.error("Error fetching exact listening data:", error);
     }
   };
 
@@ -354,25 +475,42 @@ const EmployeeComponent = ({ id, role }) => {
     setExerciseView(period);
     setListeningView(period);
     setFocusView(period);
+    setPeriodForExact(period);
 
     fetchEmotionData(period);
     fetchStressData(period);
     fetchExerciseData(period);
     fetchListeningData(period);
     fetchFocusData(period);
+
+    if (period === "daily") {
+      setCalType("date");
+      setSelectedDate(new Date());
+    } else if (period === "weekly") {
+      setCalType("week");
+    } else if (period === "monthly") {
+      setCalType("month");
+    }
   };
 
-  const getDatePickerType = (view) => {
-    switch (view) {
-      case "daily":
-        return "date";
-      case "weekly":
-        return "week";
-      case "monthly":
-        return "month";
-      default:
-        return "date";
-    }
+  const handleDateChange = (date) => {
+    const exact_period = date.target.value;
+    setSelectedDate(new Date(exact_period));
+    fetchExactBreathingData(periodForExact, exact_period);
+    fetchExactListeningData(periodForExact, exact_period);
+    fetchExactEmotionData(periodForExact, exact_period);
+    fetchExactFocusData(periodForExact, exact_period);
+    fetchExactStressData(periodForExact, exact_period);
+  };
+
+  const [isEmotionOverlayOpen, setIsOverlayOpen] = useState(false);
+
+  const openEmotionOverlay = () => {
+    setIsOverlayOpen(true);
+  };
+
+  const closeEmotionOverlay = () => {
+    setIsOverlayOpen(false);
   };
 
   return (
@@ -382,6 +520,7 @@ const EmployeeComponent = ({ id, role }) => {
 
         <div className={` ${Color.outSideCard} rounded-xl px-6 py-6`}>
           <div className="flex justify-between">
+            {/*Date Picker Componenet*/}
             <div>
               {["daily", "weekly", "monthly"].map((period) => (
                 <button
@@ -396,6 +535,30 @@ const EmployeeComponent = ({ id, role }) => {
                   {period.charAt(0).toUpperCase() + period.slice(1)}
                 </button>
               ))}
+              <div className="flex items-center">
+                <FaCalendarAlt size={24} className="mr-2 cursor-pointer" />
+
+                <input
+                  type={calType}
+                  selected={selectedDate}
+                  onChange={handleDateChange}
+                  showPopperArrow={false}
+                  className="cursor-pointer"
+                />
+              </div>
+            </div>
+
+            {/*Report Download Componenet*/}
+            <div>
+              {(userRole === "Admin" || userRole === "Supervisor") && (
+                <button
+                  className={`bg-sky-500  px-4 py-2 rounded-md mb-5 flex ${BtnColor.primary}`}
+                  onClick={downloadPDF}
+                  title="in PDF format"
+                >
+                  <LuFileDown /> Download Report
+                </button>
+              )}
             </div>
 
             <div>
@@ -428,9 +591,11 @@ const EmployeeComponent = ({ id, role }) => {
                     : "Overall Emotions"}
                 </h5>
 
-                <button className=" hover:text-sky-600">
-                  <FaArrowRightArrowLeft size={20} />
-                </button>
+                <div className="flex align-super">
+                  <button onClick={openEmotionOverlay}>
+                    <FaArrowRightArrowLeft size={20} />
+                  </button>
+                </div>
 
                 {emotionChartError ? (
                   <h2 className="text-xl  mt-4">{emotionChartError}</h2>
@@ -464,6 +629,10 @@ const EmployeeComponent = ({ id, role }) => {
                     ? "Weekly Stress Levels"
                     : "Monthly Stress Levels"}
                 </h5>
+                <button className=" hover:text-sky-600">
+                  <FaArrowRightArrowLeft size={20} />
+                </button>
+
                 {stressChartError ? (
                   <h2 className="text-xl  mt-4">{stressChartError}</h2>
                 ) : (
@@ -495,6 +664,9 @@ const EmployeeComponent = ({ id, role }) => {
                     ? "Weekly Focus Data"
                     : "Monthly Focus Data"}
                 </h5>
+                <button className=" hover:text-sky-600">
+                  <FaArrowRightArrowLeft size={20} />
+                </button>
                 {focusChartError ? (
                   <h2 className="text-xl  mt-4">{listeningChartError}</h2>
                 ) : (
@@ -522,6 +694,9 @@ const EmployeeComponent = ({ id, role }) => {
                     ? "Weekly Breathing Exercise Usage"
                     : "Monthly Breathing Exercise Usage"}
                 </h5>
+                <button className=" hover:text-sky-600">
+                  <FaArrowRightArrowLeft size={20} />
+                </button>
                 {breathingChartError ? (
                   <h2 className="text-xl  mt-4">{breathingChartError}</h2>
                 ) : (
@@ -562,6 +737,9 @@ const EmployeeComponent = ({ id, role }) => {
                     ? "Weekly Track Listening Usage"
                     : "Monthly Track Listening Usage"}
                 </h5>
+                <button className=" hover:text-sky-600">
+                  <FaArrowRightArrowLeft size={20} />
+                </button>
                 {listeningChartError ? (
                   <h2 className="text-xl  mt-4">{listeningChartError}</h2>
                 ) : (
@@ -619,7 +797,15 @@ const EmployeeComponent = ({ id, role }) => {
             </div>
           </div>
         </div>
+        <div></div>
       </div>
+
+      {isEmotionOverlayOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <EmotionCompare id={userData.id} period={periodForExact}/>
+          <button onClick={closeEmotionOverlay}>Close</button>
+        </div>
+      )}
     </div>
   );
 };

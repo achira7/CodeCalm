@@ -39,15 +39,12 @@ const Login = () => {
 
       if (response.data.message === "Login successful") {
         setUserData(response.data);
-
         setFormError(false);
-        if (response.data.is_staff) {
+        if (response.data.is_superuser) {
+          navigate("/admin/dashboard"); 
+        } else{
           navigate("/employee/dashboard");
-        } else if (response.data.is_superuser) {
-          navigate("/admin/dashboard");
-        } else {
-          navigate("/employee/dashboard");
-        }
+        } 
       } else if (response.data.message === "Invalid username or password") {
         toast.error(response.data.message, {
           position: "top-right",

@@ -120,6 +120,9 @@ function App() {
         <Route path="/admin/settings" element={<AdminSettings />} />
         <Route path="/admin/breathing" element={<AddBreathingProfile />} />
         <Route path="/admin/track" element={<AddTrack />} />
+
+        <Route path={`/admin/employee_dashboard/:id`} element={<Dashboard />} />
+
       </Routes>
     </RecoilRoot>
   );

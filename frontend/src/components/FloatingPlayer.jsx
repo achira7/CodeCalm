@@ -252,7 +252,7 @@ const FloatingPlayer = () => {
         )}
 
         <AudioPlayer
-          //autoPlay={false}
+          autoPlay={false}
           ref={audioRef}
           src={`http://127.0.0.1:8000/${currentTrack.audioSrc}`}
           onPlay={handlePlayPause}
