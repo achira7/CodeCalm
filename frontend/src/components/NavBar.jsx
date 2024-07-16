@@ -81,7 +81,6 @@ const NavBar = () => {
     { id: 3, title: 'breathing exercise', link: '/employee/breathingexercise' },
     { id: 4, title: 'Audio Therapy', link: '/employee/player' },
     { id: 5, title: 'Self Stress Assess', link: '/employee/self_stress' },
-    { id: 6, title: 'face login reg', link: '/employee/facelogin_reg' },
   ];
 
   const supervisorLinks = [

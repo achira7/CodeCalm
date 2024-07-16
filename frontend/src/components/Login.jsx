@@ -161,9 +161,9 @@ const Login = () => {
             onClick={openFaceLogin}
             className="text-amber-500 cursor-pointer hover:underline"
           >
-            <a className="text-sky-500 underline cursor-pointer">
+            {/*<a className="text-sky-500 underline cursor-pointer">
               Try FaceLogin
-            </a>
+            </a>*/}
           </div>
 
           <button

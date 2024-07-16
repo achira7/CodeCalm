@@ -24,6 +24,10 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
 import EmotionCompare from "./compare/EmotionCompare";
+import FocusCompare from "./compare/FocusCompare";
+import BreathingCompare from "./compare/BreathingCompare";
+import ListeningCompare from "./compare/ListeningCompare";
+import StressCompare from "./compare/StressCompare";
 
 const pfp = "http://127.0.0.1:8000/media/profilePictures/default.jpg";
 const icons = "http://127.0.0.1:8000/media/icons";
@@ -195,7 +199,6 @@ const EmployeeComponent = ({ id, role }) => {
       } else if (period === "daily") {
         setDailyFocusData(data);
       }
-      //setFocusedData(data);
     } catch (error) {
       console.error("Error fetching focus data:", error);
     }
@@ -503,25 +506,61 @@ const EmployeeComponent = ({ id, role }) => {
     fetchExactStressData(periodForExact, exact_period);
   };
 
-  const [isEmotionOverlayOpen, setIsOverlayOpen] = useState(false);
+  const [isEmotionOverlayOpen, setIsEmotionOverlayOpen] = useState(false);
+  const [isStressOverlayOpen, setIsStressOverlayOpen] = useState(false);
+  const [isFocusOverlayOpen, setIsFocusOverlayOpen] = useState(false);
+  const [isBreathingOverlayOpen, setIsBreathingOverlayOpen] = useState(false);
+  const [isListeningOverlayOpen, setIsListeningOverlayOpen] = useState(false);
 
   const openEmotionOverlay = () => {
-    setIsOverlayOpen(true);
+    setIsEmotionOverlayOpen(true);
   };
 
   const closeEmotionOverlay = () => {
-    setIsOverlayOpen(false);
+    setIsEmotionOverlayOpen(false);
+  };
+
+  const openStressOverlay = () => {
+    setIsStressOverlayOpen(true);
+  };
+
+  const closeStressOverlay = () => {
+    setIsStressOverlayOpen(false);
+  };
+
+  const openFocusOverlay = () => {
+    setIsFocusOverlayOpen(true);
+  };
+
+  const closeFocusOverlay = () => {
+    setIsFocusOverlayOpen(false);
+  };
+
+  const openBreathingOverlay = () => {
+    setIsBreathingOverlayOpen(true);
+  };
+
+  const closeBreathingOverlay = () => {
+    setIsBreathingOverlayOpen(false);
+  };
+
+  const openListeningOverlay = () => {
+    setIsListeningOverlayOpen(true);
+  };
+
+  const closeListeningOverlay = () => {
+    setIsListeningOverlayOpen(false);
   };
 
   return (
-    <div className={`min-h-screen ${Color.background} `}>
+    <div className={`min-h-screen ${Color.background}`}>
       <div className="container  mx-auto py-2 px-4 md:px-20 lg:px-12 xl:px-48">
         {/*Period Selection Buttons */}
 
         <div className={` ${Color.outSideCard} rounded-xl px-6 py-6`}>
           <div className="flex justify-between">
             {/*Date Picker Componenet*/}
-            <div>
+            <div className="flex items-center">
               {["daily", "weekly", "monthly"].map((period) => (
                 <button
                   key={period}
@@ -535,9 +574,7 @@ const EmployeeComponent = ({ id, role }) => {
                   {period.charAt(0).toUpperCase() + period.slice(1)}
                 </button>
               ))}
-              <div className="flex items-center">
-                <FaCalendarAlt size={24} className="mr-2 cursor-pointer" />
-
+              <div className="flex items-center align-super">
                 <input
                   type={calType}
                   selected={selectedDate}
@@ -629,9 +666,11 @@ const EmployeeComponent = ({ id, role }) => {
                     ? "Weekly Stress Levels"
                     : "Monthly Stress Levels"}
                 </h5>
-                <button className=" hover:text-sky-600">
-                  <FaArrowRightArrowLeft size={20} />
-                </button>
+                <div className="flex align-super">
+                  <button onClick={openStressOverlay}>
+                    <FaArrowRightArrowLeft size={20} />
+                  </button>
+                </div>
 
                 {stressChartError ? (
                   <h2 className="text-xl  mt-4">{stressChartError}</h2>
@@ -664,9 +703,11 @@ const EmployeeComponent = ({ id, role }) => {
                     ? "Weekly Focus Data"
                     : "Monthly Focus Data"}
                 </h5>
-                <button className=" hover:text-sky-600">
-                  <FaArrowRightArrowLeft size={20} />
-                </button>
+                <div className="flex align-super">
+                  <button onClick={openFocusOverlay}>
+                    <FaArrowRightArrowLeft size={20} />
+                  </button>
+                </div>
                 {focusChartError ? (
                   <h2 className="text-xl  mt-4">{listeningChartError}</h2>
                 ) : (
@@ -694,9 +735,11 @@ const EmployeeComponent = ({ id, role }) => {
                     ? "Weekly Breathing Exercise Usage"
                     : "Monthly Breathing Exercise Usage"}
                 </h5>
-                <button className=" hover:text-sky-600">
-                  <FaArrowRightArrowLeft size={20} />
-                </button>
+                <div className="flex align-super">
+                  <button onClick={openBreathingOverlay}>
+                    <FaArrowRightArrowLeft size={20} />
+                  </button>
+                </div>
                 {breathingChartError ? (
                   <h2 className="text-xl  mt-4">{breathingChartError}</h2>
                 ) : (
@@ -737,9 +780,11 @@ const EmployeeComponent = ({ id, role }) => {
                     ? "Weekly Track Listening Usage"
                     : "Monthly Track Listening Usage"}
                 </h5>
-                <button className=" hover:text-sky-600">
-                  <FaArrowRightArrowLeft size={20} />
-                </button>
+                <div className="flex align-super">
+                  <button onClick={openListeningOverlay}>
+                    <FaArrowRightArrowLeft size={20} />
+                  </button>
+                </div>
                 {listeningChartError ? (
                   <h2 className="text-xl  mt-4">{listeningChartError}</h2>
                 ) : (
@@ -802,8 +847,36 @@ const EmployeeComponent = ({ id, role }) => {
 
       {isEmotionOverlayOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <EmotionCompare id={userData.id} period={periodForExact}/>
+          <EmotionCompare id={userData.id} period={periodForExact} />
           <button onClick={closeEmotionOverlay}>Close</button>
+        </div>
+      )}
+
+      {isStressOverlayOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <StressCompare id={userData.id} period={periodForExact} />
+          <button onClick={closeStressOverlay}>Close</button>
+        </div>
+      )}
+
+      {isFocusOverlayOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <FocusCompare id={userData.id} period={periodForExact} />
+          <button onClick={closeFocusOverlay}>Close</button>
+        </div>
+      )}
+
+      {isBreathingOverlayOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <BreathingCompare id={userData.id} period={periodForExact} />
+          <button onClick={closeBreathingOverlay}>Close</button>
+        </div>
+      )}
+
+      {isListeningOverlayOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <ListeningCompare id={userData.id} period={periodForExact} />
+          <button onClick={closeListeningOverlay}>Close</button>
         </div>
       )}
     </div>

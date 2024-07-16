@@ -33,11 +33,15 @@ const EmotionCompare = ({ id, period }) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [calType, setCalType] = useState("date");
 
-  if (period === "weekly") {
-    setCalType("week");
-  } else if (period === "monthly") {
-    setCalType("month");
-  }
+  useEffect(() => {
+    if (period === "weekly") {
+      setCalType("week");
+    } else if (period === "monthly") {
+      setCalType("month");
+    } else {
+      setCalType("date");
+    }
+  }, [period]);
 
   const fetchEmotionData = async (period) => {
     try {
@@ -90,7 +94,7 @@ const EmotionCompare = ({ id, period }) => {
   };
 
   return (
-    <div className="flex flex-wrap justify-center gap-10 mt-4 w-full">
+    <div className={`min-h-screen ${Color.background} `}>
       <div className="flex flex-col items-center">
         <h2>Daily Emotions</h2>
         <div className="relative"> {/*`rounded-lg  ${Color.chartsBGText} m-4 p-6`*/}
@@ -124,48 +128,50 @@ const EmotionCompare = ({ id, period }) => {
           ))}
         </div>
       </div>
-
-      <div className="flex flex-col items-center">
-        <h2>Daily Emotions</h2>
-        <input
-          type={calType}
-          value={selectedDate.toISOString().split("T")[0]}
-          onChange={handleDateChange}
-          className="cursor-pointer"
-        />
-        <div className="relative"> {/*`rounded-lg  ${Color.chartsBGText} m-4 p-6`*/}
-          <DoughnutChart {...exactEmotions} />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <img
-              className="w-16"
-              src={`http://127.0.0.1:8000/media/emojis/${highestEmotion.key}.png`}
-              alt={highestEmotion.key}
-              title={`Highest emotion is: ${highestEmotion.key}`}
-            />
-          </div>
-        </div>
-        <div className="flex flex-wrap justify-center gap-10 mt-4 w-full">
-          {Object.keys(exactHourlyEmotion).map((hour, index) => (
-            <div key={index} className="text-center">
-              {exactHourlyEmotion[hour] ? (
-                <div>
-                  <img
-                    className="w-10"
-                    src={`http://127.0.0.1:8000/media/emojis/${exactHourlyEmotion[hour]}.png`}
-                    alt={exactHourlyEmotion[hour]}
-                    title={exactHourlyEmotion[hour]}
-                  />
-                </div>
-              ) : (
-                <span className="text-xl"> - </span>
-              )}
-              <p className="text-sm">{hour.split(" ")[0]}</p>
+  
+      {/* New wrapper div for side by side layout */}
+      <div className="flex flex-row justify-center mt-8">
+        <div className="flex flex-col items-center">
+          <h2>Daily Emotions</h2>
+          <input
+            type={calType}
+            value={selectedDate.toISOString().split("T")[0]}
+            onChange={handleDateChange}
+            className="cursor-pointer"
+          />
+          <div className="relative"> {/*`rounded-lg  ${Color.chartsBGText} m-4 p-6`*/}
+            <DoughnutChart {...exactEmotions} />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <img
+                className="w-16"
+                src={`http://127.0.0.1:8000/media/emojis/${highestEmotion.key}.png`}
+                alt={highestEmotion.key}
+                title={`Highest emotion is: ${highestEmotion.key}`}
+              />
             </div>
-          ))}
+          </div>
+          <div className="flex flex-wrap justify-center gap-10 mt-4 w-full">
+            {Object.keys(exactHourlyEmotion).map((hour, index) => (
+              <div key={index} className="text-center">
+                {exactHourlyEmotion[hour] ? (
+                  <div>
+                    <img
+                      className="w-10"
+                      src={`http://127.0.0.1:8000/media/emojis/${exactHourlyEmotion[hour]}.png`}
+                      alt={exactHourlyEmotion[hour]}
+                      title={exactHourlyEmotion[hour]}
+                    />
+                  </div>
+                ) : (
+                  <span className="text-xl"> - </span>
+                )}
+                <p className="text-sm">{hour.split(" ")[0]}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
   );
-};
-
-export default EmotionCompare;
+}
+  export default EmotionCompare;

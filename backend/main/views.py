@@ -17,7 +17,6 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate
 from django.conf import settings
 from rest_framework import exceptions 
-
 from django.utils import timezone
 from django.http import HttpResponse
 from django.http import JsonResponse
@@ -1668,7 +1667,7 @@ class FocusDataView(APIView):
                             if face_landmarks:
                                 landmarks = face_landmarks[0]
 
-                                # Extract 2D coordinates of the facial landmarks
+                                #Extract 2D coordinate
                                 image_points = np.array([
                                     landmarks['nose_tip'][2],    # Nose tip
                                     landmarks['chin'][8],        # Chin
@@ -1678,7 +1677,7 @@ class FocusDataView(APIView):
                                     landmarks['top_lip'][6]      # Right mouth corner
                                 ], dtype=np.float32)
 
-                                # Camera matrix
+                                #Camera matrix
                                 focal_length = opencv_image.shape[1]
                                 center = (opencv_image.shape[1] // 2, opencv_image.shape[0] // 2)
                                 camera_matrix = np.array([
@@ -1709,12 +1708,12 @@ class FocusDataView(APIView):
 
                                 focused = -25 < yaw < 25
 
-                                #Simple gaze detection (based on eye landmarks)
+                                #Gaze detection based on eye landmarks
                                 left_eye_center = np.mean(landmarks['left_eye'], axis=0).astype(int)
                                 right_eye_center = np.mean(landmarks['right_eye'], axis=0).astype(int)
-                                gaze_direction = (left_eye_center[0] + right_eye_center[0]) / 2  # Simplified
+                                gaze_direction = (left_eye_center[0] + right_eye_center[0]) / 2  
 
-                                gaze_focused = 0.3 * opencv_image.shape[1] < gaze_direction < 0.7 * opencv_image.shape[1]  # Adjust as needed
+                                gaze_focused = 0.3 * opencv_image.shape[1] < gaze_direction < 0.7 * opencv_image.shape[1]  
 
                                 if focused and gaze_focused:
                                     focus_status = 'F'
