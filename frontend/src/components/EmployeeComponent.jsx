@@ -10,6 +10,7 @@ import TwoValueBarChart from "./charts/TwoValueBarChart";
 import { FaArrowLeft, FaArrowRight, FaCalendarAlt } from "react-icons/fa";
 import { LuFileDown } from "react-icons/lu";
 import { FaArrowRightArrowLeft } from "react-icons/fa6";
+import { IoClose } from "react-icons/io5";
 
 import "../index.css";
 import { useParams } from "react-router-dom";
@@ -19,15 +20,21 @@ import html2canvas from "html2canvas";
 
 import { Color } from "../theme/Colors";
 import { BtnColor } from "../theme/ButtonTheme";
+import { BtnClose } from "../theme/ButtonTheme";
+import { CompareIconColor } from "../theme/ButtonTheme";
+import { DateSelector } from "../theme/ButtonTheme";
 
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { FaRegWindowClose } from "react-icons/fa";
 
 import EmotionCompare from "./compare/EmotionCompare";
 import FocusCompare from "./compare/FocusCompare";
 import BreathingCompare from "./compare/BreathingCompare";
 import ListeningCompare from "./compare/ListeningCompare";
 import StressCompare from "./compare/StressCompare";
+
+import EmployeeInfo from "./EmployeeInfo";
 
 const pfp = "http://127.0.0.1:8000/media/profilePictures/default.jpg";
 const icons = "http://127.0.0.1:8000/media/icons";
@@ -554,33 +561,40 @@ const EmployeeComponent = ({ id, role }) => {
 
   return (
     <div className={`min-h-screen ${Color.background}`}>
+
+<EmployeeInfo name={`${userData.first_name} ${userData.last_name}`} team={userData.team} accountType={`Employee`} picture={`https://i.etsystatic.com/14064392/r/il/fe4fdd/4237312565/il_570xN.4237312565_5bs0.jpg`}/>
+
+
       <div className="container  mx-auto py-2 px-4 md:px-20 lg:px-12 xl:px-48">
         {/*Period Selection Buttons */}
 
         <div className={` ${Color.outSideCard} rounded-xl px-6 py-6`}>
-          <div className="flex justify-between">
+          <div>
             {/*Date Picker Componenet*/}
-            <div className="flex items-center">
-              {["daily", "weekly", "monthly"].map((period) => (
-                <button
-                  key={period}
-                  className={`mx-2 px-4 py-2 rounded ${
-                    emotionView === period
-                      ? BtnColor.dashBoardBtnSelected
-                      : BtnColor.dashBoardBtnIdel
-                  } `}
-                  onClick={() => handlePeriodChange(period)}
-                >
-                  {period.charAt(0).toUpperCase() + period.slice(1)}
-                </button>
-              ))}
-              <div className="flex items-center align-super">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                {["daily", "weekly", "monthly"].map((period) => (
+                  <button
+                    key={period}
+                    className={`mx-2 px-4 py-2 rounded ${
+                      emotionView === period
+                        ? BtnColor.dashBoardBtnSelected
+                        : BtnColor.dashBoardBtnIdel
+                    } `}
+                    onClick={() => handlePeriodChange(period)}
+                  >
+                    {period.charAt(0).toUpperCase() + period.slice(1)}
+                  </button>
+                ))}
+              </div>
+              <div className={`flex items-center align-super `}>
                 <input
                   type={calType}
                   selected={selectedDate}
                   onChange={handleDateChange}
-                  showPopperArrow={false}
-                  className="cursor-pointer"
+                  //showPopperArrow={false}
+                  className="cursor-pointer text-lg rounded-lg py-1 px-3 text-white bg-emerald-500"
+                  style={{ caretColor: 'transparent' }}
                 />
               </div>
             </div>
@@ -597,6 +611,7 @@ const EmployeeComponent = ({ id, role }) => {
                 </button>
               )}
             </div>
+
 
             <div>
               {(userRole === "Admin" || userRole === "Supervisor") && (
@@ -615,7 +630,7 @@ const EmployeeComponent = ({ id, role }) => {
             className="grid grid-cols-1  lg:grid-cols-2 xl:grid-cols-2 gap-0 justify-center"
             id="report-content"
           >
-            {/* PIE CHART */}
+            {/* Emotions */}
             <div className={`rounded-lg  ${Color.chartsBGText} m-4 p-6`}>
               <div className="text-center flex-auto">
                 <h5 className="text-2xl font-semibold  mb-5">
@@ -628,7 +643,10 @@ const EmployeeComponent = ({ id, role }) => {
                     : "Overall Emotions"}
                 </h5>
 
-                <div className="flex align-super">
+                <div
+                  className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
+                  title="Compare Emotion"
+                >
                   <button onClick={openEmotionOverlay}>
                     <FaArrowRightArrowLeft size={20} />
                   </button>
@@ -666,7 +684,10 @@ const EmployeeComponent = ({ id, role }) => {
                     ? "Weekly Stress Levels"
                     : "Monthly Stress Levels"}
                 </h5>
-                <div className="flex align-super">
+                <div
+                  className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
+                  title="Compare Stress"
+                >
                   <button onClick={openStressOverlay}>
                     <FaArrowRightArrowLeft size={20} />
                   </button>
@@ -703,7 +724,10 @@ const EmployeeComponent = ({ id, role }) => {
                     ? "Weekly Focus Data"
                     : "Monthly Focus Data"}
                 </h5>
-                <div className="flex align-super">
+                <div
+                  className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
+                  title="Compare Focus"
+                >
                   <button onClick={openFocusOverlay}>
                     <FaArrowRightArrowLeft size={20} />
                   </button>
@@ -735,7 +759,10 @@ const EmployeeComponent = ({ id, role }) => {
                     ? "Weekly Breathing Exercise Usage"
                     : "Monthly Breathing Exercise Usage"}
                 </h5>
-                <div className="flex align-super">
+                <div
+                  className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
+                  title="Compare Breathing Exercise"
+                >
                   <button onClick={openBreathingOverlay}>
                     <FaArrowRightArrowLeft size={20} />
                   </button>
@@ -780,7 +807,10 @@ const EmployeeComponent = ({ id, role }) => {
                     ? "Weekly Track Listening Usage"
                     : "Monthly Track Listening Usage"}
                 </h5>
-                <div className="flex align-super">
+                <div
+                  className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
+                  title="Compare Auddio Therapy"
+                >
                   <button onClick={openListeningOverlay}>
                     <FaArrowRightArrowLeft size={20} />
                   </button>
@@ -847,36 +877,66 @@ const EmployeeComponent = ({ id, role }) => {
 
       {isEmotionOverlayOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <EmotionCompare id={userData.id} period={periodForExact} />
-          <button onClick={closeEmotionOverlay}>Close</button>
+          <div>
+            <button
+              onClick={closeEmotionOverlay}
+              className={`${BtnClose.base} ${BtnClose.hover} ${BtnClose.rotate}`}
+            >
+              <IoClose />
+            </button>
+          </div>
+
+          <div>
+            <EmotionCompare id={userData.id} period={periodForExact} />
+          </div>
         </div>
       )}
 
       {isStressOverlayOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <StressCompare id={userData.id} period={periodForExact} />
-          <button onClick={closeStressOverlay}>Close</button>
+          <button
+            onClick={closeStressOverlay}
+            className={`${BtnClose.base} ${BtnClose.hover} ${BtnClose.rotate}`}
+          >
+            <IoClose />
+          </button>
         </div>
       )}
 
       {isFocusOverlayOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <FocusCompare id={userData.id} period={periodForExact} />
-          <button onClick={closeFocusOverlay}>Close</button>
+          <button
+            onClick={closeFocusOverlay}
+            className={`${BtnClose.base} ${BtnClose.hover} ${BtnClose.rotate}`}
+          >
+            <IoClose />
+          </button>
         </div>
       )}
 
       {isBreathingOverlayOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <BreathingCompare id={userData.id} period={periodForExact} />
-          <button onClick={closeBreathingOverlay}>Close</button>
+          <button
+            onClick={closeBreathingOverlay}
+            className={`${BtnClose.base} ${BtnClose.hover}`}
+          >
+            <IoClose />
+          </button>
         </div>
       )}
 
       {isListeningOverlayOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <ListeningCompare id={userData.id} period={periodForExact} />
-          <button onClick={closeListeningOverlay}>Close</button>
+          <button
+            onClick={closeListeningOverlay}
+            className={`${BtnClose.base} ${BtnClose.hover}`}
+          >
+            <IoClose />
+          </button>
         </div>
       )}
     </div>

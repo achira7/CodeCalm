@@ -51,6 +51,7 @@ export const ColorSet02 = {
     chartText : 'white',
     chartGrids : 'rgba(7, 142, 196, 0.507)',
     playerBG : "bg-gray-500 text-white",
+
 }
 
 export const getColorSet = () => {
@@ -61,4 +62,7 @@ export const getColorSet = () => {
 export const Color = getColorSet();
 
 
-// export const Color = ColorSet01
+export const PrimColor = {
+    green: "emerald-600",
+    red: "red-500"
+} 

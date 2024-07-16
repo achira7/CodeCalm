@@ -4,6 +4,7 @@ import { Color } from "../../theme/Colors";
 import { BtnColor } from "../../theme/ButtonTheme";
 import LineChart from "../charts/LineChart";
 
+
 const ListeningCompare = ({ id, period }) => {
   const [userData, settUserData] = useState({})
 

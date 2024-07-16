@@ -94,8 +94,10 @@ const EmotionCompare = ({ id, period }) => {
   };
 
   return (
-    <div className={`min-h-screen ${Color.background} `}>
-      <div className="flex flex-col items-center">
+    <div className={`${Color.background} rounded-lg m-4 p-6`}>
+      <div className="flex flex-cols lg:flex-row rounded-lg m-4 p-6">
+
+      <div className={` ${Color.chartsBGText}   rounded-lg m-4 p-6 `}>
         <h2>Daily Emotions</h2>
         <div className="relative"> {/*`rounded-lg  ${Color.chartsBGText} m-4 p-6`*/}
           <DoughnutChart {...emotions} />
@@ -108,7 +110,7 @@ const EmotionCompare = ({ id, period }) => {
             />
           </div>
         </div>
-        <div className="flex flex-wrap justify-center gap-10 mt-4 w-full">
+        {/*<div className="flex flex-wrap justify-center gap-10 mt-4 w-full">
           {Object.keys(hourlyEmotion).map((hour, index) => (
             <div key={index} className="text-center">
               {hourlyEmotion[hour] ? (
@@ -126,11 +128,11 @@ const EmotionCompare = ({ id, period }) => {
               <p className="text-sm">{hour.split(" ")[0]}</p>
             </div>
           ))}
-        </div>
+        </div>*/}
       </div>
   
       {/* New wrapper div for side by side layout */}
-      <div className="flex flex-row justify-center mt-8">
+      <div className={` ${Color.chartsBGText}   rounded-lg m-4 p-6 `}>
         <div className="flex flex-col items-center">
           <h2>Daily Emotions</h2>
           <input
@@ -150,7 +152,7 @@ const EmotionCompare = ({ id, period }) => {
               />
             </div>
           </div>
-          <div className="flex flex-wrap justify-center gap-10 mt-4 w-full">
+          {/*<div className="flex flex-wrap justify-center gap-10 mt-4 w-full">
             {Object.keys(exactHourlyEmotion).map((hour, index) => (
               <div key={index} className="text-center">
                 {exactHourlyEmotion[hour] ? (
@@ -168,9 +170,10 @@ const EmotionCompare = ({ id, period }) => {
                 <p className="text-sm">{hour.split(" ")[0]}</p>
               </div>
             ))}
-          </div>
+          </div>*/}
         </div>
       </div>
+    </div>
     </div>
   );
 }
