@@ -10,7 +10,7 @@ import TwoValueBarChart from "./charts/TwoValueBarChart";
 import { FaArrowLeft, FaArrowRight, FaCalendarAlt } from "react-icons/fa";
 import { LuFileDown } from "react-icons/lu";
 import { FaArrowRightArrowLeft } from "react-icons/fa6";
-import { IoClose } from "react-icons/io5";
+import { IoClose, IoHelpCircleOutline } from "react-icons/io5";
 
 import "../index.css";
 import { useParams } from "react-router-dom";
@@ -23,6 +23,8 @@ import { BtnColor } from "../theme/ButtonTheme";
 import { BtnClose } from "../theme/ButtonTheme";
 import { CompareIconColor } from "../theme/ButtonTheme";
 import { DateSelector } from "../theme/ButtonTheme";
+import { NoData } from "../theme/ChartError";
+import { RetrieveError } from "../theme/ChartError";
 
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -138,7 +140,6 @@ const EmployeeComponent = ({ id, role }) => {
         params: {
           user_id: id,
           period: period,
-          //specific_period: specific_period,
         },
       });
       const data = response.data.defaultEmotionValues;
@@ -148,7 +149,7 @@ const EmployeeComponent = ({ id, role }) => {
 
       const allZero = Object.values(data).every((value) => value === 0);
       if (allZero) {
-        setEmotionChartError("No Emotion Data Recorded ⚠");
+        setEmotionChartError(<NoData type="Emotion" />);
       } else {
         setEmotionChartError(null);
       }
@@ -158,7 +159,7 @@ const EmployeeComponent = ({ id, role }) => {
       const maxKey = keys[values.indexOf(maxValue)];
       setHighestEmotion({ key: maxKey, value: maxValue });
     } catch (error) {
-      console.error("Error fetching data:", error);
+      setEmotionChartError(<RetrieveError type="Emotion" />);
       setChartError("An error occurred!");
     }
   };
@@ -171,7 +172,7 @@ const EmployeeComponent = ({ id, role }) => {
       const data = response.data.days || {};
       const allZero = Object.values(data).every((value) => value === 0);
       if (allZero) {
-        setStressChartError("No Data Stress Recorded ⚠");
+        setStressChartError(<NoData type="Stress" />);
       } else {
         setStressChartError(null);
       }
@@ -183,7 +184,7 @@ const EmployeeComponent = ({ id, role }) => {
         setDailyStressData(data);
       }
     } catch (error) {
-      console.error("Error fetching stress data:", error);
+      setEmotionChartError(<RetrieveError type="Stress" />);
     }
   };
 
@@ -195,7 +196,7 @@ const EmployeeComponent = ({ id, role }) => {
       const data = response.data.days || {};
       const allZero = Object.values(data).every((value) => value === 0);
       if (allZero) {
-        setFocusChartError("No Focus Data Recorded ⚠");
+        setFocusChartError(<NoData type="Focus" />);
       } else {
         setFocusChartError(null);
       }
@@ -207,7 +208,7 @@ const EmployeeComponent = ({ id, role }) => {
         setDailyFocusData(data);
       }
     } catch (error) {
-      console.error("Error fetching focus data:", error);
+      setEmotionChartError(<RetrieveError type="Focus" />);
     }
   };
 
@@ -219,7 +220,7 @@ const EmployeeComponent = ({ id, role }) => {
       const data = response.data.days || {};
       const allZero = Object.values(data).every((value) => value === 0);
       if (allZero) {
-        setBreathingChartError("No Data Recorded ⚠");
+        setBreathingChartError(<NoData type="Breathing Exercise" />);
       } else {
         setBreathingChartError(null);
       }
@@ -232,7 +233,7 @@ const EmployeeComponent = ({ id, role }) => {
       }
       setMostUsedExercise(response.data.most_used_exercise || null);
     } catch (error) {
-      console.error("Error fetching exercise data:", error);
+      setEmotionChartError(<RetrieveError type="Breathing Exercise" />);
     }
   };
 
@@ -244,7 +245,7 @@ const EmployeeComponent = ({ id, role }) => {
       const data = response.data.days || {};
       const allZero = Object.values(data).every((value) => value === 0);
       if (allZero) {
-        setListeningChartError("No Data Recorded ⚠");
+        setListeningChartError(<NoData type="Audio Threapy" />);
       } else {
         setListeningChartError(null);
       }
@@ -257,7 +258,7 @@ const EmployeeComponent = ({ id, role }) => {
       }
       setMostListenedTrack(response.data.most_listened_track || null);
     } catch (error) {
-      console.error("Error fetching listening data:", error);
+      //setEmotionChartError(<RetrieveError type="Audio Therapy" />);
     }
   };
 
@@ -561,9 +562,12 @@ const EmployeeComponent = ({ id, role }) => {
 
   return (
     <div className={`min-h-screen ${Color.background}`}>
-
-<EmployeeInfo name={`${userData.first_name} ${userData.last_name}`} team={userData.team} accountType={`Employee`} picture={`https://i.etsystatic.com/14064392/r/il/fe4fdd/4237312565/il_570xN.4237312565_5bs0.jpg`}/>
-
+      <EmployeeInfo
+        name={`${userData.first_name} ${userData.last_name}`}
+        team={userData.team}
+        accountType={`Employee`}
+        picture={`https://i.etsystatic.com/14064392/r/il/fe4fdd/4237312565/il_570xN.4237312565_5bs0.jpg`}
+      />
 
       <div className="container  mx-auto py-2 px-4 md:px-20 lg:px-12 xl:px-48">
         {/*Period Selection Buttons */}
@@ -594,7 +598,7 @@ const EmployeeComponent = ({ id, role }) => {
                   onChange={handleDateChange}
                   //showPopperArrow={false}
                   className="cursor-pointer text-lg rounded-lg py-1 px-3 text-white bg-emerald-500"
-                  style={{ caretColor: 'transparent' }}
+                  style={{ caretColor: "transparent" }}
                 />
               </div>
             </div>
@@ -611,7 +615,6 @@ const EmployeeComponent = ({ id, role }) => {
                 </button>
               )}
             </div>
-
 
             <div>
               {(userRole === "Admin" || userRole === "Supervisor") && (
@@ -633,6 +636,7 @@ const EmployeeComponent = ({ id, role }) => {
             {/* Emotions */}
             <div className={`rounded-lg  ${Color.chartsBGText} m-4 p-6`}>
               <div className="text-center flex-auto">
+                <IoHelpCircleOutline size={25} />
                 <h5 className="text-2xl font-semibold  mb-5">
                   {emotionView === "daily"
                     ? "Daily Emotions"
@@ -643,11 +647,12 @@ const EmployeeComponent = ({ id, role }) => {
                     : "Overall Emotions"}
                 </h5>
 
-                <div
-                  className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
-                  title="Compare Emotion"
-                >
-                  <button onClick={openEmotionOverlay}>
+                <div>
+                  <button
+                    onClick={openEmotionOverlay}
+                    className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
+                    title="Compare Emotion Data"
+                  >
                     <FaArrowRightArrowLeft size={20} />
                   </button>
                 </div>
@@ -660,13 +665,13 @@ const EmployeeComponent = ({ id, role }) => {
                       <DoughnutChart {...emotions} />
 
                       <div className="mb-24" id="highestEmotion">
-                        <img
+                        {/*<img
                           className=""
                           // src={`http://127.0.0.1:8000/media/emojis/${highestEmotion.key}.png`}
                           src={`http://127.0.0.1:8000/media/emojis/${highestEmotion.key}.png`}
                           alt={highestEmotion.key}
                           title={`Highest emotion is: ${highestEmotion.key}`}
-                        />
+                />*/}
                       </div>
                     </div>
                   </div>
@@ -684,11 +689,12 @@ const EmployeeComponent = ({ id, role }) => {
                     ? "Weekly Stress Levels"
                     : "Monthly Stress Levels"}
                 </h5>
-                <div
-                  className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
-                  title="Compare Stress"
-                >
-                  <button onClick={openStressOverlay}>
+                <div>
+                  <button
+                    onClick={openStressOverlay}
+                    className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
+                    title="Compare Auddio Therapy"
+                  >
                     <FaArrowRightArrowLeft size={20} />
                   </button>
                 </div>
@@ -724,11 +730,12 @@ const EmployeeComponent = ({ id, role }) => {
                     ? "Weekly Focus Data"
                     : "Monthly Focus Data"}
                 </h5>
-                <div
-                  className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
-                  title="Compare Focus"
-                >
-                  <button onClick={openFocusOverlay}>
+                <div>
+                  <button
+                    onClick={openFocusOverlay}
+                    className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
+                    title="Compare Auddio Therapy"
+                  >
                     <FaArrowRightArrowLeft size={20} />
                   </button>
                 </div>
@@ -759,11 +766,12 @@ const EmployeeComponent = ({ id, role }) => {
                     ? "Weekly Breathing Exercise Usage"
                     : "Monthly Breathing Exercise Usage"}
                 </h5>
-                <div
-                  className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
-                  title="Compare Breathing Exercise"
-                >
-                  <button onClick={openBreathingOverlay}>
+                <div>
+                  <button
+                    onClick={openBreathingOverlay}
+                    className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
+                    title="Compare Auddio Therapy"
+                  >
                     <FaArrowRightArrowLeft size={20} />
                   </button>
                 </div>
@@ -807,11 +815,12 @@ const EmployeeComponent = ({ id, role }) => {
                     ? "Weekly Track Listening Usage"
                     : "Monthly Track Listening Usage"}
                 </h5>
-                <div
-                  className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
-                  title="Compare Auddio Therapy"
-                >
-                  <button onClick={openListeningOverlay}>
+                <div>
+                  <button
+                    onClick={openListeningOverlay}
+                    className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
+                    title="Compare Auddio Therapy"
+                  >
                     <FaArrowRightArrowLeft size={20} />
                   </button>
                 </div>
@@ -877,66 +886,82 @@ const EmployeeComponent = ({ id, role }) => {
 
       {isEmotionOverlayOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div>
+          <div className="relative bg-white p-6 rounded-md shadow-lg">
             <button
               onClick={closeEmotionOverlay}
-              className={`${BtnClose.base} ${BtnClose.hover} ${BtnClose.rotate}`}
+              className={` text-black absolute top-2 right-2 ${BtnClose.base} ${BtnClose.hover} ${BtnClose.rotate}`}
             >
-              <IoClose />
+              <IoClose size={25} />
             </button>
-          </div>
-
-          <div>
-            <EmotionCompare id={userData.id} period={periodForExact} />
+            <div className="flex justify-center items-center">
+              <EmotionCompare id={userData.id} period={periodForExact} />
+            </div>
           </div>
         </div>
       )}
 
       {isStressOverlayOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <StressCompare id={userData.id} period={periodForExact} />
-          <button
-            onClick={closeStressOverlay}
-            className={`${BtnClose.base} ${BtnClose.hover} ${BtnClose.rotate}`}
-          >
-            <IoClose />
-          </button>
+          <div className="relative bg-white p-6 rounded-md shadow-lg">
+            <button
+              onClick={closeStressOverlay}
+              className={` text-black absolute top-2 right-2 ${BtnClose.base} ${BtnClose.hover}`}
+            >
+              <IoClose size={25} />
+            </button>
+
+            <div className="flex justify-center items-center">
+              <StressCompare id={userData.id} period={periodForExact} />
+            </div>
+          </div>
         </div>
       )}
 
       {isFocusOverlayOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <FocusCompare id={userData.id} period={periodForExact} />
-          <button
-            onClick={closeFocusOverlay}
-            className={`${BtnClose.base} ${BtnClose.hover} ${BtnClose.rotate}`}
-          >
-            <IoClose />
-          </button>
+          <div className="relative bg-white p-6 rounded-md shadow-lg">
+            <button
+              onClick={closeFocusOverlay}
+              className={`${BtnClose.base} ${BtnClose.hover}`}
+            >
+              <IoClose size={25}/>
+            </button>
+            <div>
+              <FocusCompare id={userData.id} period={periodForExact} />
+            </div>
+          </div>
         </div>
       )}
 
       {isBreathingOverlayOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <BreathingCompare id={userData.id} period={periodForExact} />
-          <button
-            onClick={closeBreathingOverlay}
-            className={`${BtnClose.base} ${BtnClose.hover}`}
-          >
-            <IoClose />
-          </button>
+          <div className="relative bg-white p-6 rounded-md shadow-lg">
+            <button
+              onClick={closeBreathingOverlay}
+              className={`${BtnClose.base} ${BtnClose.hover}`}
+            >
+              <IoClose size={25} />
+            </button>
+            <div>
+              <BreathingCompare id={userData.id} period={periodForExact} />
+            </div>
+          </div>
         </div>
       )}
 
       {isListeningOverlayOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <ListeningCompare id={userData.id} period={periodForExact} />
-          <button
-            onClick={closeListeningOverlay}
-            className={`${BtnClose.base} ${BtnClose.hover}`}
-          >
-            <IoClose />
-          </button>
+          <div className="relative bg-white p-6 rounded-md shadow-lg">
+            <button
+              onClick={closeListeningOverlay}
+              className={`${BtnClose.base} ${BtnClose.hover}`}
+            >
+              <IoClose />
+            </button>
+            <div>
+              <ListeningCompare id={userData.id} period={periodForExact} />
+            </div>
+          </div>
         </div>
       )}
     </div>

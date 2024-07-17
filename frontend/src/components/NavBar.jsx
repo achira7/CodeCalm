@@ -145,7 +145,7 @@ const NavBar = () => {
           <div className={` ${Color.navBarMob} absolute top-0 left-0 w-full  mt-16 py-2`}>
             <ul className="flex flex-col items-center ">
               {navLinks.map(({ id, title, link }) => (
-                <li key={id} className="my-2 hover:bg-sky-500 rounded-3xl">
+                <li key={id} className="my-2 hover:bg-sky-500 rounded-3xl capitalize">
                   <Link
                     to={link}
                     className=" text-center block py-2 px-4"

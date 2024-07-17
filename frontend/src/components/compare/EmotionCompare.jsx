@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from "react";
 import DoughnutChart from "../charts/DoughnutChart";
 import axios from "axios";
+import moment from "moment";
+
 import { Color } from "../../theme/Colors";
 import { BtnColor } from "../../theme/ButtonTheme";
-const EmotionCompare = ({ id, period }) => {
-  console.log(id, period);
+import { NoData } from "../../theme/ChartError";
+import { RetrieveError } from "../../theme/ChartError";
 
-  const [emotions, setEmotions] = useState({
+const EmotionCompare = ({ id, team, period }) => {
+
+  const [emotionsA, setEmotionsA] = useState({
     angry: 0,
     disgust: 0,
     fear: 0,
@@ -16,7 +20,7 @@ const EmotionCompare = ({ id, period }) => {
     neutral: 0,
   });
 
-  const [exactEmotions, setExactEmotions] = useState({
+  const [emotionsB, setEmotionsB] = useState({
     angry: 0,
     disgust: 0,
     fear: 0,
@@ -26,155 +30,251 @@ const EmotionCompare = ({ id, period }) => {
     neutral: 0,
   });
 
-  const [hourlyEmotion, setHourlyEmotion] = useState({});
-  const [exactHourlyEmotion, setExactHourlyEmotion] = useState({});
+  const [hourlyEmotionA, setHourlyEmotionA] = useState({});
+  const [hourlyEmotionB, setHourlyEmotionB] = useState({});
 
   const [highestEmotion, setHighestEmotion] = useState({ key: "", value: 0 });
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDateA, setSelectedDateA] = useState(new Date());
+  const [selectedDateB, setSelectedDateB] = useState(new Date());
+
   const [calType, setCalType] = useState("date");
+  const [chartErrorA, setChartErrorA] = useState(null);
+  const [chartErrorB, setChartErrorB] = useState(null);
+
+  const [property, setProperty] = useState("");
+  const [parameter, setParameter] = useState("");
 
   useEffect(() => {
+    if (id) {
+      setProperty("user_id");
+      setParameter(id);
+    } else if (team) {
+      setProperty("team_id");
+      setParameter(team);
+    }
+  }, [id, team]);
+
+  useEffect(() => {
+    const today = moment();
+    let defaultDateA, defaultDateB;
+
     if (period === "weekly") {
       setCalType("week");
+      defaultDateA = today.startOf("week").format("YYYY-[W]WW");
+      defaultDateB = today
+        .subtract(1, "week")
+        .startOf("week")
+        .format("YYYY-[W]WW");
     } else if (period === "monthly") {
       setCalType("month");
-    } else {
+      defaultDateA = today.startOf("month").format("YYYY-MM");
+      defaultDateB = today
+        .subtract(1, "month")
+        .startOf("month")
+        .format("YYYY-MM");
+    } else if (period === "daily") {
       setCalType("date");
+      defaultDateA = today.startOf("day").format("YYYY-MM-DD");
+      defaultDateB = today
+        .subtract(1, "day")
+        .startOf("day")
+        .format("YYYY-MM-DD");
     }
-  }, [period]);
 
-  const fetchEmotionData = async (period) => {
-    try {
-      const response = await axios.get("http://localhost:8000/api/emotions/", {
-        params: {
-          user_id: id,
-          period: period,
-        },
-      });
-      const data = response.data.defaultEmotionValues;
-      const hourlyEmotion = response.data.hourlyDominantEmotions;
-      setEmotions(data);
-      setHourlyEmotion(hourlyEmotion);
+    setSelectedDateA(defaultDateA);
+    setSelectedDateB(defaultDateB);
 
-      const values = Object.values(data);
-      const keys = Object.keys(data);
-      const maxValue = Math.max(...values);
-      const maxKey = keys[values.indexOf(maxValue)];
-      setHighestEmotion({ key: maxKey, value: maxValue });
-    } catch (error) {
-      console.error("Error fetching data:", error);
+    if (property && parameter) {
+      fetchEmotionData(
+        property,
+        parameter,
+        period,
+        defaultDateA,
+        setEmotionsA,
+        setHourlyEmotionA
+      );
+      fetchEmotionData(
+        property,
+        parameter,
+        period,
+        defaultDateB,
+        setEmotionsB,
+        setHourlyEmotionB
+      );
     }
-  };
+  }, [period, property, parameter]);
 
-  const fetchExactEmotionData = async (period, exact_period) => {
+  const fetchEmotionData = async (
+    property,
+    parameter,
+    period,
+    exact_period,
+    setEmotions,
+    setHourlyEmotion
+  ) => {
     try {
       const response = await axios.get(
         "http://localhost:8000/api/exact_emotions/",
         {
-          params: { user_id: id, period: period, exact_period: exact_period },
+          params: {
+            [property]: parameter,
+            period: period,
+            exact_period: exact_period,
+          },
         }
       );
-      const data = response.data.defaultEmotionValues;
-      const hourlyEmotion = response.data.hourlyDominantEmotions;
-      setExactEmotions(data);
-      setExactHourlyEmotion(hourlyEmotion);
+      setEmotions(response.data.defaultEmotionValues);
+      setHourlyEmotion(response.data.hourlyDominantEmotions);
     } catch (error) {
-      console.error("Error fetching exact emotion data:", error);
+      setChartErrorA(<RetrieveError type="Emotion" />);
     }
   };
 
   useEffect(() => {
-    fetchEmotionData(period);
-  }, [id, period]);
+    if (emotionsA) {
+      const allZeroA = Object.values(emotionsA).every((value) => value === 0);
+      if (allZeroA) {
+        setChartErrorA(<NoData type="Emotion" />);
+      } else {
+        setChartErrorA(null);
+      }
+    }
+  }, [emotionsA]);
 
-  const handleDateChange = (date) => {
+  useEffect(() => {
+    if (emotionsB) {
+      const allZeroB = Object.values(emotionsB).every((value) => value === 0);
+      if (allZeroB) {
+        setChartErrorB(<NoData type="Emotion" />);
+      } else {
+        setChartErrorB(null);
+      }
+    }
+  }, [emotionsB]);
+
+  const handleDateChangeA = (date) => {
     const exact_period = date.target.value;
-    setSelectedDate(new Date(exact_period));
-    fetchExactEmotionData(period, exact_period);
+    setSelectedDateA(exact_period);
+    fetchEmotionData(
+      property,
+      parameter,
+      period,
+      exact_period,
+      setEmotionsA,
+      setHourlyEmotionA
+    );
+  };
+
+  const handleDateChangeB = (date) => {
+    const exact_period = date.target.value;
+    setSelectedDateB(exact_period);
+    fetchEmotionData(
+      property,
+      parameter,
+      period,
+      exact_period,
+      setEmotionsB,
+      setHourlyEmotionB
+    );
   };
 
   return (
     <div className={`${Color.background} rounded-lg m-4 p-6`}>
       <div className="flex flex-cols lg:flex-row rounded-lg m-4 p-6">
-
-      <div className={` ${Color.chartsBGText}   rounded-lg m-4 p-6 `}>
-        <h2>Daily Emotions</h2>
-        <div className="relative"> {/*`rounded-lg  ${Color.chartsBGText} m-4 p-6`*/}
-          <DoughnutChart {...emotions} />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <img
-              className="w-16"
-              src={`http://127.0.0.1:8000/media/emojis/${highestEmotion.key}.png`}
-              alt={highestEmotion.key}
-              title={`Highest emotion is: ${highestEmotion.key}`}
-            />
-          </div>
-        </div>
-        {/*<div className="flex flex-wrap justify-center gap-10 mt-4 w-full">
-          {Object.keys(hourlyEmotion).map((hour, index) => (
-            <div key={index} className="text-center">
-              {hourlyEmotion[hour] ? (
-                <div>
-                  <img
-                    className="w-10"
-                    src={`http://127.0.0.1:8000/media/emojis/${hourlyEmotion[hour]}.png`}
-                    alt={hourlyEmotion[hour]}
-                    title={hourlyEmotion[hour]}
-                  />
-                </div>
-              ) : (
-                <span className="text-xl"> - </span>
-              )}
-              <p className="text-sm">{hour.split(" ")[0]}</p>
-            </div>
-          ))}
-        </div>*/}
-      </div>
-  
-      {/* New wrapper div for side by side layout */}
-      <div className={` ${Color.chartsBGText}   rounded-lg m-4 p-6 `}>
-        <div className="flex flex-col items-center">
-          <h2>Daily Emotions</h2>
+        <div className={` ${Color.chartsBGText}   rounded-lg m-4 p-6 `}>
+          <h2> Emotion Data on: </h2>
           <input
             type={calType}
-            value={selectedDate.toISOString().split("T")[0]}
-            onChange={handleDateChange}
+            value={selectedDateA}
+            onChange={handleDateChangeA}
             className="cursor-pointer"
           />
-          <div className="relative"> {/*`rounded-lg  ${Color.chartsBGText} m-4 p-6`*/}
-            <DoughnutChart {...exactEmotions} />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <img
-                className="w-16"
-                src={`http://127.0.0.1:8000/media/emojis/${highestEmotion.key}.png`}
-                alt={highestEmotion.key}
-                title={`Highest emotion is: ${highestEmotion.key}`}
-              />
-            </div>
-          </div>
-          {/*<div className="flex flex-wrap justify-center gap-10 mt-4 w-full">
-            {Object.keys(exactHourlyEmotion).map((hour, index) => (
-              <div key={index} className="text-center">
-                {exactHourlyEmotion[hour] ? (
-                  <div>
-                    <img
-                      className="w-10"
-                      src={`http://127.0.0.1:8000/media/emojis/${exactHourlyEmotion[hour]}.png`}
-                      alt={exactHourlyEmotion[hour]}
-                      title={exactHourlyEmotion[hour]}
-                    />
-                  </div>
-                ) : (
-                  <span className="text-xl"> - </span>
-                )}
-                <p className="text-sm">{hour.split(" ")[0]}</p>
+          {chartErrorA ? (
+            <h2 className="text-xl  mt-4">{chartErrorA}</h2>
+          ) : (
+            <div className="relative">
+              <DoughnutChart {...emotionsA} />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <img
+                  className="w-16"
+                  src={`http://127.0.0.1:8000/media/emojis/${highestEmotion.key}.png`}
+                  alt={highestEmotion.key}
+                  title={`Highest emotion is: ${highestEmotion.key}`}
+                />
               </div>
-            ))}
-          </div>*/}
+
+              <div className="flex flex-wrap justify-center mt-4">
+                {Object.keys(hourlyEmotionA).map((hour, index) => (
+                  <div key={index} className="text-center">
+                    {hourlyEmotionA[hour] ? (
+                      <div>
+                        <img
+                          className="w-10"
+                          src={`http://127.0.0.1:8000/media/emojis/${hourlyEmotionA[hour]}.png`}
+                          alt={hourlyEmotionA[hour]}
+                          title={hourlyEmotionA[hour]}
+                        />
+                      </div>
+                    ) : (
+                      <span className="text-xl"> - </span>
+                    )}
+                    <p className="text-sm">{hour.split(" ")[0]}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className={` ${Color.chartsBGText}  rounded-lg m-4 p-6 `}>
+        <div className="flex flex-col items-center">
+          <h2>Emotion Data on:</h2>
+          <input
+            type={calType}
+            value={selectedDateB}
+            onChange={handleDateChangeB}
+            className="cursor-pointer"
+          />
+          {chartErrorB ? (
+            <h2 className="text-xl mt-4">{chartErrorB}</h2>
+          ) : (
+            <div className="relative">
+              <div className="flex flex-cols lg:flex-row">
+                <DoughnutChart {...emotionsB} />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <img
+                    className="w-16"
+                    src={`http://127.0.0.1:8000/media/emojis/${highestEmotion.key}.png`}
+                    alt={highestEmotion.key}
+                    title={`Highest emotion is: ${highestEmotion.key}`}
+                  />
+                </div>
+              </div>
+              <div className="flex flex-wrap justify-center mt-4">
+                {Object.keys(hourlyEmotionB).map((hour, index) => (
+                  <div key={index} className="text-center">
+                    {hourlyEmotionB[hour] ? (
+                      <div>
+                        <img
+                          className="w-10"
+                          src={`http://127.0.0.1:8000/media/emojis/${hourlyEmotionB[hour]}.png`}
+                          alt={hourlyEmotionB[hour]}
+                          title={hourlyEmotionB[hour]}
+                        />
+                      </div>
+                    ) : (
+                      <span className="text-xl"> - </span>
+                    )}
+                    <p className="text-sm">{hour.split(" ")[0]}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
-    </div>
   );
-}
-  export default EmotionCompare;
+};
+export default EmotionCompare;

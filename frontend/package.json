@@ -18,6 +18,7 @@
     "axios": "^1.6.8",
     "chart.js": "^4.4.2",
     "extract-colors": "^4.0.6",
+    "flowbite": "^2.4.1",
     "howler": "^2.2.4",
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.1",

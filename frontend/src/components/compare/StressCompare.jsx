@@ -1,111 +1,215 @@
 import React, { useEffect, useState } from "react";
+import BarChart from "../charts/BarChart";
 import axios from "axios";
+import moment from "moment";
+
 import { Color } from "../../theme/Colors";
 import { BtnColor } from "../../theme/ButtonTheme";
-import BarChart from "../charts/BarChart";
+import { NoData } from "../../theme/ChartError";
+import { RetrieveError } from "../../theme/ChartError";
 
-const StressCompare = ({ id, period }) => {
-  const [userData, settUserData] = useState({})
-  const [stressData, setStressData] = useState("");
-  const [exactStressData, setExactStressData] = useState("");
+const StressCompare = ({ id, team, period }) => {
+  const [stressA, setStressA] = useState("");
+  const [stressB, setStressB] = useState("");
 
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [calType, setCalType] = useState("date");
+  const [selectedDateA, setSelectedDateA] = useState(new Date());
+  const [selectedDateB, setSelectedDateB] = useState(new Date()); 
   const [stressView, setStressView] = useState("daily");
-  const [stressChartError, setStressChartError] = useState(null);
+
+  const [chartErrorA, setChartErrorA] = useState(null);
+  const [chartErrorB, setChartErrorB] = useState(null);
+
+  const [calType, setCalType] = useState("date");
+  const [property, setProperty] = useState("");
+  const [parameter, setParameter] = useState("");
+
 
   useEffect(() => {
+    if (id) {
+      setProperty("user_id");
+      setParameter(id);
+    } else if (team) {
+      setProperty("team_id");
+      setParameter(team);
+    }
+  }, [id, team]);
+
+  useEffect(() => {
+    const today = moment();
+    let defaultDateA, defaultDateB;
+
     if (period === "weekly") {
       setCalType("week");
+      defaultDateA = today.startOf("week").format("YYYY-[W]WW");
+      defaultDateB = today
+        .subtract(1, "week")
+        .startOf("week")
+        .format("YYYY-[W]WW");
     } else if (period === "monthly") {
       setCalType("month");
-    } else {
+      defaultDateA = today.startOf("month").format("YYYY-MM");
+      defaultDateB = today
+        .subtract(1, "month")
+        .startOf("month")
+        .format("YYYY-MM");
+    } else if (period === "daily") {
       setCalType("date");
+      defaultDateA = today.startOf("day").format("YYYY-MM-DD");
+      defaultDateB = today
+        .subtract(1, "day")
+        .startOf("day")
+        .format("YYYY-MM-DD");
     }
-  }, [period]);
+
+    setSelectedDateA(defaultDateA);
+    setSelectedDateB(defaultDateB);
+
+    if (property && parameter) {
+      fetchData(
+        property,
+        parameter,
+        period,
+        defaultDateA,
+        setStressA,
+      );
+      fetchData(
+        property,
+        parameter,
+        period,
+        defaultDateB,
+        setStressB,
+      );
+    }
+  }, [period, property, parameter]);
+
+  const fetchData = async (
+    property,
+    parameter,
+    period,
+    exact_period,
+    setStress,
+  ) => {
+    try {
+      const response = await axios.get(
+        "http://localhost:8000/api/exact_stress/",
+        {
+          params: {
+            [property]: parameter,
+            period: period,
+            exact_period: exact_period,
+          },
+        }
+      );
+      setStress(response.data.days);
+
+    } catch (error) {
+      setChartErrorA(<RetrieveError type="Stress" />);
+    }
+  };
 
   useEffect(() => {
-    fetchStressData(period);
-  }, [id, period]);
-  
+    if (stressA) {
+      const allZeroA = Object.values(stressA).every((value) => value === 0);
+      if (allZeroA) {
+        setChartErrorA(<NoData type="Stress" />);
+      } else {
+        setChartErrorA(null);
+      }
+    }
+  }, [stressA]);
+
+  useEffect(() => {
+    if (stressB) {
+      const allZeroB = Object.values(stressB).every((value) => value === 0);
+      if (allZeroB) {
+        setChartErrorB(<NoData type="Stress" />);
+      } else {
+        setChartErrorB(null);
+      }
+    }
+  }, [stressB]);
+
+  const handleDateChangeA = (date) => {
+    const exact_period = date.target.value;
+    setSelectedDateA(exact_period);
+    fetchData(
+      property,
+      parameter,
+      period,
+      exact_period,
+      setStressA,
+    );
+  };
+
+  const handleDateChangeB = (date) => {
+    const exact_period = date.target.value;
+    setSelectedDateB(exact_period);
+    fetchData(
+      property,
+      parameter,
+      period,
+      exact_period,
+      setStressB,
+    );
+  };
+
   return (
-    <div>
-                  {/* Stress Data */}
-                  <div className={`${Color.chartsBGText} rounded-lg  m-4 p-6`}>
-              <div className="text-center">
-                <h5 className="text-2xl font-semibold  mb-5">
-                  {stressView === "daily"
-                    ? "Daily Stress Levels"
-                    : stressView === "weekly"
-                    ? "Weekly Stress Levels"
-                    : "Monthly Stress Levels"}
-                </h5>
-                <div className="flex align-super">
-                  <button onClick={openStressOverlay}>
-                    <FaArrowRightArrowLeft size={20} />
-                  </button>
-                </div>
+    <div className={`${Color.background} rounded-lg m-4 p-6`}>
+      {/* Stress Data */}
+      <div className="flex flex-cols lg:flex-row rounded-lg m-4 p-6">
+        <div className={` ${Color.chartsBGText}   rounded-lg m-4 p-6 `}>
+        <h2> Stress Data on: </h2>
+          <input
+            type={calType}
+            value={selectedDateA}
+            onChange={handleDateChangeA}
+            className="cursor-pointer"
+          />
+          {chartErrorA ? (
+            <h2 className="text-xl">{chartErrorA}</h2>
+          ) : (
+            <BarChart
+              data={
+                {
+                  daily: stressA,
+                  weekly: stressA,
+                  monthly: stressA,
+                }[stressView]
+              }
+              period={period}
+            />
+          )}
+        </div>
 
-                {stressChartError ? (
-                  <h2 className="text-xl  mt-4">{stressChartError}</h2>
-                ) : (
-                  <BarChart
-                    data={
-                      {
-                        daily: dailyStressData,
-                        weekly: weeklyStressData,
-                        monthly: monthlyStressData,
-                      }[stressView]
-                    }
-                    period={stressView}
-                  />
-                )}
-                <div className="mt-6">
-                  Use the filteration button on top to filter this result more.
-                  You can hover to view more details.
-                </div>
-              </div>
-            </div>
-
-
-                        {/* Stress Data */}
-                        <div className={`${Color.chartsBGText} rounded-lg  m-4 p-6`}>
-              <div className="text-center">
-                <h5 className="text-2xl font-semibold  mb-5">
-                  {stressView === "daily"
-                    ? "Daily Stress Levels"
-                    : stressView === "weekly"
-                    ? "Weekly Stress Levels"
-                    : "Monthly Stress Levels"}
-                </h5>
-                <div className="flex align-super">
-                  <button onClick={openStressOverlay}>
-                    <FaArrowRightArrowLeft size={20} />
-                  </button>
-                </div>
-
-                {stressChartError ? (
-                  <h2 className="text-xl  mt-4">{stressChartError}</h2>
-                ) : (
-                  <BarChart
-                    data={
-                      {
-                        daily: exactStressData,
-                        weekly: exactStressData,
-                        monthly: exactStressData,
-                      }[stressView]
-                    }
-                    period={stressView}
-                  />
-                )}
-                <div className="mt-6">
-                  Use the filteration button on top to filter this result more.
-                  You can hover to view more details.
-                </div>
-              </div>
-            </div>
+        {/* Exact Stress Data */}
+        <div className={`${Color.chartsBGText} rounded-lg  m-4 p-6`}>
+          <div className={`flex items-center align-super `}>
+          <h2>Stress Data on:</h2>
+          <input
+            type={calType}
+            value={selectedDateB}
+            onChange={handleDateChangeB}
+            className="cursor-pointer"
+          />
+          </div>
+          {chartErrorB ? (
+            <h2 className="text-xl">{chartErrorB}</h2>
+          ) : (
+            <BarChart
+              data={
+                {
+                  daily: stressB,
+                  weekly: stressB,
+                  monthly: stressB,
+                }[stressView]
+              }
+              period={period}
+            />
+          )}
+        </div>
+      </div>
     </div>
-  )
-}
+  );
+};
 
-export default StressCompare
+export default StressCompare;

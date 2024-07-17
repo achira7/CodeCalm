@@ -1,193 +1,246 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import moment from "moment";
+
 import { Color } from "../../theme/Colors";
 import { BtnColor } from "../../theme/ButtonTheme";
+import { NoData } from "../../theme/ChartError";
+import { RetrieveError } from "../../theme/ChartError";
 import LineChart from "../charts/LineChart";
 
 
-const ListeningCompare = ({ id, period }) => {
-  const [userData, settUserData] = useState({})
+const ListeningCompare = ({ id, team, period }) => {
+  const [listeningA, setListeningA] = useState("");
+  const [listeningB, setListeningB] = useState("");
 
-  const [listeningView, setListeningView] = useState("daily");
-  const [exactListeningData, setExactListeningData] = useState("")
-  const [listeningData, setListeningData] = useState("")
-  const [listeningChartError, setListeningChartError] = useState(null);
-  const [mostListenedTrack, setMostListenedTrack] = useState(null);
+  const [mostUsedA, setMostUsedA] = useState(null);
+  const [mostUsedB, setMostUsedB] = useState(null);
+
+  const [listening, setListening] = useState("");
+  const [mostUsed, setMostUsed] = useState("");
+
+  const [selectedDateA, setSelectedDateA] = useState(new Date());
+  const [selectedDateB, setSelectedDateB] = useState(new Date());
+  const [stressView, setStressView] = useState("daily");
+
+  const [chartErrorA, setChartErrorA] = useState(null);
+  const [chartErrorB, setChartErrorB] = useState(null);
+
   const [calType, setCalType] = useState("date");
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [periodForExact, setPeriodForExact] = useState("daily");
+  const [property, setProperty] = useState("");
+  const [parameter, setParameter] = useState("");
 
-
-
-
-
-
-  const fetchListeningData = async (period) => {
-    try {
-      const response = await axios.get("http://localhost:8000/api/listening/", {
-        params: { user_id: id, period: period },
-      });
-      const data = response.data.days || {};
-      const allZero = Object.values(data).every((value) => value === 0);
-      if (allZero) {
-        setListeningChartError("No Data Recorded ⚠");
-      } else {
-        setListeningChartError(null);
-      }
-      if (period === "weekly") {
-        setListeningData(data);
-      } else if (period === "monthly") {
-        setListeningData(data);
-      } else if (period === "daily") {
-        setListeningData(data);
-      }
-      setMostListenedTrack(response.data.most_listened_track || null);
-    } catch (error) {
-      console.error("Error fetching listening data:", error);
+  useEffect(() => {
+    if (id) {
+      setProperty("user_id");
+      setParameter(id);
+    } else if (team) {
+      setProperty("team_id");
+      setParameter(team);
     }
-  };
+  }, [id, team]);
 
+  useEffect(() => {
+    const today = moment();
+    let defaultDateA, defaultDateB;
 
-  const fetchExactListeningData = async (period, exact_period) => {
+        if (period === "weekly") {
+          setCalType("week");
+          defaultDateA = today.startOf("week").format("YYYY-[W]WW");
+          defaultDateB = today
+            .subtract(1, "week")
+            .startOf("week")
+            .format("YYYY-[W]WW");
+        } else if (period === "monthly") {
+          setCalType("month");
+          defaultDateA = today.startOf("month").format("YYYY-MM");
+          defaultDateB = today
+            .subtract(1, "month")
+            .startOf("month")
+            .format("YYYY-MM");
+        } else if (period === "daily") {
+          setCalType("date");
+          defaultDateA = today.startOf("day").format("YYYY-MM-DD");
+          defaultDateB = today
+            .subtract(1, "day")
+            .startOf("day")
+            .format("YYYY-MM-DD");
+        }
+        
+    setSelectedDateA(defaultDateA);
+    setSelectedDateB(defaultDateB);
+
+    if (property && parameter) {
+      fetchData(
+        property,
+        parameter,
+        period,
+        defaultDateA,
+        setListeningA,
+        setMostUsedA,
+      );
+      fetchData(
+        property,
+        parameter,
+        period,
+        defaultDateB,
+        setListeningB,
+        setMostUsedB,
+      );
+    }
+  }, [period, property, parameter]);
+
+  const fetchData = async (
+    property,
+    parameter,
+    period,
+    exact_period,
+    setListening,
+    setMostUsed
+  ) => {
     try {
       const response = await axios.get(
         "http://localhost:8000/api/exact_listening/",
         {
-          params: { user_id: id, period: period, exact_period: exact_period },
+          params: {
+            [property]: parameter,
+            period: period,
+            exact_period: exact_period,
+          },
         }
       );
-      const data = response.data.days || {};
-      if (period === "daily") {
-        setExactListeningData(data);
-      } else if (period === "weekly") {
-        setExactListeningData(data);
-      } else if (period === "monthly") {
-        setExactListeningData(data);
-      }
-      console.log(data);
+      setListening(response.data.days);
+      setMostUsed(response.data.most_listened_track || null);
     } catch (error) {
-      console.error("Error fetching exact listening data:", error);
+      setChartErrorA(<RetrieveError type="Audio Threapy" />);
     }
-  }
+  };
 
   useEffect(() => {
-    if (period === "weekly") {
-      setCalType("week");
-    } else if (period === "monthly") {
-      setCalType("month");
-    } else {
-      setCalType("date");
+    if (listeningA) {
+      const allZeroA = Object.values(listeningA).every((value) => value === 0);
+      if (allZeroA) {
+        setChartErrorA(<NoData type="Audio Threapy" />);
+      } else {
+        setChartErrorA(null);
+      }
     }
-  }, [period]);
+  }, [listeningA]);
 
-  
   useEffect(() => {
-    fetchListeningData(period);
-  }, [id, period]);
+    if (listeningB) {
+      const allZeroB = Object.values(listeningB).every((value) => value === 0);
+      if (allZeroB) {
+        setChartErrorB(<NoData type="Audio Threapy" />);
+      } else {
+        setChartErrorB(null);
+      }
+    }
+  }, [listeningB]);
 
-  const handleDateChange = (date) => {
+  const handleDateChangeA = (date) => {
     const exact_period = date.target.value;
-    setSelectedDate(new Date(exact_period));
-    fetchExactListeningData(periodForExact, exact_period);
+    setSelectedDateA(exact_period);
+    fetchData(
+      property,
+      parameter,
+      period,
+      exact_period,
+      setListeningA,
+      setMostUsedA,
+    );
+  };
 
+  const handleDateChangeB = (date) => {
+    const exact_period = date.target.value;
+    setSelectedDateB(exact_period);
+    fetchData(
+      property,
+      parameter,
+      period,
+      exact_period,
+      setListeningB,
+      setMostUsedB,
+    );
   };
 
   return (
-    <div  className={` ${Color.background}`}>
-    <div className = "flex flex-cols lg:flex-row">
-      {/* Listening Data */}
-      <div className={` ${Color.chartsBGText}   rounded-lg m-4 p-6 `}>
-              <div className="text-center">
-                <h5 className="text-2xl font-semibold  mb-5">
-                  {listeningView === "daily"
-                    ? "Daily Track Listening Usage"
-                    : listeningView === "weekly"
-                    ? "Weekly Track Listening Usage"
-                    : "Monthly Track Listening Usage"}
-                </h5>
-                {listeningChartError ? (
-                  <h2 className="text-xl  mt-4">{listeningChartError}</h2>
-                ) : (
-                  <LineChart
-                    data={
-                      {
-                        daily: listeningData,
-                        weekly: listeningData,
-                        monthly: listeningData,
-                      }[listeningView]
-                    }
-                  />
-                )}
+    <div className={`${Color.background} rounded-lg m-4 p-6`}>
+    <div className="flex flex-cols lg:flex-row rounded-lg m-4 p-6">
+      <div className={` ${Color.chartsBGText} rounded-lg m-4 p-6 `}>
+        <h2> Audio Threapy usage on: </h2>
+        <input
+          type={calType}
+          value={selectedDateA}
+          onChange={handleDateChangeA}
+          className="cursor-pointer"
+        />
+        {chartErrorA ? (
+          <h2 className="text-xl">{chartErrorA}</h2>
+        ) : (
+          <LineChart
+          
+            data={{
+              daily: listeningA,
+              weekly: listeningA,
+              monthly: listeningA,
+            }[period]}
+          />
+        )}
 
-                {mostListenedTrack && (
-                  <div className="mt-4">
-                    <h5 className="text-lg font-semibold mb-2">
-                      {userData.first_name}'s Most Listened Track:
-                    </h5>
-                    <p className="">{mostListenedTrack.track_name}</p>
-                    <p className="">
-                      Total Duration:{" "}
-                      {(mostListenedTrack.total_duration / 60).toFixed(2)}{" "}
-                      minutes
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-
-
-            {/* Exact Listening Data */}
-            <div className={` ${Color.chartsBGText}   rounded-lg m-4 p-6 `}>
-            <div className="flex items-center">
-                <input
-                  type={calType}
-                  selected={selectedDate}
-                  onChange={handleDateChange}
-                  showPopperArrow={false}
-                  className="cursor-pointer"
-                />
-              </div>
-              <div className="text-center">
-                <h5 className="text-2xl font-semibold  mb-5">
-                  {listeningView === "daily"
-                    ? "Daily Track Listening Usage"
-                    : listeningView === "weekly"
-                    ? "Weekly Track Listening Usage"
-                    : "Monthly Track Listening Usage"}
-                </h5>
-                {listeningChartError ? (
-                  <h2 className="text-xl  mt-4">{listeningChartError}</h2>
-                ) : (
-                  <LineChart
-                    data={
-                      {
-                        daily: exactListeningData,
-                        weekly: exactListeningData,
-                        monthly: exactListeningData,
-                      }[listeningView]
-                    }
-                  />
-                )}
-
-                {mostListenedTrack && (
-                  <div className="mt-4">
-                    <h5 className="text-lg font-semibold mb-2">
-                      {userData.first_name}'s Most Listened Track:
-                    </h5>
-                    <p className="">{mostListenedTrack.track_name}</p>
-                    <p className="">
-                      Total Duration:{" "}
-                      {(mostListenedTrack.total_duration / 60).toFixed(2)}{" "}
-                      minutes
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
+        {mostUsedA && (
+          <div className="mt-4">
+            <h5 className="text-lg font-semibold mb-2">
+              Most Used Exercise:
+            </h5>
+            <p>{mostUsedA.track_name}</p>
+            <p>
+              Total Duration:{" "}
+              {(mostUsedA.total_duration / 60.0).toFixed(2)} minutes
+            </p>
+          </div>
+        )}
+      </div>
     </div>
-    </div>
-  )
-}
 
-export default ListeningCompare
+    {/**Exact Data */}
+    <div className={`${Color.chartsBGText} rounded-lg  m-4 p-6`}>
+      <div className={`flex items-center align-super `}>
+        <h2>Audio Threapy usage on:</h2>
+        <input
+          type={calType}
+          value={selectedDateB}
+          onChange={handleDateChangeB}
+          className="cursor-pointer"
+        />
+      </div>
+      {chartErrorB ? (
+        <h2 className="text-xl mt-4">{chartErrorB}</h2>
+      ) : (
+        <LineChart
+          data={{
+            daily: listeningB,
+            weekly: listeningB,
+            monthly: listeningB,
+          }[period]}
+        />
+      )}
+
+      {mostUsedB && (
+        <div className="mt-4">
+          <h5 className="text-lg font-semibold mb-2">
+            Most Used Exercise:
+          </h5>
+          <p>{mostUsedB.track_name}</p>
+          <p>
+            Total Duration:{" "}
+            {(mostUsedB.total_duration / 60.0).toFixed(2)} minutes
+          </p>
+        </div>
+      )}
+    </div>
+  </div>
+);
+};
+
+export default ListeningCompare;

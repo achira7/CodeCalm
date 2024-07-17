@@ -1,3 +1,5 @@
+import React from "react";
+
 import { PrimColor } from "./Colors";
 
 export const BtnColor = {
@@ -8,8 +10,8 @@ export const BtnColor = {
 }
 
 export const BtnClose = {
-    base: "text-3xl flex items-center justify-center rounded-md",
-    hover: `hover:bg-${PrimColor.red} transition duration-300`,
+    base: "text-3xl flex items-center justify-center rounded-md text-black",
+    hover: `hover:bg-${PrimColor.red} hover:text-white transition duration-300`,
     //rotate: "transition-transform transform hover:rotate-180 duration-500",
   };
 

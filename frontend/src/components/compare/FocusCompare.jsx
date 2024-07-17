@@ -1,145 +1,208 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import moment from "moment";
 import { Color } from "../../theme/Colors";
 import { BtnColor } from "../../theme/ButtonTheme";
 import TwoValueBarChart from "../charts/TwoValueBarChart";
+import { NoData } from "../../theme/ChartError";
+import { RetrieveError } from "../../theme/ChartError";
 
-const FocusCompare = ({ id, period }) => {
-  const [focusData, setFocusData] = useState("");
-  const [exactFocusData, setExactFocusData] = useState("");
+const FocusCompare = ({ id, team, period }) => {
+  const [focusA, setFocusA] = useState("");
+  const [focusB, setFocusB] = useState("");
 
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDateA, setSelectedDateA] = useState(new Date());
+  const [selectedDateB, setSelectedDateB] = useState(new Date());
+  const [chartErrorA, setChartErrorA] = useState(null);
+  const [chartErrorB, setChartErrorB] = useState(null)
   const [calType, setCalType] = useState("date");
   const [focusView, setFocusView] = useState("daily");
   const [focusChartError, setFocusChartError] = useState(null);
 
+  const [property, setProperty] = useState("");
+  const [parameter, setParameter] = useState("");
+
+
   useEffect(() => {
+    if (id) {
+      setProperty("user_id");
+      setParameter(id);
+    } else if (team) {
+      setProperty("team_id");
+      setParameter(team);
+    }
+  }, [id, team]);
+
+  useEffect(() => {    
+    const today = moment();
+    let defaultDateA, defaultDateB;
+
     if (period === "weekly") {
       setCalType("week");
+      defaultDateA = today.startOf("week").format("YYYY-[W]WW");
+      defaultDateB = today
+        .subtract(1, "week")
+        .startOf("week")
+        .format("YYYY-[W]WW");
     } else if (period === "monthly") {
       setCalType("month");
-    } else {
+      defaultDateA = today.startOf("month").format("YYYY-MM");
+      defaultDateB = today
+        .subtract(1, "month")
+        .startOf("month")
+        .format("YYYY-MM");
+    } else if (period === "daily") {
       setCalType("date");
+      defaultDateA = today.startOf("day").format("YYYY-MM-DD");
+      defaultDateB = today
+        .subtract(1, "day")
+        .startOf("day")
+        .format("YYYY-MM-DD");
     }
-  }, [period]);
 
-  useEffect(() => {
-    fetchFocusData(period);
-  }, [id, period]);
+    setSelectedDateA(defaultDateA);
+    setSelectedDateB(defaultDateB);
 
-  const fetchFocusData = async (period) => {
-    try {
-      const response = await axios.get("http://localhost:8000/api/focus", {
-        params: { user_id: id, period: period },
-      });
-      const data = response.data.days || {};
-      const allZero = Object.values(data).every((value) => value === 0);
-      if (allZero) {
-        setFocusChartError("No Focus Data Recorded ⚠");
-      } else {
-        setFocusChartError(null);
-      }
-      if (period === "weekly") {
-        setFocusData(data);
-      } else if (period === "monthly") {
-        setFocusData(data);
-      } else if (period === "daily") {
-        setFocusData(data);
-      }
-      //setFocusedData(data);
-    } catch (error) {
-      console.error("Error fetching focus data:", error);
+    if (property && parameter) {
+      fetchData(
+        property,
+        parameter,
+        period,
+        defaultDateA,
+        setFocusA,
+      );
+      fetchData(
+        property,
+        parameter,
+        period,
+        defaultDateB,
+        setFocusB,
+      );
     }
-  };
+  }, [period, property, parameter]);
 
-  const fetchExactFocusData = async (period, exact_period) => {
+  const fetchData = async (
+    property,
+    parameter,
+    period,
+    exact_period,
+    setFocus,
+  ) => {
     try {
       const response = await axios.get(
         "http://localhost:8000/api/exact_focus/",
         {
-          params: { user_id: id, period: period, exact_period: exact_period },
+          params: {
+            [property]: parameter,
+            period: period,
+            exact_period: exact_period,
+          },
         }
       );
-      const data = response.data.days || {};
-      if (period === "daily") {
-        setExactFocusData(data);
-      } else if (period === "weekly") {
-        setExactFocusData(data);
-      } else if (period === "monthly") {
-        setExactFocusData(data);
-      }
-      console.log(data);
+      setFocus(response.data.days);
     } catch (error) {
-      console.error("Error fetching exact listening data:", error);
+      setChartErrorA(<RetrieveError type="Focus" />);
     }
   };
 
   useEffect(() => {
-    fetchFocusData(period);
-  }, [id, period]);
+    if (focusA) {
+      const allZeroA = Object.values(focusA).every((value) => value === 0);
+      if (allZeroA) {
+        setChartErrorA(<NoData type="Focus" />);
+      } else {
+        setChartErrorA(null);
+      }
+    }
+  }, [focusA]);
 
-  const handleDateChange = (date) => {
+  useEffect(() => {
+    if (focusB) {
+      const allZeroB = Object.values(focusB).every((value) => value === 0);
+      if (allZeroB) {
+        setChartErrorB(<NoData type="Focus" />);
+      } else {
+        setChartErrorB(null);
+      }
+    }
+  }, [focusB]);
+
+  const handleDateChangeA = (date) => {
     const exact_period = date.target.value;
-    setSelectedDate(new Date(exact_period));
-    fetchExactFocusData(period, exact_period);
+    setSelectedDateA(exact_period);
+    fetchData(
+      property,
+      parameter,
+      period,
+      exact_period,
+      setFocusA,
+    );
+  };
+
+  const handleDateChangeB = (date) => {
+    const exact_period = date.target.value;
+    setSelectedDateB(exact_period);
+    fetchData(
+      property,
+      parameter,
+      period,
+      exact_period,
+      setFocusB,
+    );
   };
 
   return (
-    <div className={`min-h-screen ${Color.background} `}>
+    <div className={`${Color.background} rounded-lg m-4 p-6`}>
+      <div className="flex flex-cols lg:flex-row rounded-lg m-4 p-6">
+
+      
       <div className={` ${Color.chartsBGText}   rounded-lg m-4 p-6 `}>
-        <div className="text-center">
-          <h5 className="text-2xl font-semibold  mb-5">
-            {focusView === "daily"
-              ? "Daily Focus Data"
-              : focusView === "weekly"
-              ? "Weekly Focus Data"
-              : "Monthly Focus Data"}
-          </h5>
-          {focusChartError ? (
-            <h2 className="text-xl  mt-4">{listeningChartError}</h2>
+      <h2> Focus Data on: </h2>
+          <input
+            type={calType}
+            value={selectedDateA}
+            onChange={handleDateChangeA}
+            className="cursor-pointer"
+          />
+          {chartErrorA ? (
+            <h2 className="text-xl">{chartErrorA}</h2>
           ) : (
-            <TwoValueBarChart
-              data={
-                {
-                  daily: focusData,
-                  weekly: focusData,
-                  monthly: focusData,
-                }[focusView]
-              }
-              period={focusView}
-            />
-          )}
-        </div>
+              <TwoValueBarChart
+                data={
+                  {
+                    daily: focusA,
+                    weekly: focusA,
+                    monthly: focusA,
+                  }[focusView]
+                }
+                period={period}
+              />
+            )}
       </div>
 
       {/*Exact Focus*/}
-      <div className={` ${Color.chartsBGText}   rounded-lg m-4 p-6 `}>
-        <div className="text-center">
+      <div className={`${Color.chartsBGText} rounded-lg  m-4 p-6`}>
+          <div className={`flex items-center align-super `}>
+      <h2>Focus Data on:</h2>
           <input
             type={calType}
-            value={selectedDate.toISOString().split("T")[0]}
-            onChange={handleDateChange}
+            value={selectedDateB}
+            onChange={handleDateChangeB}
             className="cursor-pointer"
           />
-          <h5 className="text-2xl font-semibold  mb-5">
-            {focusView === "daily"
-              ? "Daily Focus Data"
-              : focusView === "weekly"
-              ? "Weekly Focus Data"
-              : "Monthly Focus Data"}
-          </h5>
-          {focusChartError ? (
-            <h2 className="text-xl  mt-4">{listeningChartError}</h2>
+          </div>
+          {chartErrorB ? (
+            <h2 className="text-xl  mt-4">{chartErrorB}</h2>
           ) : (
             <TwoValueBarChart
               data={
                 {
-                  daily: exactFocusData,
-                  weekly: exactFocusData,
-                  monthly: exactFocusData,
+                  daily: focusB,
+                  weekly: focusB,
+                  monthly: focusB,
                 }[focusView]
               }
-              period={focusView}
+              period={period}
             />
           )}
         </div>

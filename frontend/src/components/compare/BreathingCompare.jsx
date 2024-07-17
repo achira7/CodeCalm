@@ -1,235 +1,245 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import moment from "moment";
+
 import { Color } from "../../theme/Colors";
 import { BtnColor } from "../../theme/ButtonTheme";
+import { NoData } from "../../theme/ChartError";
+import { RetrieveError } from "../../theme/ChartError";
 import LineChart from "../charts/LineChart";
 
-const BreathingCompare = ({ id, period }) => {
-  const [userData, setUserData] = useState({});
+const BreathingCompare = ({ id, team, period }) => {
+  const [breathingA, setBreathingA] = useState("");
+  const [breathingB, setBreathingB] = useState("");
 
-  const [emotionChartError, setEmotionChartError] = useState(null);
-  const [stressChartError, setStressChartError] = useState(null);
-  const [breathingChartError, setBreathingChartError] = useState(null);
-  const [listeningChartError, setListeningChartError] = useState(null);
+  const [mostUsedA, setMostUsedA] = useState(null);
+  const [mostUsedB, setMostUsedB] = useState(null);
 
-  const [highestEmotion, setHighestEmotion] = useState({ key: "", value: 0 });
-  const [weeklyExerciseData, setWeeklyExerciseData] = useState({});
-  const [monthlyExerciseData, setMonthlyExerciseData] = useState({});
-  const [dailyExerciseData, setDailyExerciseData] = useState({});
-  const [weeklyListeningData, setWeeklyListeningData] = useState({});
-  const [monthlyListeningData, setMonthlyListeningData] = useState({});
-  const [dailyListeningData, setDailyListeningData] = useState({});
-  const [mostUsedExercise, setMostUsedExercise] = useState(null);
-  const [mostListenedTrack, setMostListenedTrack] = useState(null);
-  const [exerciseView, setExerciseView] = useState("daily");
-  const [listeningView, setListeningView] = useState("daily");
-  const [emotionView, setEmotionView] = useState("daily");
+  const [breathing, setBreathing] = useState("");
+  const [mostUsed, setMostUsed] = useState("");
 
-  const [dailyFocusData, setDailyFocusData] = useState({});
-  const [weeklyFocusData, setWeeklyFocusData] = useState({});
-  const [monthlyFocusData, setMonthlyFocusData] = useState({});
-  const [focusedData, setFocusedData] = useState({});
-  const [focusChartError, setFocusChartError] = useState(null);
-  const [focusView, setFocusView] = useState("daily");
-
-  const [dailyStressData, setDailyStressData] = useState({});
-  const [weeklyStressData, setWeeklyStressData] = useState({});
-  const [monthlyStressData, setMonthlyStressData] = useState({});
+  const [selectedDateA, setSelectedDateA] = useState(new Date());
+  const [selectedDateB, setSelectedDateB] = useState(new Date());
   const [stressView, setStressView] = useState("daily");
 
-  const [hourlyEmotion, setHourlyEmotion] = useState([]);
-
-  const [userRole, setUserRole] = useState("");
-  const [componenetUserData, setComponenetUserData] = useState({});
-
-  const [goBackText, setGoBackText] = useState("");
-
-  const [specificPeriod, setSpecificPeriod] = useState(null);
-  const [dateType, setDateType] = useState("daily");
-
-  const [selectedView, setSelectedView] = useState("daily");
-
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [periodForExact, setPeriodForExact] = useState("daily");
+  const [chartErrorA, setChartErrorA] = useState(null);
+  const [chartErrorB, setChartErrorB] = useState(null);
 
   const [calType, setCalType] = useState("date");
-
-  const [breathingData, setBreathingData] = useState("")
-  const [exactBreathingData, setExactBreathingData] = useState("")
+  const [property, setProperty] = useState("");
+  const [parameter, setParameter] = useState("");
 
   useEffect(() => {
+    if (id) {
+      setProperty("user_id");
+      setParameter(id);
+    } else if (team) {
+      setProperty("team_id");
+      setParameter(team);
+    }
+  }, [id, team]);
+
+  useEffect(() => {
+    const today = moment();
+    let defaultDateA, defaultDateB;
+
     if (period === "weekly") {
       setCalType("week");
+      defaultDateA = today.startOf("week").format("YYYY-[W]WW");
+      defaultDateB = today
+        .subtract(1, "week")
+        .startOf("week")
+        .format("YYYY-[W]WW");
     } else if (period === "monthly") {
       setCalType("month");
-    } else {
+      defaultDateA = today.startOf("month").format("YYYY-MM");
+      defaultDateB = today
+        .subtract(1, "month")
+        .startOf("month")
+        .format("YYYY-MM");
+    } else if (period === "daily") {
       setCalType("date");
+      defaultDateA = today.startOf("day").format("YYYY-MM-DD");
+      defaultDateB = today
+        .subtract(1, "day")
+        .startOf("day")
+        .format("YYYY-MM-DD");
     }
-  }, [period]);
 
-  useEffect(() => {
-    fetchBreathingData(period);
-    fetchUserDataWithID(id)
-  }, [id, period]);
+    setSelectedDateA(defaultDateA);
+    setSelectedDateB(defaultDateB);
 
-  const fetchUserDataWithID = async () => {
-    try {
-      const response = await axios.get("http://localhost:8000/api/g/", {
-        params: {
-          user_id: id,
-        },
-      });
-      setUserData(response.data);
-    } catch (e) {
-      console.error(e);
-      setNavigate(true);
+    if (property && parameter) {
+      fetchData(
+        property,
+        parameter,
+        period,
+        defaultDateA,
+        setBreathingA,
+        setMostUsedA,
+      );
+      fetchData(
+        property,
+        parameter,
+        period,
+        defaultDateB,
+        setBreathingB,
+        setMostUsedB,
+      );
     }
-  };
+  }, [period, property, parameter]);
 
-  const fetchExactBreathingData = async (period, exact_period) => {
+  const fetchData = async (
+    property,
+    parameter,
+    period,
+    exact_period,
+    setBreathing,
+    setMostUsed
+  ) => {
     try {
       const response = await axios.get(
         "http://localhost:8000/api/exact_breathing/",
         {
-          params: { user_id: id, period: period, exact_period: exact_period },
+          params: {
+            [property]: parameter,
+            period: period,
+            exact_period: exact_period,
+          },
         }
       );
-      const data = response.data.days || {};
-      if (period === "daily") {
-        setExactBreathingData(data);
-      } else if (period === "weekly") {
-        setExactBreathingData(data);
-      } else if (period === "monthly") {
-        setExactBreathingData(data);
-      }
-      console.log(data);
+      setBreathing(response.data.days);
+      setMostUsed(response.data.most_used_exercise || null);
     } catch (error) {
-      console.error("Error fetching exact breathing data:", error);
+      setChartErrorA(<RetrieveError type="Audio Threapy" />);
     }
   };
 
-  const fetchBreathingData = async (period) => {
-    try {
-      const response = await axios.get("http://localhost:8000/api/breathing/", {
-        params: { user_id: id, period: period },
-      });
-      const data = response.data.days || {};
-      const allZero = Object.values(data).every((value) => value === 0);
-      if (allZero) {
-        setBreathingChartError("No Data Recorded ⚠");
+  useEffect(() => {
+    if (breathingA) {
+      const allZeroA = Object.values(breathingA).every((value) => value === 0);
+      if (allZeroA) {
+        setChartErrorA(<NoData type="Audio Threapy" />);
       } else {
-        setBreathingChartError(null);
+        setChartErrorA(null);
       }
-      if (period === "weekly") {
-        setBreathingData(data);
-      } else if (period === "monthly") {
-        setBreathingData(data);
-      } else if (period === "daily") {
-        setBreathingData(data);
-      }
-      setMostUsedExercise(response.data.most_used_exercise || null);
-    } catch (error) {
-      console.error("Error fetching exercise data:", error);
     }
-  };
+  }, [breathingA]);
 
+  useEffect(() => {
+    if (breathingB) {
+      const allZeroB = Object.values(breathingB).every((value) => value === 0);
+      if (allZeroB) {
+        setChartErrorB(<NoData type="Audio Threapy" />);
+      } else {
+        setChartErrorB(null);
+      }
+    }
+  }, [breathingB]);
 
-  const handleDateChange = (date) => {
+  const handleDateChangeA = (date) => {
     const exact_period = date.target.value;
-    setSelectedDate(new Date(exact_period));
-    fetchExactBreathingData(period, exact_period);
+    setSelectedDateA(exact_period);
+    fetchData(
+      property,
+      parameter,
+      period,
+      exact_period,
+      setBreathingA,
+      setMostUsedA,
+    );
   };
 
+  const handleDateChangeB = (date) => {
+    const exact_period = date.target.value;
+    setSelectedDateB(exact_period);
+    fetchData(
+      property,
+      parameter,
+      period,
+      exact_period,
+      setBreathingB,
+      setMostUsedB,
+    );
+  };
 
   return (
-    <div>
-
-<div className={` ${Color.chartsBGText}  rounded-lg  m-4 p-6`}>
-              <div className="text-center">
-                <h5 className="text-2xl font-semibold  mb-5">
-                  {exerciseView === "daily"
-                    ? "Daily Breathing Exercise Usage"
-                    : exerciseView === "weekly"
-                    ? "Weekly Breathing Exercise Usage"
-                    : "Monthly Breathing Exercise Usage"}
-                </h5>
-          
-                {breathingChartError ? (
-                  <h2 className="text-xl  mt-4">{breathingChartError}</h2>
-                ) : (
-                  <LineChart
-                    data={
-                      {
-                        daily: breathingData,
-                        weekly: breathingData,
-                        monthly: breathingData,
-                      }[exerciseView]
-                    }
-                  />
-                )}
-
-                {mostUsedExercise && (
-                  <div className="mt-4">
-                    <h5 className="text-lg font-semibold  mb-2">
-                      {userData.first_name}'s Most Used Exercise:
-                    </h5>
-                    <p className="">{mostUsedExercise.exercise_name}</p>
-                    <p className="">
-                      Total Duration:{" "}
-                      {(mostUsedExercise.total_duration / 60.0).toFixed(2)}{" "}
-                      minutes
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/**Exact Data */}
-            <div className={` ${Color.chartsBGText}  rounded-lg  m-4 p-6`}>
-              <div className="text-center">
-              <input
+    <div className={`${Color.background} rounded-lg m-4 p-6`}>
+      <div className="flex flex-cols lg:flex-row rounded-lg m-4 p-6">
+        <div className={` ${Color.chartsBGText} rounded-lg m-4 p-6 `}>
+          <h2> Stress Data on: </h2>
+          <input
             type={calType}
-            value={selectedDate.toISOString().split("T")[0]}
-            onChange={handleDateChange}
+            value={selectedDateA}
+            onChange={handleDateChangeA}
             className="cursor-pointer"
           />
-                <h5 className="text-2xl font-semibold  mb-5">
-                  {exerciseView === "daily"
-                    ? "Daily Breathing Exercise Usage"
-                    : exerciseView === "weekly"
-                    ? "Weekly Breathing Exercise Usage"
-                    : "Monthly Breathing Exercise Usage"}
-                </h5>
-        
-                {breathingChartError ? (
-                  <h2 className="text-xl  mt-4">{breathingChartError}</h2>
-                ) : (
-                  <LineChart
-                    data={
-                      {
-                        daily: exactBreathingData,
-                      }[exerciseView]
-                    }
-                  />
-                )}
+          {chartErrorA ? (
+            <h2 className="text-xl">{chartErrorA}</h2>
+          ) : (
+            <LineChart
+            
+              data={{
+                daily: breathingA,
+                weekly: breathingA,
+                monthly: breathingA,
+              }[period]}
+            />
+          )}
 
-                {mostUsedExercise && (
-                  <div className="mt-4">
-                    <h5 className="text-lg font-semibold  mb-2">
-                      {userData.first_name}'s Most Used Exercise:
-                    </h5>
-                    <p className="">{mostUsedExercise.exercise_name}</p>
-                    <p className="">
-                      Total Duration:{" "}
-                      {(mostUsedExercise.total_duration / 60.0).toFixed(2)}{" "}
-                      minutes
-                    </p>
-                  </div>
-                )}
-              </div>
+          {mostUsedA && (
+            <div className="mt-4">
+              <h5 className="text-lg font-semibold mb-2">
+                Most Used Exercise:
+              </h5>
+              <p>{mostUsedA.exercise_name}</p>
+              <p>
+                Total Duration:{" "}
+                {(mostUsedA.total_duration / 60.0).toFixed(2)} minutes
+              </p>
             </div>
-    </div>
-  )
-}
+          )}
+        </div>
+      </div>
 
-export default BreathingCompare
+      {/**Exact Data */}
+      <div className={`${Color.chartsBGText} rounded-lg  m-4 p-6`}>
+        <div className={`flex items-center align-super `}>
+          <h2>Stress Data on:</h2>
+          <input
+            type={calType}
+            value={selectedDateB}
+            onChange={handleDateChangeB}
+            className="cursor-pointer"
+          />
+        </div>
+        {chartErrorB ? (
+          <h2 className="text-xl mt-4">{chartErrorB}</h2>
+        ) : (
+          <LineChart
+            data={{
+              daily: breathingB,
+              weekly: breathingB,
+              monthly: breathingB,
+            }[period]}
+          />
+        )}
+
+        {mostUsedB && (
+          <div className="mt-4">
+            <h5 className="text-lg font-semibold mb-2">
+              Most Used Exercise:
+            </h5>
+            <p>{mostUsedB.exercise_name}</p>
+            <p>
+              Total Duration:{" "}
+              {(mostUsedB.total_duration / 60.0).toFixed(2)} minutes
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default BreathingCompare;
