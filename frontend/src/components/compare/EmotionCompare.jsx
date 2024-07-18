@@ -7,8 +7,13 @@ import { Color } from "../../theme/Colors";
 import { BtnColor } from "../../theme/ButtonTheme";
 import { NoData } from "../../theme/ChartError";
 import { RetrieveError } from "../../theme/ChartError";
+import { downloadPDF } from "../DownloadReport";
+import { ReportButton } from "../../theme/ButtonTheme";
 
-const EmotionCompare = ({ id, team, period }) => {
+import { IoMdDownload } from "react-icons/io";
+
+
+const EmotionCompare = ({ id, name, userRole, team, period }) => {
 
   const [emotionsA, setEmotionsA] = useState({
     angry: 0,
@@ -178,8 +183,24 @@ const EmotionCompare = ({ id, team, period }) => {
     );
   };
 
+  const generateReport = () => {
+    downloadPDF({ componenetName: "Emotion Compare", team: team, name: name, userRole:userRole, orientation:"l" });
+  };
+
   return (
     <div className={`${Color.background} rounded-lg m-4 p-6`}>
+      <div>
+        {(userRole === "Admin" || userRole === "Supervisor") && (
+          <button
+            className={`flex items-center px-4 py-2 rounded-md ${ReportButton.base} ${ReportButton.hover}`}
+            onClick={generateReport}
+            title="in PDF format"
+          >
+            <IoMdDownload className="mr-2" /> Generate Report
+          </button>
+        )}
+      </div>
+        <div id="Emotion Compare report-content">
       <div className="flex flex-cols lg:flex-row rounded-lg m-4 p-6">
         <div className={` ${Color.chartsBGText}   rounded-lg m-4 p-6 `}>
           <h2> Emotion Data on: </h2>
@@ -274,6 +295,7 @@ const EmotionCompare = ({ id, team, period }) => {
           )}
         </div>
       </div>
+    </div>
     </div>
   );
 };

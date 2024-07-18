@@ -40,7 +40,8 @@ from main.views import (
     ExactTrackListeningView,
     ExactEmotionDataView,
     ExactStressDataView,
-    ExactFocusDataView
+    ExactFocusDataView,
+    TeamDetail
 )
 
 urlpatterns = [
@@ -73,6 +74,10 @@ urlpatterns = [
     path('getweeklyallemotions/', WeeklyEmployeeEmotionDataView.as_view()),
     path('team/', EmployeeTeamView.as_view()),
     path('teamlist/', TeamList.as_view()),
+
+    path('teamlist/', TeamList.as_view(), name='team-list'),
+    path('team/<int:pk>/', TeamDetail.as_view(), name='team-detail'),
+
     path('employeelist/', EmployeeList.as_view()),
     path('employee/<int:pk>/', EmployeeDetail.as_view()),
 

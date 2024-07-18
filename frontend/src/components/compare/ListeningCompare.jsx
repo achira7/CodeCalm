@@ -3,13 +3,16 @@ import axios from "axios";
 import moment from "moment";
 
 import { Color } from "../../theme/Colors";
-import { BtnColor } from "../../theme/ButtonTheme";
+import { BtnColor, ReportButton } from "../../theme/ButtonTheme";
 import { NoData } from "../../theme/ChartError";
 import { RetrieveError } from "../../theme/ChartError";
+import { downloadPDF } from "../DownloadReport";
+
 import LineChart from "../charts/LineChart";
 
+import { IoMdDownload } from "react-icons/io";
 
-const ListeningCompare = ({ id, team, period }) => {
+const ListeningCompare = ({ id, name, userRole, team, period }) => {
   const [listeningA, setListeningA] = useState("");
   const [listeningB, setListeningB] = useState("");
 
@@ -44,29 +47,29 @@ const ListeningCompare = ({ id, team, period }) => {
     const today = moment();
     let defaultDateA, defaultDateB;
 
-        if (period === "weekly") {
-          setCalType("week");
-          defaultDateA = today.startOf("week").format("YYYY-[W]WW");
-          defaultDateB = today
-            .subtract(1, "week")
-            .startOf("week")
-            .format("YYYY-[W]WW");
-        } else if (period === "monthly") {
-          setCalType("month");
-          defaultDateA = today.startOf("month").format("YYYY-MM");
-          defaultDateB = today
-            .subtract(1, "month")
-            .startOf("month")
-            .format("YYYY-MM");
-        } else if (period === "daily") {
-          setCalType("date");
-          defaultDateA = today.startOf("day").format("YYYY-MM-DD");
-          defaultDateB = today
-            .subtract(1, "day")
-            .startOf("day")
-            .format("YYYY-MM-DD");
-        }
-        
+    if (period === "weekly") {
+      setCalType("week");
+      defaultDateA = today.startOf("week").format("YYYY-[W]WW");
+      defaultDateB = today
+        .subtract(1, "week")
+        .startOf("week")
+        .format("YYYY-[W]WW");
+    } else if (period === "monthly") {
+      setCalType("month");
+      defaultDateA = today.startOf("month").format("YYYY-MM");
+      defaultDateB = today
+        .subtract(1, "month")
+        .startOf("month")
+        .format("YYYY-MM");
+    } else if (period === "daily") {
+      setCalType("date");
+      defaultDateA = today.startOf("day").format("YYYY-MM-DD");
+      defaultDateB = today
+        .subtract(1, "day")
+        .startOf("day")
+        .format("YYYY-MM-DD");
+    }
+
     setSelectedDateA(defaultDateA);
     setSelectedDateB(defaultDateB);
 
@@ -77,7 +80,7 @@ const ListeningCompare = ({ id, team, period }) => {
         period,
         defaultDateA,
         setListeningA,
-        setMostUsedA,
+        setMostUsedA
       );
       fetchData(
         property,
@@ -85,7 +88,7 @@ const ListeningCompare = ({ id, team, period }) => {
         period,
         defaultDateB,
         setListeningB,
-        setMostUsedB,
+        setMostUsedB
       );
     }
   }, [period, property, parameter]);
@@ -147,7 +150,7 @@ const ListeningCompare = ({ id, team, period }) => {
       period,
       exact_period,
       setListeningA,
-      setMostUsedA,
+      setMostUsedA
     );
   };
 
@@ -160,87 +163,114 @@ const ListeningCompare = ({ id, team, period }) => {
       period,
       exact_period,
       setListeningB,
-      setMostUsedB,
+      setMostUsedB
     );
+  };
+
+  const generateReport = () => {
+    downloadPDF({
+      componenetName: "Audio Therapy Compare",
+      team: team,
+      name: name,
+      userRole: userRole,
+      orientation: "l",
+    });
   };
 
   return (
     <div className={`${Color.background} rounded-lg m-4 p-6`}>
-    <div className="flex flex-cols lg:flex-row rounded-lg m-4 p-6">
-      <div className={` ${Color.chartsBGText} rounded-lg m-4 p-6 `}>
-        <h2> Audio Threapy usage on: </h2>
-        <input
-          type={calType}
-          value={selectedDateA}
-          onChange={handleDateChangeA}
-          className="cursor-pointer"
-        />
-        {chartErrorA ? (
-          <h2 className="text-xl">{chartErrorA}</h2>
-        ) : (
-          <LineChart
-          
-            data={{
-              daily: listeningA,
-              weekly: listeningA,
-              monthly: listeningA,
-            }[period]}
-          />
+      <div>
+        {(userRole === "Admin" || userRole === "Supervisor") && (
+          <button
+            className={`flex items-center px-4 py-2 rounded-md ${ReportButton.base} ${ReportButton.hover}`}
+            onClick={generateReport}
+            title="in PDF format"
+          >
+            <IoMdDownload className="mr-2" /> Generate Report
+          </button>
         )}
+      </div>
 
-        {mostUsedA && (
-          <div className="mt-4">
-            <h5 className="text-lg font-semibold mb-2">
-              Most Used Exercise:
-            </h5>
-            <p>{mostUsedA.track_name}</p>
-            <p>
-              Total Duration:{" "}
-              {(mostUsedA.total_duration / 60.0).toFixed(2)} minutes
-            </p>
+      <div id="Audio Therapy Compare report-content">
+        <div className="flex flex-cols lg:flex-row rounded-lg m-4 p-6">
+          <div className={` ${Color.chartsBGText} rounded-lg m-4 p-6 `}>
+            <h2> Audio Threapy usage on: </h2>
+            <input
+              type={calType}
+              value={selectedDateA}
+              onChange={handleDateChangeA}
+              className="cursor-pointer"
+            />
+            {chartErrorA ? (
+              <h2 className="text-xl">{chartErrorA}</h2>
+            ) : (
+              <LineChart
+                data={
+                  {
+                    daily: listeningA,
+                    weekly: listeningA,
+                    monthly: listeningA,
+                  }[period]
+                }
+              />
+            )}
+
+            {mostUsedA && (
+              <div className="mt-4">
+                <h5 className="text-lg font-semibold mb-2">
+                  Most Used Exercise:
+                </h5>
+                <p>{mostUsedA.track_name}</p>
+                <p>
+                  Total Duration: {(mostUsedA.total_duration / 60.0).toFixed(2)}{" "}
+                  minutes
+                </p>
+              </div>
+            )}
           </div>
-        )}
-      </div>
-    </div>
-
-    {/**Exact Data */}
-    <div className={`${Color.chartsBGText} rounded-lg  m-4 p-6`}>
-      <div className={`flex items-center align-super `}>
-        <h2>Audio Threapy usage on:</h2>
-        <input
-          type={calType}
-          value={selectedDateB}
-          onChange={handleDateChangeB}
-          className="cursor-pointer"
-        />
-      </div>
-      {chartErrorB ? (
-        <h2 className="text-xl mt-4">{chartErrorB}</h2>
-      ) : (
-        <LineChart
-          data={{
-            daily: listeningB,
-            weekly: listeningB,
-            monthly: listeningB,
-          }[period]}
-        />
-      )}
-
-      {mostUsedB && (
-        <div className="mt-4">
-          <h5 className="text-lg font-semibold mb-2">
-            Most Used Exercise:
-          </h5>
-          <p>{mostUsedB.track_name}</p>
-          <p>
-            Total Duration:{" "}
-            {(mostUsedB.total_duration / 60.0).toFixed(2)} minutes
-          </p>
         </div>
-      )}
+
+        {/**Exact Data */}
+        <div className={`${Color.chartsBGText} rounded-lg  m-4 p-6`}>
+          <div className={`flex items-center align-super `}>
+            <h2>Audio Threapy usage on:</h2>
+            <input
+              type={calType}
+              value={selectedDateB}
+              onChange={handleDateChangeB}
+              className="cursor-pointer"
+            />
+          </div>
+          {chartErrorB ? (
+            <h2 className="text-xl mt-4">{chartErrorB}</h2>
+          ) : (
+            <LineChart
+              data={
+                {
+                  daily: listeningB,
+                  weekly: listeningB,
+                  monthly: listeningB,
+                }[period]
+              }
+            />
+          )}
+
+          {mostUsedB && (
+            <div className="mt-4">
+              <h5 className="text-lg font-semibold mb-2">
+                Most Used Exercise:
+              </h5>
+              <p>{mostUsedB.track_name}</p>
+              <p>
+                Total Duration: {(mostUsedB.total_duration / 60.0).toFixed(2)}{" "}
+                minutes
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
-  </div>
-);
+  );
 };
 
 export default ListeningCompare;

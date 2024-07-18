@@ -227,6 +227,23 @@ class TeamList(generics.ListAPIView):
     queryset = Employee_Team.objects.all()
     serializer_class = EmployeeTeamSerializer
 
+class TeamDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Employee_Team.objects.all()
+    serializer_class = EmployeeTeamSerializer
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
     
 def stringToRGB(base64_string):
     imgdata = base64.b64decode(str(base64_string))

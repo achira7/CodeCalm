@@ -64,5 +64,6 @@ export const Color = getColorSet();
 
 export const PrimColor = {
     green: "emerald-600",
-    red: "red-500"
+    red: "red-500",
+    yellow: "yellow-500",
 } 

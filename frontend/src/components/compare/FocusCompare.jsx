@@ -2,26 +2,28 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import moment from "moment";
 import { Color } from "../../theme/Colors";
-import { BtnColor } from "../../theme/ButtonTheme";
+import { BtnColor, ReportButton } from "../../theme/ButtonTheme";
 import TwoValueBarChart from "../charts/TwoValueBarChart";
 import { NoData } from "../../theme/ChartError";
 import { RetrieveError } from "../../theme/ChartError";
+import { downloadPDF } from "../DownloadReport";
 
-const FocusCompare = ({ id, team, period }) => {
+import { IoMdDownload } from "react-icons/io";
+
+const FocusCompare = ({ id, name, userRole, team, period }) => {
   const [focusA, setFocusA] = useState("");
   const [focusB, setFocusB] = useState("");
 
   const [selectedDateA, setSelectedDateA] = useState(new Date());
   const [selectedDateB, setSelectedDateB] = useState(new Date());
   const [chartErrorA, setChartErrorA] = useState(null);
-  const [chartErrorB, setChartErrorB] = useState(null)
+  const [chartErrorB, setChartErrorB] = useState(null);
   const [calType, setCalType] = useState("date");
   const [focusView, setFocusView] = useState("daily");
   const [focusChartError, setFocusChartError] = useState(null);
 
   const [property, setProperty] = useState("");
   const [parameter, setParameter] = useState("");
-
 
   useEffect(() => {
     if (id) {
@@ -33,7 +35,7 @@ const FocusCompare = ({ id, team, period }) => {
     }
   }, [id, team]);
 
-  useEffect(() => {    
+  useEffect(() => {
     const today = moment();
     let defaultDateA, defaultDateB;
 
@@ -64,20 +66,8 @@ const FocusCompare = ({ id, team, period }) => {
     setSelectedDateB(defaultDateB);
 
     if (property && parameter) {
-      fetchData(
-        property,
-        parameter,
-        period,
-        defaultDateA,
-        setFocusA,
-      );
-      fetchData(
-        property,
-        parameter,
-        period,
-        defaultDateB,
-        setFocusB,
-      );
+      fetchData(property, parameter, period, defaultDateA, setFocusA);
+      fetchData(property, parameter, period, defaultDateB, setFocusB);
     }
   }, [period, property, parameter]);
 
@@ -86,7 +76,7 @@ const FocusCompare = ({ id, team, period }) => {
     parameter,
     period,
     exact_period,
-    setFocus,
+    setFocus
   ) => {
     try {
       const response = await axios.get(
@@ -130,34 +120,43 @@ const FocusCompare = ({ id, team, period }) => {
   const handleDateChangeA = (date) => {
     const exact_period = date.target.value;
     setSelectedDateA(exact_period);
-    fetchData(
-      property,
-      parameter,
-      period,
-      exact_period,
-      setFocusA,
-    );
+    fetchData(property, parameter, period, exact_period, setFocusA);
   };
 
   const handleDateChangeB = (date) => {
     const exact_period = date.target.value;
     setSelectedDateB(exact_period);
-    fetchData(
-      property,
-      parameter,
-      period,
-      exact_period,
-      setFocusB,
-    );
+    fetchData(property, parameter, period, exact_period, setFocusB);
+  };
+
+  const generateReport = () => {
+    downloadPDF({
+      componenetName: "Focus Compare",
+      team: team,
+      name: name,
+      userRole: userRole,
+      orientation: "l",
+    });
   };
 
   return (
     <div className={`${Color.background} rounded-lg m-4 p-6`}>
-      <div className="flex flex-cols lg:flex-row rounded-lg m-4 p-6">
+      <div>
+        {(userRole === "Admin" || userRole === "Supervisor") && (
+          <button
+            className={`flex items-center px-4 py-2 rounded-md ${ReportButton.base} ${ReportButton.hover}`}
+            onClick={generateReport}
+            title="in PDF format"
+          >
+            <IoMdDownload className="mr-2" /> Generate Report
+          </button>
+        )}
+      </div>
 
-      
-      <div className={` ${Color.chartsBGText}   rounded-lg m-4 p-6 `}>
-      <h2> Focus Data on: </h2>
+      <div id="Focus Compare report-content">
+      <div className="flex flex-cols lg:flex-row rounded-lg m-4 p-6">
+        <div className={` ${Color.chartsBGText}   rounded-lg m-4 p-6 `}>
+          <h2> Focus Data on: </h2>
           <input
             type={calType}
             value={selectedDateA}
@@ -167,29 +166,29 @@ const FocusCompare = ({ id, team, period }) => {
           {chartErrorA ? (
             <h2 className="text-xl">{chartErrorA}</h2>
           ) : (
-              <TwoValueBarChart
-                data={
-                  {
-                    daily: focusA,
-                    weekly: focusA,
-                    monthly: focusA,
-                  }[focusView]
-                }
-                period={period}
-              />
-            )}
-      </div>
+            <TwoValueBarChart
+              data={
+                {
+                  daily: focusA,
+                  weekly: focusA,
+                  monthly: focusA,
+                }[focusView]
+              }
+              period={period}
+            />
+          )}
+        </div>
 
-      {/*Exact Focus*/}
-      <div className={`${Color.chartsBGText} rounded-lg  m-4 p-6`}>
+        {/*Exact Focus*/}
+        <div className={`${Color.chartsBGText} rounded-lg  m-4 p-6`}>
           <div className={`flex items-center align-super `}>
-      <h2>Focus Data on:</h2>
-          <input
-            type={calType}
-            value={selectedDateB}
-            onChange={handleDateChangeB}
-            className="cursor-pointer"
-          />
+            <h2>Focus Data on:</h2>
+            <input
+              type={calType}
+              value={selectedDateB}
+              onChange={handleDateChangeB}
+              className="cursor-pointer"
+            />
           </div>
           {chartErrorB ? (
             <h2 className="text-xl  mt-4">{chartErrorB}</h2>
@@ -207,6 +206,7 @@ const FocusCompare = ({ id, team, period }) => {
           )}
         </div>
       </div>
+    </div>
     </div>
   );
 };

@@ -24,6 +24,10 @@ export const BtnClose = {
   export const DateSelector = {
     base: "relative flex items-center",
     hover: `hover:shadow-md hover:shadow-${PrimColor.green} transition duration-300`,
+  }
 
+  export const ReportButton = {
+    base: "relative flex items-center bg-yellow-500 text-stone-950",
+    hover: `bg-sky-600 text-white hover:bg-yellow-600 hover:text-white rounded-lg transition duration-300`,
   }
   

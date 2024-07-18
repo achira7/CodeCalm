@@ -2,13 +2,19 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import moment from "moment";
 
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+import { IoMdDownload } from "react-icons/io";
+
 import { Color } from "../../theme/Colors";
-import { BtnColor } from "../../theme/ButtonTheme";
+import { BtnColor, ReportButton } from "../../theme/ButtonTheme";
 import { NoData } from "../../theme/ChartError";
 import { RetrieveError } from "../../theme/ChartError";
-import LineChart from "../charts/LineChart";
 
-const BreathingCompare = ({ id, team, period }) => {
+import LineChart from "../charts/LineChart";
+import { downloadPDF } from "../DownloadReport";
+
+const BreathingCompare = ({ id, name, userRole, team, period }) => {
   const [breathingA, setBreathingA] = useState("");
   const [breathingB, setBreathingB] = useState("");
 
@@ -76,7 +82,7 @@ const BreathingCompare = ({ id, team, period }) => {
         period,
         defaultDateA,
         setBreathingA,
-        setMostUsedA,
+        setMostUsedA
       );
       fetchData(
         property,
@@ -84,7 +90,7 @@ const BreathingCompare = ({ id, team, period }) => {
         period,
         defaultDateB,
         setBreathingB,
-        setMostUsedB,
+        setMostUsedB
       );
     }
   }, [period, property, parameter]);
@@ -146,7 +152,7 @@ const BreathingCompare = ({ id, team, period }) => {
       period,
       exact_period,
       setBreathingA,
-      setMostUsedA,
+      setMostUsedA
     );
   };
 
@@ -159,84 +165,111 @@ const BreathingCompare = ({ id, team, period }) => {
       period,
       exact_period,
       setBreathingB,
-      setMostUsedB,
+      setMostUsedB
     );
+  };
+
+  const generateReport = () => {
+    downloadPDF({
+      componenetName: "Breathing Compare",
+      team: team,
+      name: name,
+      userRole: userRole,
+      orientation: "l",
+    });
   };
 
   return (
     <div className={`${Color.background} rounded-lg m-4 p-6`}>
-      <div className="flex flex-cols lg:flex-row rounded-lg m-4 p-6">
-        <div className={` ${Color.chartsBGText} rounded-lg m-4 p-6 `}>
-          <h2> Stress Data on: </h2>
-          <input
-            type={calType}
-            value={selectedDateA}
-            onChange={handleDateChangeA}
-            className="cursor-pointer"
-          />
-          {chartErrorA ? (
-            <h2 className="text-xl">{chartErrorA}</h2>
+      <div>
+        {(userRole === "Admin" || userRole === "Supervisor") && (
+          <button
+            className={`flex items-center px-4 py-2 rounded-md ${ReportButton.base} ${ReportButton.hover}`}
+            onClick={generateReport}
+            title="in PDF format"
+          >
+            <IoMdDownload className="mr-2" /> Generate Report
+          </button>
+        )}
+      </div>
+
+      <div id="Breathing Compare report-content">
+        <div className="flex flex-cols lg:flex-row rounded-lg m-4 p-6">
+          <div className={` ${Color.chartsBGText} rounded-lg m-4 p-6 `}>
+            <h2> Stress Data on: </h2>
+            <input
+              type={calType}
+              value={selectedDateA}
+              onChange={handleDateChangeA}
+              className="cursor-pointer"
+            />
+            {chartErrorA ? (
+              <h2 className="text-xl">{chartErrorA}</h2>
+            ) : (
+              <LineChart
+                data={
+                  {
+                    daily: breathingA,
+                    weekly: breathingA,
+                    monthly: breathingA,
+                  }[period]
+                }
+              />
+            )}
+
+            {mostUsedA && (
+              <div className="mt-4">
+                <h5 className="text-lg font-semibold mb-2">
+                  Most Used Exercise:
+                </h5>
+                <p>{mostUsedA.exercise_name}</p>
+                <p>
+                  Total Duration: {(mostUsedA.total_duration / 60.0).toFixed(2)}{" "}
+                  minutes
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/**Exact Data */}
+        <div className={`${Color.chartsBGText} rounded-lg  m-4 p-6`}>
+          <div className={`flex items-center align-super `}>
+            <h2>Stress Data on:</h2>
+            <input
+              type={calType}
+              value={selectedDateB}
+              onChange={handleDateChangeB}
+              className="cursor-pointer"
+            />
+          </div>
+          {chartErrorB ? (
+            <h2 className="text-xl mt-4">{chartErrorB}</h2>
           ) : (
             <LineChart
-            
-              data={{
-                daily: breathingA,
-                weekly: breathingA,
-                monthly: breathingA,
-              }[period]}
+              data={
+                {
+                  daily: breathingB,
+                  weekly: breathingB,
+                  monthly: breathingB,
+                }[period]
+              }
             />
           )}
 
-          {mostUsedA && (
+          {mostUsedB && (
             <div className="mt-4">
               <h5 className="text-lg font-semibold mb-2">
                 Most Used Exercise:
               </h5>
-              <p>{mostUsedA.exercise_name}</p>
+              <p>{mostUsedB.exercise_name}</p>
               <p>
-                Total Duration:{" "}
-                {(mostUsedA.total_duration / 60.0).toFixed(2)} minutes
+                Total Duration: {(mostUsedB.total_duration / 60.0).toFixed(2)}{" "}
+                minutes
               </p>
             </div>
           )}
         </div>
-      </div>
-
-      {/**Exact Data */}
-      <div className={`${Color.chartsBGText} rounded-lg  m-4 p-6`}>
-        <div className={`flex items-center align-super `}>
-          <h2>Stress Data on:</h2>
-          <input
-            type={calType}
-            value={selectedDateB}
-            onChange={handleDateChangeB}
-            className="cursor-pointer"
-          />
-        </div>
-        {chartErrorB ? (
-          <h2 className="text-xl mt-4">{chartErrorB}</h2>
-        ) : (
-          <LineChart
-            data={{
-              daily: breathingB,
-              weekly: breathingB,
-              monthly: breathingB,
-            }[period]}
-          />
-        )}
-
-        {mostUsedB && (
-          <div className="mt-4">
-            <h5 className="text-lg font-semibold mb-2">
-              Most Used Exercise:
-            </h5>
-            <p>{mostUsedB.exercise_name}</p>
-            <p>
-              Total Duration:{" "}
-              {(mostUsedB.total_duration / 60.0).toFixed(2)} minutes
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );

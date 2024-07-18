@@ -3,6 +3,7 @@ import axios from "axios";
 import { Navigate } from "react-router-dom";
 import "../index.css";
 import TestComponent from "./EmployeeComponent";
+import { Link, useNavigate } from 'react-router-dom';
 
 const pfp = "http://127.0.0.1:8000/media/profilePictures/default.jpg";
 const icons = "http://127.0.0.1:8000/media/icons";
@@ -45,7 +46,7 @@ const EmployeeDashboard = () => {
         </div>
 
         <div className="container mx-auto py-6">
-            <TestComponent id={userData.id} role={userRole} />
+            <TestComponent id={userData.id} role={userRole}/>
           </div>
         </div>
       </div>

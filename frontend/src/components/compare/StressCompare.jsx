@@ -8,7 +8,10 @@ import { BtnColor } from "../../theme/ButtonTheme";
 import { NoData } from "../../theme/ChartError";
 import { RetrieveError } from "../../theme/ChartError";
 
-const StressCompare = ({ id, team, period }) => {
+import { IoMdDownload } from "react-icons/io";
+
+
+const StressCompare = ({ id, name, userRole, team, period }) => {
   const [stressA, setStressA] = useState("");
   const [stressB, setStressB] = useState("");
 

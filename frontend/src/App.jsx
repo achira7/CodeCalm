@@ -38,6 +38,7 @@ import AddBreathingProfile from "./components/admin/AddBreathingProfile";
 import AddTrack from "./components/admin/AddTrack";
 import FaceLoginRegistration from "./components/FaceLoginRegistration";
 import FloatingPlayer from "./components/FloatingPlayer";
+import StressQuestionForm from "./components/admin/AddQuestionForm" 
 
 function App() {
   const location = useLocation();
@@ -122,6 +123,8 @@ function App() {
         <Route path="/admin/track" element={<AddTrack />} />
 
         <Route path={`/admin/employee_dashboard/:id`} element={<Dashboard />} />
+        <Route path={`/admin/addquestion`} element={<StressQuestionForm />} />
+
 
       </Routes>
     </RecoilRoot>

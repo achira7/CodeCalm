@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Navigate, Link } from "react-router-dom";
-import { Color } from "../theme/Colors";
 import DoughnutChart from "./charts/DoughnutChart";
 import LineChart from "./charts/LineChart";
 import BarChart from "./charts/BarChart";
@@ -11,18 +10,35 @@ import TwoValueBarChart from "./charts/TwoValueBarChart";
 
 import { LuFileDown } from "react-icons/lu";
 import { FaArrowRightArrowLeft } from "react-icons/fa6";
+import { IoClose, IoHelpCircleOutline } from "react-icons/io5";
+import { IoMdDownload } from "react-icons/io";
 
 import "../index.css";
 import { useParams } from "react-router-dom";
 
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import { BtnColor } from "../theme/ButtonTheme";
+import { Color } from "../theme/Colors";
+import { BtnClose } from "../theme/ButtonTheme";
+import { BtnColor, ReportButton } from "../theme/ButtonTheme";
+import { CompareIconColor } from "../theme/ButtonTheme";
+import { DateSelector } from "../theme/ButtonTheme";
+import { NoData } from "../theme/ChartError";
+import { RetrieveError } from "../theme/ChartError";
+import { downloadPDF } from "./DownloadReport";
+
+import EmotionCompare from "./compare/EmotionCompare";
+import FocusCompare from "./compare/FocusCompare";
+import BreathingCompare from "./compare/BreathingCompare";
+import ListeningCompare from "./compare/ListeningCompare";
+import StressCompare from "./compare/StressCompare";
+
+import EmployeeInfo from "./EmployeeInfo";
 
 const pfp = "http://127.0.0.1:8000/media/profilePictures/default.jpg";
 const icons = "http://127.0.0.1:8000/media/icons";
 
-const TeamComponent = ({ team }) => {
+const TeamComponent = ({ team, role }) => {
   const params = useParams();
 
   const [emotions, setEmotions] = useState({
@@ -70,6 +86,18 @@ const TeamComponent = ({ team }) => {
   const [hourlyEmotion, setHourlyEmotion] = useState([]);
   const [userRole, setUserRole] = useState("");
 
+  const [goBackText, setGoBackText] = useState("");
+
+  const [specificPeriod, setSpecificPeriod] = useState(null);
+  const [dateType, setDateType] = useState("daily");
+
+  const [selectedView, setSelectedView] = useState("daily");
+
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [periodForExact, setPeriodForExact] = useState("daily");
+
+  const [calType, setCalType] = useState("date");
+
   const fetchUserData = async () => {
     try {
       const response = await axios.get("http://localhost:8000/api/getuser/", {
@@ -99,7 +127,7 @@ const TeamComponent = ({ team }) => {
 
       const allZero = Object.values(data).every((value) => value === 0);
       if (allZero) {
-        setEmotionChartError("No Emotion Data Recorded ⚠");
+        setEmotionChartError(<NoData type="Emotion" />);
       } else {
         setEmotionChartError(null);
       }
@@ -109,7 +137,7 @@ const TeamComponent = ({ team }) => {
       const maxKey = keys[values.indexOf(maxValue)];
       setHighestEmotion({ key: maxKey, value: maxValue });
     } catch (error) {
-      console.error("Error fetching data:", error);
+      setEmotionChartError(<RetrieveError type="Emotion" />);
       setChartError("An error occurred!");
     }
   };
@@ -122,7 +150,7 @@ const TeamComponent = ({ team }) => {
       const data = response.data.days || {};
       const allZero = Object.values(data).every((value) => value === 0);
       if (allZero) {
-        setStressChartError("No Data Stress Recorded ⚠");
+        setStressChartError(<NoData type="Stress" />);
       } else {
         setStressChartError(null);
       }
@@ -134,11 +162,11 @@ const TeamComponent = ({ team }) => {
         setDailyStressData(data);
       }
     } catch (error) {
-      console.error("Error fetching stress data:", error);
+      setEmotionChartError(<RetrieveError type="Stress" />);
     }
   };
 
-  const fetchFocusData = async (period) => {
+  const fetchFocusData = async (team, period) => {
     try {
       const response = await axios.get("http://localhost:8000/api/focus", {
         params: { team_id: team, period: period },
@@ -146,7 +174,7 @@ const TeamComponent = ({ team }) => {
       const data = response.data.days || {};
       const allZero = Object.values(data).every((value) => value === 0);
       if (allZero) {
-        setFocusChartError("No Focus Data Recorded ⚠");
+        setFocusChartError(<NoData type="Focus" />);
       } else {
         setFocusChartError(null);
       }
@@ -157,9 +185,8 @@ const TeamComponent = ({ team }) => {
       } else if (period === "daily") {
         setDailyFocusData(data);
       }
-      //setFocusedData(data);
     } catch (error) {
-      console.error("Error fetching focus data:", error);
+      setEmotionChartError(<RetrieveError type="Focus" />);
     }
   };
 
@@ -171,7 +198,7 @@ const TeamComponent = ({ team }) => {
       const data = response.data.days || {};
       const allZero = Object.values(data).every((value) => value === 0);
       if (allZero) {
-        setBreathingChartError("No Data Recorded ⚠");
+        setBreathingChartError(<NoData type="Breathing Exercise" />);
       } else {
         setBreathingChartError(null);
       }
@@ -182,9 +209,9 @@ const TeamComponent = ({ team }) => {
       } else if (period === "daily") {
         setDailyExerciseData(data);
       }
-      setMostUsedExercise(response.data.most_used_exercise);
+      setMostUsedExercise(response.data.most_used_exercise || null);
     } catch (error) {
-      console.error("Error fetching exercise data:", error);
+      setEmotionChartError(<RetrieveError type="Breathing Exercise" />);
     }
   };
 
@@ -196,7 +223,7 @@ const TeamComponent = ({ team }) => {
       const data = response.data.days || {};
       const allZero = Object.values(data).every((value) => value === 0);
       if (allZero) {
-        setListeningChartError("No Data Recorded ⚠");
+        setListeningChartError(<NoData type="Audio Threapy" />);
       } else {
         setListeningChartError(null);
       }
@@ -207,21 +234,138 @@ const TeamComponent = ({ team }) => {
       } else if (period === "daily") {
         setDailyListeningData(data);
       }
-      setMostListenedTrack(response.data.most_listened_track);
+      setMostListenedTrack(response.data.most_listened_track || null);
     } catch (error) {
-      console.error("Error fetching listening data:", error);
+      //setEmotionChartError(<RetrieveError type="Audio Therapy" />);
+    }
+  };
+
+  //EXACT PERIOD FUNCTIONS
+  const fetchExactBreathingData = async (team, period, exact_period) => {
+    try {
+      const response = await axios.get(
+        "http://localhost:8000/api/exact_breathing/",
+        {
+          params: { team_id: team, period: period, exact_period: exact_period },
+        }
+      );
+      const data = response.data.days || {};
+      if (period === "daily") {
+        setDailyExerciseData(data);
+      } else if (period === "weekly") {
+        setWeeklyExerciseData(data);
+      } else if (period === "monthly") {
+        setMonthlyExerciseData(data);
+      }
+      console.log(data);
+    } catch (error) {
+      console.error("Error fetching exact breathing data:", error);
+    }
+  };
+
+  const fetchExactListeningData = async (team, period, exact_period) => {
+    try {
+      const response = await axios.get(
+        "http://localhost:8000/api/exact_listening/",
+        {
+          params: { team_id: team, period: period, exact_period: exact_period },
+        }
+      );
+      const data = response.data.days || {};
+      if (period === "daily") {
+        setDailyListeningData(data);
+      } else if (period === "weekly") {
+        setWeeklyListeningData(data);
+      } else if (period === "monthly") {
+        setMonthlyListeningData(data);
+      }
+      console.log(data);
+    } catch (error) {
+      console.error("Error fetching exact listening data:", error);
+    }
+  };
+
+  const fetchExactEmotionData = async (team, period, exact_period) => {
+    try {
+      const response = await axios.get(
+        "http://localhost:8000/api/exact_emotions/",
+        {
+          params: { team_id: team, period: period, exact_period: exact_period },
+        }
+      );
+      const data = response.data.defaultEmotionValues;
+      const hourlyEmotion = response.data.hourlyDominantEmotions;
+      setEmotions(data);
+      setHourlyEmotion(hourlyEmotion);
+
+      if (period === "daily") {
+        setDailyListeningData(data);
+      } else if (period === "weekly") {
+        setWeeklyListeningData(data);
+      } else if (period === "monthly") {
+        setMonthlyListeningData(data);
+      }
+      console.log(data);
+    } catch (error) {
+      console.error("Error fetching exact listening data:", error);
+    }
+  };
+
+  const fetchExactStressData = async (team, period, exact_period) => {
+    try {
+      const response = await axios.get(
+        "http://localhost:8000/api/exact_stress/",
+        {
+          params: { team_id: team, period: period, exact_period: exact_period },
+        }
+      );
+      const data = response.data.days || {};
+      if (period === "daily") {
+        setDailyStressData(data);
+      } else if (period === "weekly") {
+        setWeeklyStressData(data);
+      } else if (period === "monthly") {
+        setMonthlyStressData(data);
+      }
+      console.log(data);
+    } catch (error) {
+      console.error("Error fetching exact listening data:", error);
+    }
+  };
+
+  const fetchExactFocusData = async (team, period, exact_period) => {
+    try {
+      const response = await axios.get(
+        "http://localhost:8000/api/exact_focus/",
+        {
+          params: { team_id: team, period: period, exact_period: exact_period },
+        },
+        console.log(team_id, period, exact_period)
+      );
+      const data = response.data.days || {};
+      if (period === "daily") {
+        setDailyFocusData(data);
+      } else if (period === "weekly") {
+        setWeeklyFocusData(data);
+      } else if (period === "monthly") {
+        setMonthlyFocusData(data);
+      }
+      console.log(data);
+    } catch (error) {
+      console.error("Error fetching exact listening data:", error);
     }
   };
 
   useEffect(() => {
     if (team) {
       fetchUserData();
-      fetchStressData(team, stressView);
       fetchEmotionData(team, emotionView);
       fetchExerciseData(team, exerciseView);
       fetchListeningData(team, listeningView);
+      fetchStressData(team, stressView);
+      fetchFocusData(team, focusView);
     }
-  }, [exerciseView, listeningView, emotionView, stressView]);
+  }, [team, exerciseView, listeningView, emotionView, stressView, focusView]);
 
   const handleViewChange = (viewSetter, view, direction, viewsArray) => {
     const currentIndex = viewsArray.indexOf(view);
@@ -251,93 +395,151 @@ const TeamComponent = ({ team }) => {
   const isFocusLeftDisabled = focusView === "daily";
   const isFocusRightDisabled = focusView === "monthly";
 
-  const downloadPDF = async () => {
-    /*await axios.post("http://localhost:8000/api/report/", {
-        downloaded_by: userID,
-            })*/
-
-    const timestamp = new Date().toISOString();
-
-    const input = document.getElementById("report-content");
-
-    html2canvas(input, { scale: 2 })
-      .then((canvas) => {
-        const imgData = canvas.toDataURL("image/png");
-        const pdf = new jsPDF("p", "mm", "a4");
-        const imgWidth = pdf.internal.pageSize.getWidth();
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-        pdf.addImage(imgData, "PNG", 0, 20, imgWidth, imgHeight);
-
-        pdf.setFont("helvetica"); // Set font to helvetica
-        pdf.setFontSize(10); // Set font size to 16
-        pdf.setTextColor(0, 0, 255);
-
-        pdf
-          .text(`Team ${componenetUserData.team} Report`, 10, 10)
-          .setTextColor(0, 0, 0);
-        pdf.text(`Generated on: ${timestamp}`, 10, 15);
-        pdf.text(
-          `Generated By: ${userRole} - ${componenetUserData.first_name} ${componenetUserData.last_name}`,
-          10,
-          20
-        );
-
-        pdf.save(`team_${team}_report_${timestamp}.pdf`);
-      })
-      .catch((error) => {
-        console.error("Error generating PDF:", error);
-      });
-  };
-
-  useEffect(() => {
-    if (team) {
-      fetchFocusData(focusView);
-    }
-  }, [team, focusView]);
-
   const handlePeriodChange = (period) => {
     setEmotionView(period);
     setStressView(period);
     setExerciseView(period);
     setListeningView(period);
     setFocusView(period);
+    setPeriodForExact(period);
 
     fetchEmotionData(period);
     fetchStressData(period);
     fetchExerciseData(period);
     fetchListeningData(period);
     fetchFocusData(period);
+
+    if (period === "daily") {
+      setCalType("date");
+      setSelectedDate(new Date());
+    } else if (period === "weekly") {
+      setCalType("week");
+    } else if (period === "monthly") {
+      setCalType("month");
+    }
+  };
+
+  const handleDateChange = (date) => {
+    const exact_period = date.target.value;
+    setSelectedDate(new Date(exact_period));
+    fetchExactBreathingData(periodForExact, exact_period);
+    fetchExactListeningData(periodForExact, exact_period);
+    fetchExactEmotionData(periodForExact, exact_period);
+    fetchExactFocusData(periodForExact, exact_period);
+    fetchExactStressData(periodForExact, exact_period);
+  };
+
+  const [isEmotionOverlayOpen, setIsEmotionOverlayOpen] = useState(false);
+  const [isStressOverlayOpen, setIsStressOverlayOpen] = useState(false);
+  const [isFocusOverlayOpen, setIsFocusOverlayOpen] = useState(false);
+  const [isBreathingOverlayOpen, setIsBreathingOverlayOpen] = useState(false);
+  const [isListeningOverlayOpen, setIsListeningOverlayOpen] = useState(false);
+
+  const openEmotionOverlay = () => {
+    setIsEmotionOverlayOpen(true);
+  };
+
+  const closeEmotionOverlay = () => {
+    setIsEmotionOverlayOpen(false);
+  };
+
+  const openStressOverlay = () => {
+    setIsStressOverlayOpen(true);
+  };
+
+  const closeStressOverlay = () => {
+    setIsStressOverlayOpen(false);
+  };
+
+  const openFocusOverlay = () => {
+    setIsFocusOverlayOpen(true);
+  };
+
+  const closeFocusOverlay = () => {
+    setIsFocusOverlayOpen(false);
+  };
+
+  const openBreathingOverlay = () => {
+    setIsBreathingOverlayOpen(true);
+  };
+
+  const closeBreathingOverlay = () => {
+    setIsBreathingOverlayOpen(false);
+  };
+
+  const openListeningOverlay = () => {
+    setIsListeningOverlayOpen(true);
+  };
+
+  const closeListeningOverlay = () => {
+    setIsListeningOverlayOpen(false);
+  };
+
+  const generateReport = () => {
+    downloadPDF({
+      componenetName: `Team Overview ${team}`,
+      team: team,
+      name: name,
+      userRole: role,
+      orientation: "",
+    });
   };
 
   return (
-    <div className={`min-h-screen ${Color.background} `}>
+    <div className={`min-h-screen ${Color.background}`}>
+
+      <div> 
+        {(userRole === "Admin" || userRole === "Supervisor") && (
+          <button
+            className={`flex items-center px-4 py-2 rounded-md ${ReportButton.base} ${ReportButton.hover}`}
+            onClick={generateReport}
+            title="in PDF format"
+          >
+            <IoMdDownload className="mr-2" /> Generate Report
+          </button>
+        )}
+      </div>
+
+      <div  id="Team Overview report-content">
       <div className="container  mx-auto py-2 px-4 md:px-20 lg:px-12 xl:px-48">
         {/*Period Selection Buttons */}
 
         <div className={` ${Color.outSideCard} rounded-xl px-6 py-6`}>
-          <div className="flex justify-between">
-            <div>
-              {["daily", "weekly", "monthly"].map((period) => (
-                <button
-                  key={period}
-                  className={`mx-2 px-4 py-2 rounded ${
-                    emotionView === period
-                      ? BtnColor.dashBoardBtnSelected
-                      : BtnColor.dashBoardBtnIdel
-                  } `}
-                  onClick={() => handlePeriodChange(period)}
-                >
-                  {period.charAt(0).toUpperCase() + period.slice(1)}
-                </button>
-              ))}
+          <div>
+            {/*Date Picker Componenet*/}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                {["daily", "weekly", "monthly"].map((period) => (
+                  <button
+                    key={period}
+                    className={`mx-2 px-4 py-2 rounded ${
+                      emotionView === period
+                        ? BtnColor.dashBoardBtnSelected
+                        : BtnColor.dashBoardBtnIdel
+                    } `}
+                    onClick={() => handlePeriodChange(period)}
+                  >
+                    {period.charAt(0).toUpperCase() + period.slice(1)}
+                  </button>
+                ))}
+              </div>
+              <div className={`flex items-center align-super `}>
+                <input
+                  type={calType}
+                  selected={selectedDate}
+                  onChange={handleDateChange}
+                  //showPopperArrow={false}
+                  className="cursor-pointer text-lg rounded-lg py-1 px-3 text-white bg-emerald-500"
+                  style={{ caretColor: "transparent" }}
+                />
+              </div>
             </div>
 
             <div>
               {(userRole === "Admin" || userRole === "Supervisor") && (
                 <button
-                  className={`bg-sky-500  px-4 py-2 rounded-md mb-5 flex ${BtnColor.primary}`}
-                  onClick={downloadPDF}
+                  className={`content-center bg-sky-500  px-4 py-2 rounded-md mb-5 flex ${BtnColor.primary}`}
+                  onClick={generateReport}
                   title="in PDF format"
                 >
                   <LuFileDown /> Download Report
@@ -353,6 +555,7 @@ const TeamComponent = ({ team }) => {
             {/* PIE CHART */}
             <div className={`rounded-lg  ${Color.chartsBGText} m-4 p-6`}>
               <div className="text-center flex-auto">
+                <IoHelpCircleOutline size={25} />
                 <h5 className="text-2xl font-semibold  mb-5">
                   {emotionView === "daily"
                     ? "Daily Emotions"
@@ -363,9 +566,15 @@ const TeamComponent = ({ team }) => {
                     : "Overall Emotions"}
                 </h5>
 
-                <button className=" hover:text-sky-600">
-                  <FaArrowRightArrowLeft size={20} />
-                </button>
+                <div>
+                  <button
+                    onClick={openEmotionOverlay}
+                    className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
+                    title="Compare Emotion Data"
+                  >
+                    <FaArrowRightArrowLeft size={20} />
+                  </button>
+                </div>
 
                 {emotionChartError ? (
                   <h2 className="text-xl  mt-4">{emotionChartError}</h2>
@@ -398,6 +607,16 @@ const TeamComponent = ({ team }) => {
                     ? "Weekly Stress Levels"
                     : "Monthly Stress Levels"}
                 </h5>
+                <div>
+                  <button
+                    onClick={openStressOverlay}
+                    className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
+                    title="Compare Emotion Data"
+                  >
+                    <FaArrowRightArrowLeft size={20} />
+                  </button>
+                </div>
+
                 {stressChartError ? (
                   <h2 className="text-xl  mt-4">{stressChartError}</h2>
                 ) : (
@@ -429,6 +648,15 @@ const TeamComponent = ({ team }) => {
                     ? "Weekly Focus Data"
                     : "Monthly Focus Data"}
                 </h5>
+                <div>
+                  <button
+                    onClick={openFocusOverlay}
+                    className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
+                    title="Compare Focus data"
+                  >
+                    <FaArrowRightArrowLeft size={20} />
+                  </button>
+                </div>
                 {focusChartError ? (
                   <h2 className="text-xl  mt-4">{listeningChartError}</h2>
                 ) : (
@@ -456,6 +684,15 @@ const TeamComponent = ({ team }) => {
                     ? "Weekly Breathing Exercise Usage"
                     : "Monthly Breathing Exercise Usage"}
                 </h5>
+                <div>
+                  <button
+                    onClick={openBreathingOverlay}
+                    className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
+                    title="Compare Breathing Exercise Usage"
+                  >
+                    <FaArrowRightArrowLeft size={20} />
+                  </button>
+                </div>
                 {breathingChartError ? (
                   <h2 className="text-xl  mt-4">{breathingChartError}</h2>
                 ) : (
@@ -496,6 +733,15 @@ const TeamComponent = ({ team }) => {
                     ? "Weekly Track Listening Usage"
                     : "Monthly Track Listening Usage"}
                 </h5>
+                <div>
+                  <button
+                    onClick={openListeningOverlay}
+                    className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
+                    title="Compare Audio Therapy Usage"
+                  >
+                    <FaArrowRightArrowLeft size={20} />
+                  </button>
+                </div>
                 {listeningChartError ? (
                   <h2 className="text-xl  mt-4">{listeningChartError}</h2>
                 ) : (
@@ -551,7 +797,90 @@ const TeamComponent = ({ team }) => {
             </div>
           </div>
         </div>
+        <div></div>
       </div>
+
+      {isEmotionOverlayOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="relative bg-white p-6 rounded-md shadow-lg">
+            <button
+              onClick={closeEmotionOverlay}
+              className={` text-black absolute top-2 right-2 ${BtnClose.base} ${BtnClose.hover} ${BtnClose.rotate}`}
+            >
+              <IoClose size={25} />
+            </button>
+            <div className="flex justify-center items-center">
+              <EmotionCompare team={team} period={periodForExact} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isStressOverlayOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="relative bg-white p-6 rounded-md shadow-lg">
+            <button
+              onClick={closeStressOverlay}
+              className={` text-black absolute top-2 right-2 ${BtnClose.base} ${BtnClose.hover}`}
+            >
+              <IoClose size={25} />
+            </button>
+
+            <div className="flex justify-center items-center">
+              <StressCompare team={team} period={periodForExact} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isFocusOverlayOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="relative bg-white p-6 rounded-md shadow-lg">
+            <button
+              onClick={closeFocusOverlay}
+              className={`${BtnClose.base} ${BtnClose.hover}`}
+            >
+              <IoClose size={25} />
+            </button>
+            <div>
+              <FocusCompare team={team} period={periodForExact} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isBreathingOverlayOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="relative bg-white p-6 rounded-md shadow-lg">
+            <button
+              onClick={closeBreathingOverlay}
+              className={`${BtnClose.base} ${BtnClose.hover}`}
+            >
+              <IoClose size={25} />
+            </button>
+            <div>
+              <BreathingCompare team={team} period={periodForExact} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isListeningOverlayOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="relative bg-white p-6 rounded-md shadow-lg">
+            <button
+              onClick={closeListeningOverlay}
+              className={`${BtnClose.base} ${BtnClose.hover}`}
+            >
+              <IoClose />
+            </button>
+            <div>
+              <ListeningCompare team={team} period={periodForExact} />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
     </div>
   );
 };

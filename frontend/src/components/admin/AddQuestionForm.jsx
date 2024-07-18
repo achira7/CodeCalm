@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { Link, useNavigate } from 'react-router-dom';
 
 const StressQuestionForm = () => {
   const [questions, setQuestions] = useState([]);
@@ -152,6 +153,25 @@ const StressQuestionForm = () => {
   return (
     <div className="max-w-md mx-auto mt-8 p-4 bg-white shadow-md rounded-md">
       <ToastContainer />
+      <Link to="/admin/settings">
+          <div className="flex items-center mx-5 hover: transition-transform duration-300 cursor-pointer">
+            <svg
+              className="fill-sky-500"
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              id="back-arrow"
+            >
+              <path fill="none" d="M0 0h24v24H0V0z" opacity=".87"></path>
+              <path d="M16.62 2.99c-.49-.49-1.28-.49-1.77 0L6.54 11.3c-.39.39-.39 1.02 0 1.41l8.31 8.31c.49.49 1.28.49 1.77 0s.49-1.28 0-1.77L9.38 12l7.25-7.25c.48-.48.48-1.28-.01-1.76z"></path>
+            </svg>
+            <p className="text-sky-500 font-semibold font google text-lg mx-3">
+              To Settings Portal
+            </p>
+          </div>
+        </Link>
+
       <h2 className="text-xl font-bold mb-4">{editQuestionId ? 'Edit Stress Question' : 'Add New Stress Question'}</h2>
       <form onSubmit={editQuestionId ? handleUpdateQuestion : handleNewQuestionSubmit}>
         <label htmlFor="newQuestion" className="block text-sm font-medium text-gray-700">
