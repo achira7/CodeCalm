@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import moment from "moment";
-import { Color } from "../../theme/Colors";
+import { IoMdDownload } from "react-icons/io";
+import { Color, PrimColor } from "../../theme/Colors";
 import { BtnColor, ReportButton } from "../../theme/ButtonTheme";
 import TwoValueBarChart from "../charts/TwoValueBarChart";
 import { NoData } from "../../theme/ChartError";
 import { RetrieveError } from "../../theme/ChartError";
 import { downloadPDF } from "../DownloadReport";
-
-import { IoMdDownload } from "react-icons/io";
 
 const FocusCompare = ({ id, name, userRole, team, period }) => {
   const [focusA, setFocusA] = useState("");
@@ -140,11 +139,83 @@ const FocusCompare = ({ id, name, userRole, team, period }) => {
   };
 
   return (
-    <div className={`${Color.background} rounded-lg m-4 p-6`}>
-      <div>
+    <div className={`${Color.background} rounded-lg`}>
+      <div
+        id="Focus Compare report-content"
+        className=" flex flex-row rounded-lg m-4 p-6"
+      >
+        <div
+          className={` ${Color.chartsBGText} ${PrimColor.card} rounded-lg m-4 p-6`}
+        >
+          <div className="flex justify-center">
+            <h2> Focus Data on: </h2>
+            <input
+              type={calType}
+              value={selectedDateA}
+              onChange={handleDateChangeA}
+              className="cursor-pointer border p-1 rounded"
+            />
+          </div>
+          {chartErrorA ? (
+            <h2 className="text-xl  mt-4">{chartErrorA}</h2>
+          ) : (
+            <div className=" flex justify-center items-center">
+              <div className="max-w-[350px] max-h-[350px] p-5">
+                <TwoValueBarChart
+                  data={
+                    {
+                      daily: focusA,
+                      weekly: focusA,
+                      monthly: focusA,
+                    }[focusView]
+                  }
+                  period={period}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+        {/*Exact Focus*/}
+        <div
+          className={` ${Color.chartsBGText} ${PrimColor.card} rounded-lg m-4 p-6 `}
+        >
+          <div className="flex justify-center  flex-col">
+            <div className="flex flex-row justify-center">
+              <h2>Focus Data on:</h2>
+              <input
+                type={calType}
+                value={selectedDateB}
+                onChange={handleDateChangeB}
+                className="cursor-pointer"
+              />
+            </div>
+            {chartErrorB ? (
+              <h2 className="text-xl mt-4">{chartErrorB}</h2>
+            ) : (
+              <div>
+                <div className="flex flex-cols lg:flex-row">
+                  <div className="max-w-[350px] max-h-[350px] p-5">
+                    <TwoValueBarChart
+                      data={
+                        {
+                          daily: focusB,
+                          weekly: focusB,
+                          monthly: focusB,
+                        }[focusView]
+                      }
+                      period={period}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+      <div className="flex justify-center mt-4">
         {(userRole === "Admin" || userRole === "Supervisor") && (
           <button
-            className={`flex items-center px-4 py-2 rounded-md ${ReportButton.base} ${ReportButton.hover}`}
+            className={`flex items-center px-4 py-2 rounded-md ${ReportButton.base} ${ReportButton.hover} mb-4`}
             onClick={generateReport}
             title="in PDF format"
           >
@@ -152,61 +223,6 @@ const FocusCompare = ({ id, name, userRole, team, period }) => {
           </button>
         )}
       </div>
-
-      <div id="Focus Compare report-content">
-      <div className="flex flex-cols lg:flex-row rounded-lg m-4 p-6">
-        <div className={` ${Color.chartsBGText}   rounded-lg m-4 p-6 `}>
-          <h2> Focus Data on: </h2>
-          <input
-            type={calType}
-            value={selectedDateA}
-            onChange={handleDateChangeA}
-            className="cursor-pointer"
-          />
-          {chartErrorA ? (
-            <h2 className="text-xl">{chartErrorA}</h2>
-          ) : (
-            <TwoValueBarChart
-              data={
-                {
-                  daily: focusA,
-                  weekly: focusA,
-                  monthly: focusA,
-                }[focusView]
-              }
-              period={period}
-            />
-          )}
-        </div>
-
-        {/*Exact Focus*/}
-        <div className={`${Color.chartsBGText} rounded-lg  m-4 p-6`}>
-          <div className={`flex items-center align-super `}>
-            <h2>Focus Data on:</h2>
-            <input
-              type={calType}
-              value={selectedDateB}
-              onChange={handleDateChangeB}
-              className="cursor-pointer"
-            />
-          </div>
-          {chartErrorB ? (
-            <h2 className="text-xl  mt-4">{chartErrorB}</h2>
-          ) : (
-            <TwoValueBarChart
-              data={
-                {
-                  daily: focusB,
-                  weekly: focusB,
-                  monthly: focusB,
-                }[focusView]
-              }
-              period={period}
-            />
-          )}
-        </div>
-      </div>
-    </div>
     </div>
   );
 };

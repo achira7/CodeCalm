@@ -4,6 +4,7 @@ import axios from "axios";
 import moment from "moment";
 
 import { Color } from "../../theme/Colors";
+import { PrimColor } from "../../theme/Colors";
 import { BtnColor } from "../../theme/ButtonTheme";
 import { NoData } from "../../theme/ChartError";
 import { RetrieveError } from "../../theme/ChartError";
@@ -12,9 +13,7 @@ import { ReportButton } from "../../theme/ButtonTheme";
 
 import { IoMdDownload } from "react-icons/io";
 
-
 const EmotionCompare = ({ id, name, userRole, team, period }) => {
-
   const [emotionsA, setEmotionsA] = useState({
     angry: 0,
     disgust: 0,
@@ -184,119 +183,78 @@ const EmotionCompare = ({ id, name, userRole, team, period }) => {
   };
 
   const generateReport = () => {
-    downloadPDF({ componenetName: "Emotion Compare", team: team, name: name, userRole:userRole, orientation:"l" });
+    downloadPDF({
+      componenetName: "Emotion Compare",
+      team: team,
+      name: name,
+      userRole: userRole,
+      orientation: "l",
+    });
   };
 
   return (
-    <div className={`${Color.background} rounded-lg m-4 p-6`}>
-      <div>
-        {(userRole === "Admin" || userRole === "Supervisor") && (
-          <button
-            className={`flex items-center px-4 py-2 rounded-md ${ReportButton.base} ${ReportButton.hover}`}
-            onClick={generateReport}
-            title="in PDF format"
-          >
-            <IoMdDownload className="mr-2" /> Generate Report
-          </button>
-        )}
-      </div>
-        <div id="Emotion Compare report-content">
-      <div className="flex flex-cols lg:flex-row rounded-lg m-4 p-6">
-        <div className={` ${Color.chartsBGText}   rounded-lg m-4 p-6 `}>
-          <h2> Emotion Data on: </h2>
-          <input
-            type={calType}
-            value={selectedDateA}
-            onChange={handleDateChangeA}
-            className="cursor-pointer"
-          />
+    <div className={`${Color.background} rounded-lg flex flex-col justify-between min-h-full p-4`}>
+    <div className="flex-grow">
+      <div
+        id="Emotion Compare report-content"
+        className="flex flex-row rounded-lg m-4 p-6"
+      >
+        <div className={`${Color.chartsBGText} ${PrimColor.card} rounded-lg m-4 p-6 flex flex-col`}>
+          <div className="flex justify-center mb-4">
+            <h2>Emotion Data on:</h2>
+            <input
+              type={calType}
+              value={selectedDateA}
+              onChange={handleDateChangeA}
+              className="cursor-pointer border p-1 rounded ml-2"
+            />
+          </div>
           {chartErrorA ? (
-            <h2 className="text-xl  mt-4">{chartErrorA}</h2>
+            <h2 className="text-xl mt-4">{chartErrorA}</h2>
           ) : (
-            <div className="relative">
-              <DoughnutChart {...emotionsA} />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <img
-                  className="w-16"
-                  src={`http://127.0.0.1:8000/media/emojis/${highestEmotion.key}.png`}
-                  alt={highestEmotion.key}
-                  title={`Highest emotion is: ${highestEmotion.key}`}
-                />
-              </div>
-
-              <div className="flex flex-wrap justify-center mt-4">
-                {Object.keys(hourlyEmotionA).map((hour, index) => (
-                  <div key={index} className="text-center">
-                    {hourlyEmotionA[hour] ? (
-                      <div>
-                        <img
-                          className="w-10"
-                          src={`http://127.0.0.1:8000/media/emojis/${hourlyEmotionA[hour]}.png`}
-                          alt={hourlyEmotionA[hour]}
-                          title={hourlyEmotionA[hour]}
-                        />
-                      </div>
-                    ) : (
-                      <span className="text-xl"> - </span>
-                    )}
-                    <p className="text-sm">{hour.split(" ")[0]}</p>
-                  </div>
-                ))}
+            <div className="flex justify-center items-center">
+              <div className="max-w-[350px] max-h-[350px] p-5">
+                <DoughnutChart {...emotionsA} />
               </div>
             </div>
           )}
         </div>
-      </div>
 
-      <div className={` ${Color.chartsBGText}  rounded-lg m-4 p-6 `}>
-        <div className="flex flex-col items-center">
-          <h2>Emotion Data on:</h2>
-          <input
-            type={calType}
-            value={selectedDateB}
-            onChange={handleDateChangeB}
-            className="cursor-pointer"
-          />
+        <div className={`${Color.chartsBGText} ${PrimColor.card} rounded-lg m-4 p-6 flex flex-col`}>
+          <div className="flex justify-center mb-4">
+            <h2>Emotion Data on:</h2>
+            <input
+              type={calType}
+              value={selectedDateB}
+              onChange={handleDateChangeB}
+              className="cursor-pointer border p-1 rounded ml-2"
+            />
+          </div>
           {chartErrorB ? (
             <h2 className="text-xl mt-4">{chartErrorB}</h2>
           ) : (
-            <div className="relative">
-              <div className="flex flex-cols lg:flex-row">
+            <div className="flex justify-center items-center">
+              <div className="max-w-[350px] max-h-[350px] p-5">
                 <DoughnutChart {...emotionsB} />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <img
-                    className="w-16"
-                    src={`http://127.0.0.1:8000/media/emojis/${highestEmotion.key}.png`}
-                    alt={highestEmotion.key}
-                    title={`Highest emotion is: ${highestEmotion.key}`}
-                  />
-                </div>
-              </div>
-              <div className="flex flex-wrap justify-center mt-4">
-                {Object.keys(hourlyEmotionB).map((hour, index) => (
-                  <div key={index} className="text-center">
-                    {hourlyEmotionB[hour] ? (
-                      <div>
-                        <img
-                          className="w-10"
-                          src={`http://127.0.0.1:8000/media/emojis/${hourlyEmotionB[hour]}.png`}
-                          alt={hourlyEmotionB[hour]}
-                          title={hourlyEmotionB[hour]}
-                        />
-                      </div>
-                    ) : (
-                      <span className="text-xl"> - </span>
-                    )}
-                    <p className="text-sm">{hour.split(" ")[0]}</p>
-                  </div>
-                ))}
               </div>
             </div>
           )}
         </div>
       </div>
     </div>
+    <div className="flex justify-center mt-4">
+      {(userRole === "Admin" || userRole === "Supervisor") && (
+        <button
+          className={`flex items-center px-4 py-2 rounded-md ${ReportButton.base} ${ReportButton.hover} mb-4`}
+          onClick={generateReport}
+          title="in PDF format"
+        >
+          <IoMdDownload className="mr-2" /> Generate Report
+        </button>
+      )}
     </div>
-  );
+  </div>
+);
 };
+
 export default EmotionCompare;

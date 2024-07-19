@@ -487,400 +487,376 @@ const TeamComponent = ({ team, role }) => {
 
   return (
     <div className={`min-h-screen ${Color.background}`}>
+      <div id="Team Overview report-content">
+        <div className="container mx-auto py-2 px-4 md:px-20 lg:px-12 xl:px-48">
+          {/*Period Selection Buttons */}
 
-      <div> 
-        {(userRole === "Admin" || userRole === "Supervisor") && (
-          <button
-            className={`flex items-center px-4 py-2 rounded-md ${ReportButton.base} ${ReportButton.hover}`}
-            onClick={generateReport}
-            title="in PDF format"
-          >
-            <IoMdDownload className="mr-2" /> Generate Report
-          </button>
-        )}
-      </div>
-
-      <div  id="Team Overview report-content">
-      <div className="container  mx-auto py-2 px-4 md:px-20 lg:px-12 xl:px-48">
-        {/*Period Selection Buttons */}
-
-        <div className={` ${Color.outSideCard} rounded-xl px-6 py-6`}>
-          <div>
-            {/*Date Picker Componenet*/}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                {["daily", "weekly", "monthly"].map((period) => (
-                  <button
-                    key={period}
-                    className={`mx-2 px-4 py-2 rounded ${
-                      emotionView === period
-                        ? BtnColor.dashBoardBtnSelected
-                        : BtnColor.dashBoardBtnIdel
-                    } `}
-                    onClick={() => handlePeriodChange(period)}
-                  >
-                    {period.charAt(0).toUpperCase() + period.slice(1)}
-                  </button>
-                ))}
-              </div>
-              <div className={`flex items-center align-super `}>
-                <input
-                  type={calType}
-                  selected={selectedDate}
-                  onChange={handleDateChange}
-                  //showPopperArrow={false}
-                  className="cursor-pointer text-lg rounded-lg py-1 px-3 text-white bg-emerald-500"
-                  style={{ caretColor: "transparent" }}
-                />
-              </div>
-            </div>
-
+          <div className={` ${Color.outSideCard} rounded-xl px-6 py-6`}>
             <div>
-              {(userRole === "Admin" || userRole === "Supervisor") && (
-                <button
-                  className={`content-center bg-sky-500  px-4 py-2 rounded-md mb-5 flex ${BtnColor.primary}`}
-                  onClick={generateReport}
-                  title="in PDF format"
-                >
-                  <LuFileDown /> Download Report
-                </button>
-              )}
-            </div>
-          </div>
-
-          <div
-            className="grid grid-cols-1  lg:grid-cols-2 xl:grid-cols-2 gap-0 justify-center"
-            id="report-content"
-          >
-            {/* PIE CHART */}
-            <div className={`rounded-lg  ${Color.chartsBGText} m-4 p-6`}>
-              <div className="text-center flex-auto">
-                <IoHelpCircleOutline size={25} />
-                <h5 className="text-2xl font-semibold  mb-5">
-                  {emotionView === "daily"
-                    ? "Daily Emotions"
-                    : emotionView === "weekly"
-                    ? "Weekly Emotions"
-                    : emotionView === "monthly"
-                    ? "Monthly Emotions"
-                    : "Overall Emotions"}
-                </h5>
-
-                <div>
-                  <button
-                    onClick={openEmotionOverlay}
-                    className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
-                    title="Compare Emotion Data"
-                  >
-                    <FaArrowRightArrowLeft size={20} />
-                  </button>
+              {/* Date Picker Component */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  {["daily", "weekly", "monthly"].map((period) => (
+                    <button
+                      key={period}
+                      className={`mx-2 px-4 py-2 rounded-lg ${
+                        emotionView === period
+                          ? BtnColor.dashBoardBtnSelected
+                          : BtnColor.dashBoardBtnIdel
+                      } `}
+                      onClick={() => handlePeriodChange(period)}
+                    >
+                      {period.charAt(0).toUpperCase() + period.slice(1)}
+                    </button>
+                  ))}
+                  <input
+                    type={calType}
+                    selected={selectedDate}
+                    onChange={handleDateChange}
+                    className="cursor-pointer text-lg rounded-lg py-1 px-3 text-white bg-emerald-500 ml-2"
+                    style={{ caretColor: "transparent" }}
+                  />
                 </div>
+                <div>
+                  {(userRole === "Admin" || userRole === "Supervisor") && (
+                    <button
+                      className={`flex items-center px-4 py-2 rounded-md ${ReportButton.base} ${ReportButton.hover}`}
+                      onClick={generateReport}
+                      title="in PDF format"
+                    >
+                      <IoMdDownload className="mr-2" /> Generate Report
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
 
-                {emotionChartError ? (
-                  <h2 className="text-xl  mt-4">{emotionChartError}</h2>
-                ) : (
+            <div
+              className="grid grid-cols-1  lg:grid-cols-2 xl:grid-cols-2 gap-0 justify-center"
+              id="report-content"
+            >
+              {/* Emotions */}
+              <div className={`rounded-lg  ${Color.chartsBGText} m-4 p-6`}>
+                <div className="text-center flex-auto">
+                  <IoHelpCircleOutline size={25} />
+                  <h5 className="text-2xl font-semibold  mb-5">
+                    {emotionView === "daily"
+                      ? "Daily Emotions"
+                      : emotionView === "weekly"
+                      ? "Weekly Emotions"
+                      : emotionView === "monthly"
+                      ? "Monthly Emotions"
+                      : "Overall Emotions"}
+                  </h5>
+
                   <div>
-                    <div className="flex items-center justify-center">
-                      <DoughnutChart {...emotions} />
+                    <button
+                      onClick={openEmotionOverlay}
+                      className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
+                      title="Compare Emotion Data"
+                    >
+                      <FaArrowRightArrowLeft size={20} />
+                    </button>
+                  </div>
 
-                      <div className="mb-24" id="highestEmotion">
-                        <img
-                          className=""
-                          src={`http://127.0.0.1:8000/media/emojis/${highestEmotion.key}.png`}
-                          alt={highestEmotion.key}
-                          title={`Highest emotion is: ${highestEmotion.key}`}
-                        />
+                  {emotionChartError ? (
+                    <h2 className="text-xl  mt-4">{emotionChartError}</h2>
+                  ) : (
+                    <div>
+                      <div className="flex items-center justify-center">
+                        <DoughnutChart {...emotions} />
                       </div>
                     </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Stress Data */}
-            <div className={`${Color.chartsBGText} rounded-lg  m-4 p-6`}>
-              <div className="text-center">
-                <h5 className="text-2xl font-semibold  mb-5">
-                  {stressView === "daily"
-                    ? "Daily Stress Levels"
-                    : stressView === "weekly"
-                    ? "Weekly Stress Levels"
-                    : "Monthly Stress Levels"}
-                </h5>
-                <div>
-                  <button
-                    onClick={openStressOverlay}
-                    className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
-                    title="Compare Emotion Data"
-                  >
-                    <FaArrowRightArrowLeft size={20} />
-                  </button>
-                </div>
-
-                {stressChartError ? (
-                  <h2 className="text-xl  mt-4">{stressChartError}</h2>
-                ) : (
-                  <BarChart
-                    data={
-                      {
-                        daily: dailyStressData,
-                        weekly: weeklyStressData,
-                        monthly: monthlyStressData,
-                      }[stressView]
-                    }
-                    period={stressView}
-                  />
-                )}
-                <div className="mt-6">
-                  Use the filteration button on top to filter this result more.
-                  You can hover to view more details.
-                </div>
-              </div>
-            </div>
-
-            {/* Focus Data */}
-            <div className={` ${Color.chartsBGText}   rounded-lg m-4 p-6 `}>
-              <div className="text-center">
-                <h5 className="text-2xl font-semibold  mb-5">
-                  {focusView === "daily"
-                    ? "Daily Focus Data"
-                    : focusView === "weekly"
-                    ? "Weekly Focus Data"
-                    : "Monthly Focus Data"}
-                </h5>
-                <div>
-                  <button
-                    onClick={openFocusOverlay}
-                    className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
-                    title="Compare Focus data"
-                  >
-                    <FaArrowRightArrowLeft size={20} />
-                  </button>
-                </div>
-                {focusChartError ? (
-                  <h2 className="text-xl  mt-4">{listeningChartError}</h2>
-                ) : (
-                  <TwoValueBarChart
-                    data={
-                      {
-                        daily: dailyFocusData,
-                        weekly: weeklyFocusData,
-                        monthly: monthlyFocusData,
-                      }[focusView]
-                    }
-                    period={focusView}
-                  />
-                )}
-              </div>
-            </div>
-
-            {/* Exercise Data */}
-            <div className={` ${Color.chartsBGText}  rounded-lg  m-4 p-6`}>
-              <div className="text-center">
-                <h5 className="text-2xl font-semibold  mb-5">
-                  {exerciseView === "daily"
-                    ? "Daily Breathing Exercise Usage"
-                    : exerciseView === "weekly"
-                    ? "Weekly Breathing Exercise Usage"
-                    : "Monthly Breathing Exercise Usage"}
-                </h5>
-                <div>
-                  <button
-                    onClick={openBreathingOverlay}
-                    className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
-                    title="Compare Breathing Exercise Usage"
-                  >
-                    <FaArrowRightArrowLeft size={20} />
-                  </button>
-                </div>
-                {breathingChartError ? (
-                  <h2 className="text-xl  mt-4">{breathingChartError}</h2>
-                ) : (
-                  <LineChart
-                    data={
-                      {
-                        daily: dailyExerciseData,
-                        weekly: weeklyExerciseData,
-                        monthly: monthlyExerciseData,
-                      }[exerciseView]
-                    }
-                  />
-                )}
-
-                {mostUsedExercise && (
-                  <div className="mt-4">
-                    <h5 className="text-lg font-semibold  mb-2">
-                      Most Used Exercise:
-                    </h5>
-                    <p className="">{mostUsedExercise.exercise_name}</p>
-                    <p className="">
-                      Total Duration:{" "}
-                      {(mostUsedExercise.total_duration / 60.0).toFixed(2)}{" "}
-                      minutes
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Listening Data */}
-            <div className={` ${Color.chartsBGText}   rounded-lg m-4 p-6 `}>
-              <div className="text-center">
-                <h5 className="text-2xl font-semibold  mb-5">
-                  {listeningView === "daily"
-                    ? "Daily Track Listening Usage"
-                    : listeningView === "weekly"
-                    ? "Weekly Track Listening Usage"
-                    : "Monthly Track Listening Usage"}
-                </h5>
-                <div>
-                  <button
-                    onClick={openListeningOverlay}
-                    className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
-                    title="Compare Audio Therapy Usage"
-                  >
-                    <FaArrowRightArrowLeft size={20} />
-                  </button>
-                </div>
-                {listeningChartError ? (
-                  <h2 className="text-xl  mt-4">{listeningChartError}</h2>
-                ) : (
-                  <LineChart
-                    data={
-                      {
-                        daily: dailyListeningData,
-                        weekly: weeklyListeningData,
-                        monthly: monthlyListeningData,
-                      }[listeningView]
-                    }
-                  />
-                )}
-
-                {mostListenedTrack && (
-                  <div className="mt-4">
-                    <h5 className="text-lg font-semibold mb-2">
-                      Most Listened Track:
-                    </h5>
-                    <p className="">{mostListenedTrack.track_name}</p>
-                    <p className="">
-                      Total Duration:{" "}
-                      {(mostListenedTrack.total_duration / 60).toFixed(2)}{" "}
-                      minutes
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Emotion based on Hours */}
-          <div className={` ${Color.chartsBGText}  rounded-lg mx-4 p-6`}>
-            <h5 className="text-xl font-semibold">Dominant Emotion by Hour</h5>
-            <div className="flex flex-wrap justify-center gap-10 mt-4 w-full">
-              {Object.keys(hourlyEmotion).map((hour, index) => (
-                <div key={index} className="text-center">
-                  {hourlyEmotion[hour] ? (
-                    <div>
-                      <img
-                        className="w-10"
-                        src={`http://127.0.0.1:8000/media/emojis/${hourlyEmotion[hour]}.png`}
-                        alt={hourlyEmotion[hour]}
-                        title={hourlyEmotion[hour]}
-                      />
-                    </div>
-                  ) : (
-                    <span className="text-xl"> - </span>
                   )}
-                  <p className="text-sm">{hour.split(" ")[0]}</p>
                 </div>
-              ))}
+              </div>
+
+              {/* Stress Data */}
+              <div className={`${Color.chartsBGText} rounded-lg  m-4 p-6`}>
+                <div className="text-center">
+                  <h5 className="text-2xl font-semibold  mb-5">
+                    {stressView === "daily"
+                      ? "Daily Stress Levels"
+                      : stressView === "weekly"
+                      ? "Weekly Stress Levels"
+                      : "Monthly Stress Levels"}
+                  </h5>
+                  <div>
+                    <button
+                      onClick={openStressOverlay}
+                      className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
+                      title="Compare Emotion Data"
+                    >
+                      <FaArrowRightArrowLeft size={20} />
+                    </button>
+                  </div>
+
+                  {stressChartError ? (
+                    <h2 className="text-xl  mt-4">{stressChartError}</h2>
+                  ) : (
+                    <BarChart
+                      data={
+                        {
+                          daily: dailyStressData,
+                          weekly: weeklyStressData,
+                          monthly: monthlyStressData,
+                        }[stressView]
+                      }
+                      period={stressView}
+                    />
+                  )}
+                  <div className="mt-6">
+                    Use the filteration button on top to filter this result
+                    more. You can hover to view more details.
+                  </div>
+                </div>
+              </div>
+
+              {/* Focus Data */}
+              <div className={` ${Color.chartsBGText}   rounded-lg m-4 p-6 `}>
+                <div className="text-center">
+                  <h5 className="text-2xl font-semibold  mb-5">
+                    {focusView === "daily"
+                      ? "Daily Focus Data"
+                      : focusView === "weekly"
+                      ? "Weekly Focus Data"
+                      : "Monthly Focus Data"}
+                  </h5>
+                  <div>
+                    <button
+                      onClick={openFocusOverlay}
+                      className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
+                      title="Compare Focus Data"
+                    >
+                      <FaArrowRightArrowLeft size={20} />
+                    </button>
+                  </div>
+                  {focusChartError ? (
+                    <h2 className="text-xl  mt-4">{listeningChartError}</h2>
+                  ) : (
+                    <TwoValueBarChart
+                      data={
+                        {
+                          daily: dailyFocusData,
+                          weekly: weeklyFocusData,
+                          monthly: monthlyFocusData,
+                        }[focusView]
+                      }
+                      period={focusView}
+                    />
+                  )}
+                </div>
+              </div>
+
+              {/* Exercise Data */}
+              <div className={` ${Color.chartsBGText}  rounded-lg  m-4 p-6`}>
+                <div className="text-center">
+                  <h5 className="text-2xl font-semibold  mb-5">
+                    {exerciseView === "daily"
+                      ? "Daily Breathing Exercise Usage"
+                      : exerciseView === "weekly"
+                      ? "Weekly Breathing Exercise Usage"
+                      : "Monthly Breathing Exercise Usage"}
+                  </h5>
+                  <div>
+                    <button
+                      onClick={openBreathingOverlay}
+                      className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
+                      title="Compare Breathing Exercise Usage"
+                    >
+                      <FaArrowRightArrowLeft size={20} />
+                    </button>
+                  </div>
+                  {breathingChartError ? (
+                    <h2 className="text-xl  mt-4">{breathingChartError}</h2>
+                  ) : (
+                    <LineChart
+                      data={
+                        {
+                          daily: dailyExerciseData,
+                          weekly: weeklyExerciseData,
+                          monthly: monthlyExerciseData,
+                        }[exerciseView]
+                      }
+                    />
+                  )}
+
+                  {mostUsedExercise && (
+                    <div className="mt-4">
+                      <h5 className="text-lg font-semibold  mb-2">
+                        Most Used Exercise:
+                      </h5>
+                      <p className="">{mostUsedExercise.exercise_name}</p>
+                      <p className="">
+                        Total Duration:{" "}
+                        {(mostUsedExercise.total_duration / 60.0).toFixed(2)}{" "}
+                        minutes
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Listening Data */}
+              <div className={` ${Color.chartsBGText}   rounded-lg m-4 p-6 `}>
+                <div className="text-center">
+                  <h5 className="text-2xl font-semibold  mb-5">
+                    {listeningView === "daily"
+                      ? "Daily Track Listening Usage"
+                      : listeningView === "weekly"
+                      ? "Weekly Track Listening Usage"
+                      : "Monthly Track Listening Usage"}
+                  </h5>
+                  <div>
+                    <button
+                      onClick={openListeningOverlay}
+                      className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
+                      title="Compare Audio Therapy Usage"
+                    >
+                      <FaArrowRightArrowLeft size={20} />
+                    </button>
+                  </div>
+                  {listeningChartError ? (
+                    <h2 className="text-xl  mt-4">{listeningChartError}</h2>
+                  ) : (
+                    <LineChart
+                      data={
+                        {
+                          daily: dailyListeningData,
+                          weekly: weeklyListeningData,
+                          monthly: monthlyListeningData,
+                        }[listeningView]
+                      }
+                    />
+                  )}
+
+                  {mostListenedTrack && (
+                    <div className="mt-4">
+                      <h5 className="text-lg font-semibold mb-2">
+                        Most Listened Track:
+                      </h5>
+                      <p className="">{mostListenedTrack.track_name}</p>
+                      <p className="">
+                        Total Duration:{" "}
+                        {(mostListenedTrack.total_duration / 60).toFixed(2)}{" "}
+                        minutes
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Emotion based on Hours */}
+            <div className={` ${Color.chartsBGText}  rounded-lg mx-4 p-6`}>
+              <h5 className="text-xl font-semibold">
+                Dominant Emotion by Hour
+              </h5>
+              <div className="flex flex-wrap justify-center gap-10 mt-4 w-full">
+                {Object.keys(hourlyEmotion).map((hour, index) => (
+                  <div key={index} className="text-center">
+                    {hourlyEmotion[hour] ? (
+                      <div>
+                        <img
+                          className="w-10"
+                          src={`http://127.0.0.1:8000/media/emojis/${hourlyEmotion[hour]}.png`}
+                          alt={hourlyEmotion[hour]}
+                          title={hourlyEmotion[hour]}
+                        />
+                      </div>
+                    ) : (
+                      <span className="text-xl"> - </span>
+                    )}
+                    <p className="text-sm">{hour.split(" ")[0]}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
+          <div></div>
         </div>
-        <div></div>
-      </div>
 
-      {isEmotionOverlayOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="relative bg-white p-6 rounded-md shadow-lg">
-            <button
-              onClick={closeEmotionOverlay}
-              className={` text-black absolute top-2 right-2 ${BtnClose.base} ${BtnClose.hover} ${BtnClose.rotate}`}
-            >
-              <IoClose size={25} />
-            </button>
-            <div className="flex justify-center items-center">
-              <EmotionCompare team={team} period={periodForExact} />
+        {isEmotionOverlayOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="relative bg-white rounded-md shadow-lg">
+              <button
+                onClick={closeEmotionOverlay}
+                className={` text-black absolute top-5 right-5 ${BtnClose.base} ${BtnClose.hover}`}
+              >
+                <IoClose size={25} />
+              </button>
+              <div className="flex justify-center items-center">
+                <EmotionCompare team={team} period={periodForExact} />
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {isStressOverlayOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="relative bg-white p-6 rounded-md shadow-lg">
-            <button
-              onClick={closeStressOverlay}
-              className={` text-black absolute top-2 right-2 ${BtnClose.base} ${BtnClose.hover}`}
-            >
-              <IoClose size={25} />
-            </button>
+        {isStressOverlayOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="relative bg-white rounded-md shadow-lg">
+              <button
+                onClick={closeStressOverlay}
+                className={` text-black absolute top-5 right-5 ${BtnClose.base} ${BtnClose.hover}`}
+              >
+                <IoClose size={25} />
+              </button>
 
-            <div className="flex justify-center items-center">
-              <StressCompare team={team} period={periodForExact} />
+              <div className="flex justify-center items-center">
+                <StressCompare team={team} period={periodForExact} />
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {isFocusOverlayOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="relative bg-white p-6 rounded-md shadow-lg">
-            <button
-              onClick={closeFocusOverlay}
-              className={`${BtnClose.base} ${BtnClose.hover}`}
-            >
-              <IoClose size={25} />
-            </button>
-            <div>
-              <FocusCompare team={team} period={periodForExact} />
+        {isFocusOverlayOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="relative bg-white rounded-md shadow-lg">
+              <button
+                onClick={closeFocusOverlay}
+                className={` text-black absolute top-5 right-5 ${BtnClose.base} ${BtnClose.hover}`}
+              >
+                <IoClose size={25} />
+              </button>
+              <div>
+                <FocusCompare team={team} period={periodForExact} />
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {isBreathingOverlayOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="relative bg-white p-6 rounded-md shadow-lg">
-            <button
-              onClick={closeBreathingOverlay}
-              className={`${BtnClose.base} ${BtnClose.hover}`}
-            >
-              <IoClose size={25} />
-            </button>
-            <div>
-              <BreathingCompare team={team} period={periodForExact} />
+        {isBreathingOverlayOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="relative bg-white rounded-md shadow-lg">
+              <button
+                onClick={closeBreathingOverlay}
+                className={` text-black absolute top-5 right-5 ${BtnClose.base} ${BtnClose.hover}`}
+              >
+                <IoClose size={25} />
+              </button>
+              <div>
+                <BreathingCompare team={team} period={periodForExact} />
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {isListeningOverlayOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="relative bg-white p-6 rounded-md shadow-lg">
-            <button
-              onClick={closeListeningOverlay}
-              className={`${BtnClose.base} ${BtnClose.hover}`}
-            >
-              <IoClose />
-            </button>
-            <div>
-              <ListeningCompare team={team} period={periodForExact} />
+        {isListeningOverlayOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="relative bg-white rounded-md shadow-lg">
+              <button
+                onClick={closeListeningOverlay}
+                className={` text-black absolute top-5 right-5 ${BtnClose.base} ${BtnClose.hover}`}
+              >
+                <IoClose />
+              </button>
+              <div>
+                <ListeningCompare team={team} period={periodForExact} />
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>{" "}
     </div>
   );
 };

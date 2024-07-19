@@ -566,15 +566,16 @@ class EmotionDataView(APIView):
                             frq = "none"
 
                         # Return the emotion and frequency
+                        print(emotion)
                         return JsonResponse({'emo': emotion, 'frq': frq})
 
                 return JsonResponse({'emo': 'No face detected', 'frq': 'none'})
 
             except Exception as e:
-                return JsonResponse({'emo': 'Error occurred 1', 'frq': 'none'})
+                return JsonResponse({'emo': 'Loading...', 'frq': 'none'})
 
         except Exception as e:
-            return JsonResponse({'emo': 'Error occurred', 'frq': 'none'})
+            return JsonResponse({'emo': 'Loading...', 'frq': 'none'})
 
     def get(self, request):
         defaultEmotionValues = {'angry': 0, 'disgust': 0, 'fear': 0, 'happy': 0, 'sad': 0, 'surprise': 0, 'neutral': 0}
@@ -1745,9 +1746,9 @@ class FocusDataView(APIView):
                     return JsonResponse({'focused': False, 'text': 'No face detected'})
                 
                 except Exception as e:
-                    return JsonResponse({'focused': False, 'text': 'error'})
+                    return JsonResponse({'focused': False, 'text': 'Loading...'})
         except:
-            return JsonResponse({'focused': False, 'text': 'error'})
+            return JsonResponse({'focused': False, 'text': 'Loading...'})
 
 class ExactFocusDataView(APIView):
     def get(self, request):

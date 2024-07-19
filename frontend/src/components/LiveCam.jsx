@@ -18,8 +18,19 @@ const LiveCam = () => {
 
   const [focusLevel, setFocusLevel] = useState(null)
 
+  const [showNotification, setShowNotification] = useState(true)
+
+  const pauseNotification = true
+
+
   const webcamRef = useRef(null);
   const intervalRef = useRef(null);
+
+  useEffect(() => {
+    const timer = setTimeout(delayedFunction, 10000);
+
+    return () => clearTimeout(timer); 
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -35,6 +46,9 @@ const LiveCam = () => {
     })();
   }, []);
 
+    const delayedFunction = () => {
+      setShowNotification(true)
+    };
 
   useEffect(() => {
     const postImage = async (imageSrc) => {
@@ -67,7 +81,12 @@ const LiveCam = () => {
             response.data.emo === "Webcam cover is closed or image is too dark" ||
             response.data.emo === "Image is blurred. Please clear the webcam."
           ) {
-            toast.error(response.data.emo, {
+            
+
+            if (showNotification && localStorage.getItem("notification") !== "hidden" ){
+              setShowNotification(false)
+              notifyUser(response.data.emo);
+              toast.error(response.data.emo, {
               position: "top-right",
               autoClose: 5000,
               hideProgressBar: false,
@@ -78,9 +97,13 @@ const LiveCam = () => {
               theme: "colored",
               limit: 1,
             });
+            
+            }else{
+              setTimeout(delayedFunction, 10000);
+            }
           }
 
-          if (response.data.frq === "You seem to be stressed!") {
+          if (response.data.frq === "You seem to be stressed!" && localStorage.getItem("notification") !== true) {
             toast.error(`You seem to be stressed!`, {
               position: "top-right",
               autoClose: 5000,
@@ -164,6 +187,18 @@ const LiveCam = () => {
       clearInterval(progressInterval);
     };
   }, [userData.id]);
+
+  const customId = "custom-id-yes";
+
+  const notifyUser = (message) => {
+    if (document.hidden && Notification.permission === "granted") {
+      new Notification("CodeCalm", {
+        body: message,
+        icon: "http://127.0.0.1:8000/media/favicons/codecalm_favicon_2.png",
+      });
+    }
+  };
+
 
   useEffect(() => {
     if (Notification.permission !== "granted") {

@@ -2,7 +2,11 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import moment from "moment";
 
-import { Color } from "../../theme/Colors";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+import { IoMdDownload } from "react-icons/io";
+
+import { Color, PrimColor } from "../../theme/Colors";
 import { BtnColor, ReportButton } from "../../theme/ButtonTheme";
 import { NoData } from "../../theme/ChartError";
 import { RetrieveError } from "../../theme/ChartError";
@@ -10,7 +14,6 @@ import { downloadPDF } from "../DownloadReport";
 
 import LineChart from "../charts/LineChart";
 
-import { IoMdDownload } from "react-icons/io";
 
 const ListeningCompare = ({ id, name, userRole, team, period }) => {
   const [listeningA, setListeningA] = useState("");
@@ -179,31 +182,26 @@ const ListeningCompare = ({ id, name, userRole, team, period }) => {
 
   return (
     <div className={`${Color.background} rounded-lg m-4 p-6`}>
-      <div>
-        {(userRole === "Admin" || userRole === "Supervisor") && (
-          <button
-            className={`flex items-center px-4 py-2 rounded-md ${ReportButton.base} ${ReportButton.hover}`}
-            onClick={generateReport}
-            title="in PDF format"
-          >
-            <IoMdDownload className="mr-2" /> Generate Report
-          </button>
-        )}
-      </div>
-
-      <div id="Audio Therapy Compare report-content">
-        <div className="flex flex-cols lg:flex-row rounded-lg m-4 p-6">
-          <div className={` ${Color.chartsBGText} rounded-lg m-4 p-6 `}>
-            <h2> Audio Threapy usage on: </h2>
+      <div
+      id="Audio Therapy Compare report-content"
+      className=" flex flex-row rounded-lg"
+      >
+        <div className={`${Color.chartsBGText} ${PrimColor.card} rounded-lg m-4 p-6`}>
+          <div className="flex justify-center mb-4">
+            <h2 className="mr-2"> Audio Threapy usage on: </h2>
             <input
               type={calType}
               value={selectedDateA}
               onChange={handleDateChangeA}
-              className="cursor-pointer"
+              className="cursor-pointer border p-1 rounded"
             />
+             </div>
+
+             <div className="flex justify-center items-center">
             {chartErrorA ? (
-              <h2 className="text-xl">{chartErrorA}</h2>
+              <h2 className="text-xl mt-4">{chartErrorA}</h2>
             ) : (
+              <div className="max-w-[350px] max-h-[350px] p-5">
               <LineChart
                 data={
                   {
@@ -213,8 +211,11 @@ const ListeningCompare = ({ id, name, userRole, team, period }) => {
                   }[period]
                 }
               />
+               </div>
             )}
+            </div>
 
+            <div className="flex justify-center items-center"> 
             {mostUsedA && (
               <div className="mt-4">
                 <h5 className="text-lg font-semibold mb-2">
@@ -231,19 +232,22 @@ const ListeningCompare = ({ id, name, userRole, team, period }) => {
         </div>
 
         {/**Exact Data */}
-        <div className={`${Color.chartsBGText} rounded-lg  m-4 p-6`}>
-          <div className={`flex items-center align-super `}>
-            <h2>Audio Threapy usage on:</h2>
+        <div className={`${Color.chartsBGText} ${PrimColor.card} rounded-lg m-4 p-6`}>
+        <div className="flex justify-center mb-4">
+            <h2 className="mr-2">Audio Threapy usage on:</h2>
             <input
               type={calType}
               value={selectedDateB}
               onChange={handleDateChangeB}
-              className="cursor-pointer"
+              className="cursor-pointer border p-1 rounded"
             />
           </div>
+
+          <div className="flex justify-center items-center">
           {chartErrorB ? (
             <h2 className="text-xl mt-4">{chartErrorB}</h2>
           ) : (
+            <div className="max-w-[350px] max-h-[350px] p-5">
             <LineChart
               data={
                 {
@@ -253,8 +257,11 @@ const ListeningCompare = ({ id, name, userRole, team, period }) => {
                 }[period]
               }
             />
+            </div>
           )}
+          </div>
 
+          <div className="flex justify-center items-center">
           {mostUsedB && (
             <div className="mt-4">
               <h5 className="text-lg font-semibold mb-2">
@@ -270,6 +277,18 @@ const ListeningCompare = ({ id, name, userRole, team, period }) => {
         </div>
       </div>
     </div>
+    <div className="flex justify-center mt-4">
+      {(userRole === "Admin" || userRole === "Supervisor") && (
+        <button
+          className={`flex items-center px-4 py-2 rounded-md ${ReportButton.base} ${ReportButton.hover} mb-4`}
+          onClick={generateReport}
+          title="in PDF format"
+        >
+          <IoMdDownload className="mr-2" /> Generate Report
+        </button>
+      )}
+    </div>
+  </div>
   );
 };
 

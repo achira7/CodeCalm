@@ -109,6 +109,17 @@ const NavBar = () => {
     }
   };
 
+
+  const handleNotification = () => {
+    const currentMode = localStorage.getItem("notification");
+    if (currentMode === null || currentMode === "hidden") {
+      localStorage.setItem("notification", "show");
+    } else {
+      localStorage.setItem("notification", "hidden");
+    }
+    navigate(0); // Refresh the page to apply changes
+  };
+
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
@@ -232,19 +243,7 @@ const NavBar = () => {
 
             {isDropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-md overflow-hidden shadow-lg z-10">
-                <Link
-                  to="/profile"
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font google"
-                >
-                  <img src={` `} className="w-4 inline-flex mx-2" /> Profile{" "}
-                </Link>
-                <button
-                  onClick={handleSettingsToggle}
-                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font google"
-                >
-                  <img src={` `} className="w-4 inline-flex mx-2" />
-                  Settings
-                </button>
+
                 <button
                   onClick={handleThemeMode}
                   className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font google"
@@ -255,6 +254,18 @@ const NavBar = () => {
                     ? "Dark"
                     : "Light"}
                 </button>
+
+                <button
+                  onClick={handleNotification}
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font google"
+                >
+                  <img src={` `} className="w-4 inline-flex mx-2" />
+                  Notifications:{" "}
+                  {localStorage.getItem("notification") === "hidden"
+                    ? "Off"
+                    : "On"}
+                </button>
+
                 <button
                   onClick={logoutUser}
                   className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font google"

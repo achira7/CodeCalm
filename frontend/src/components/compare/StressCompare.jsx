@@ -4,28 +4,29 @@ import axios from "axios";
 import moment from "moment";
 
 import { Color } from "../../theme/Colors";
+import { PrimColor } from "../../theme/Colors";
 import { BtnColor } from "../../theme/ButtonTheme";
 import { NoData } from "../../theme/ChartError";
 import { RetrieveError } from "../../theme/ChartError";
+import { downloadPDF } from "../DownloadReport";
+import { ReportButton } from "../../theme/ButtonTheme";
 
 import { IoMdDownload } from "react-icons/io";
-
 
 const StressCompare = ({ id, name, userRole, team, period }) => {
   const [stressA, setStressA] = useState("");
   const [stressB, setStressB] = useState("");
 
   const [selectedDateA, setSelectedDateA] = useState(new Date());
-  const [selectedDateB, setSelectedDateB] = useState(new Date()); 
+  const [selectedDateB, setSelectedDateB] = useState(new Date());
   const [stressView, setStressView] = useState("daily");
 
+  const [calType, setCalType] = useState("date");
   const [chartErrorA, setChartErrorA] = useState(null);
   const [chartErrorB, setChartErrorB] = useState(null);
 
-  const [calType, setCalType] = useState("date");
   const [property, setProperty] = useState("");
   const [parameter, setParameter] = useState("");
-
 
   useEffect(() => {
     if (id) {
@@ -68,20 +69,8 @@ const StressCompare = ({ id, name, userRole, team, period }) => {
     setSelectedDateB(defaultDateB);
 
     if (property && parameter) {
-      fetchData(
-        property,
-        parameter,
-        period,
-        defaultDateA,
-        setStressA,
-      );
-      fetchData(
-        property,
-        parameter,
-        period,
-        defaultDateB,
-        setStressB,
-      );
+      fetchData(property, parameter, period, defaultDateA, setStressA);
+      fetchData(property, parameter, period, defaultDateB, setStressB);
     }
   }, [period, property, parameter]);
 
@@ -90,7 +79,7 @@ const StressCompare = ({ id, name, userRole, team, period }) => {
     parameter,
     period,
     exact_period,
-    setStress,
+    setStress
   ) => {
     try {
       const response = await axios.get(
@@ -104,7 +93,6 @@ const StressCompare = ({ id, name, userRole, team, period }) => {
         }
       );
       setStress(response.data.days);
-
     } catch (error) {
       setChartErrorA(<RetrieveError type="Stress" />);
     }
@@ -135,84 +123,113 @@ const StressCompare = ({ id, name, userRole, team, period }) => {
   const handleDateChangeA = (date) => {
     const exact_period = date.target.value;
     setSelectedDateA(exact_period);
-    fetchData(
-      property,
-      parameter,
-      period,
-      exact_period,
-      setStressA,
-    );
+    fetchData(property, parameter, period, exact_period, setStressA);
   };
 
   const handleDateChangeB = (date) => {
     const exact_period = date.target.value;
     setSelectedDateB(exact_period);
-    fetchData(
-      property,
-      parameter,
-      period,
-      exact_period,
-      setStressB,
-    );
+    fetchData(property, parameter, period, exact_period, setStressB);
+  }
+
+    const generateReport = () => {
+      downloadPDF({
+        componenetName: "Stress Compare",
+        team: team,
+        name: name,
+        userRole: userRole,
+        orientation: "l",
+      });
   };
 
   return (
-    <div className={`${Color.background} rounded-lg m-4 p-6`}>
-      {/* Stress Data */}
-      <div className="flex flex-cols lg:flex-row rounded-lg m-4 p-6">
-        <div className={` ${Color.chartsBGText}   rounded-lg m-4 p-6 `}>
-        <h2> Stress Data on: </h2>
-          <input
-            type={calType}
-            value={selectedDateA}
-            onChange={handleDateChangeA}
-            className="cursor-pointer"
-          />
-          {chartErrorA ? (
-            <h2 className="text-xl">{chartErrorA}</h2>
-          ) : (
-            <BarChart
-              data={
-                {
-                  daily: stressA,
-                  weekly: stressA,
-                  monthly: stressA,
-                }[stressView]
-              }
-              period={period}
-            />
-          )}
-        </div>
-
-        {/* Exact Stress Data */}
-        <div className={`${Color.chartsBGText} rounded-lg  m-4 p-6`}>
-          <div className={`flex items-center align-super `}>
-          <h2>Stress Data on:</h2>
-          <input
-            type={calType}
-            value={selectedDateB}
-            onChange={handleDateChangeB}
-            className="cursor-pointer"
-          />
+    <div className={`${Color.background} rounded-lg `}>
+      <div
+        id="Stress Compare report-content"
+        className=" flex flex-row rounded-lg m-4 p-6"
+      >
+          <div
+            className={` ${Color.chartsBGText} ${PrimColor.card} rounded-lg m-4 p-6`}
+          >
+            <div className="flex justify-center">
+              <h2> Stress Data on: </h2>
+              <input
+                type={calType}
+                value={selectedDateA}
+                onChange={handleDateChangeA}
+                className="cursor-pointer"
+              />
+            </div>
+            {chartErrorA ? (
+              <h2 className="text-xl  mt-4">{chartErrorA}</h2>
+            ) : (
+              <div className=" flex justify-center items-center">
+                <div className="max-w-[350px] max-h-[350px] p-5">
+                  <BarChart
+                    data={
+                      {
+                        daily: stressA,
+                        weekly: stressA,
+                        monthly: stressA,
+                      }[stressView]
+                    }
+                    period={period}
+                  />
+                </div>
+              </div>
+            )}
           </div>
-          {chartErrorB ? (
-            <h2 className="text-xl">{chartErrorB}</h2>
-          ) : (
-            <BarChart
-              data={
-                {
-                  daily: stressB,
-                  weekly: stressB,
-                  monthly: stressB,
-                }[stressView]
-              }
-              period={period}
-            />
-          )}
+
+          {/* Exact Stress Data */}
+          <div
+            className={` ${Color.chartsBGText} ${PrimColor.card} rounded-lg m-4 p-6 `}
+          >
+            <div className="flex justify-center  flex-col">
+              <div className="flex flex-row justify-center">
+                <h2>Stress Data on:</h2>
+                <input
+                  type={calType}
+                  value={selectedDateB}
+                  onChange={handleDateChangeB}
+                  className="cursor-pointer border p-1 rounded"
+                />
+              </div>
+              {chartErrorB ? (
+                <h2 className="text-xl mt-4">{chartErrorB}</h2>
+              ) : (
+                <div>
+                  <div className="flex flex-cols lg:flex-row">
+                    <div className="max-w-[350px] max-h-[350px] p-5">
+                      <BarChart
+                        data={
+                          {
+                            daily: stressB,
+                            weekly: stressB,
+                            monthly: stressB,
+                          }[stressView]
+                        }
+                        period={period}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+          </div>
         </div>
+        </div>
+      <div className="flex justify-center mt-4">
+      {(userRole === "Admin" || userRole === "Supervisor") && (
+        <button
+          className={`flex items-center px-4 py-2 rounded-md ${ReportButton.base} ${ReportButton.hover} mb-4`}
+          onClick={generateReport}
+          title="in PDF format"
+        >
+          <IoMdDownload className="mr-2" /> Generate Report
+        </button>
+      )}
       </div>
     </div>
   );
-};
+}
 
 export default StressCompare;
