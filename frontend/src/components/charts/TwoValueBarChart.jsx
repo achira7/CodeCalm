@@ -42,8 +42,8 @@ const TwoValueBarChart = ({ data, period }) => {
         }
       },
       tooltip: {
-        titleColor: 'blue',
-        bodyColor: 'green',
+        titleColor: 'white',
+        bodyColor: 'white',
         callbacks: {
           label: function (tooltipItem) {
             const label = chartData.labels[tooltipItem.dataIndex] || '';

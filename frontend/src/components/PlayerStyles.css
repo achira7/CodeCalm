@@ -15,6 +15,10 @@
   transition: box-shadow 0.3s ease;
 }
 
+.rhap_progress-section {
+  display: none;
+}
+
 .circle-border {
   position: relative;
   width: 235px; /* 56 * 4 */

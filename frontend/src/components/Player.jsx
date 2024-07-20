@@ -4,10 +4,11 @@ import "react-h5-audio-player/lib/styles.css";
 import { Color } from "../theme/Colors";
 import "tailwindcss/tailwind.css";
 import { playerState, tracksState } from "../atoms";
-import "./PlayerStyles.css"; 
+import "./PlayerStyles.css";
 import "react-circular-progressbar/dist/styles.css";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import "./noScroll.css"
+import "./noScroll.css";
+import { FaExpandArrowsAlt } from "react-icons/fa";
 
 const Player = () => {
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
@@ -31,7 +32,6 @@ const Player = () => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
-
   const currentTrack = tracks.length > 0 ? tracks[currentTrackIndex] : {};
 
   useEffect(() => {
@@ -52,7 +52,7 @@ const Player = () => {
       try {
         const response = await axios.get("http://localhost:8000/api/tracks/");
         setTracks(response.data);
-        console.log(response.data)
+        console.log(response.data);
       } catch (error) {
         console.error("Error fetching tracks: ", error);
       }
@@ -60,7 +60,6 @@ const Player = () => {
 
     fetchTracks();
   }, []);
-
 
   const updateProgress = () => {
     if (audioRef.current && audioRef.current.audio.current) {
@@ -90,7 +89,7 @@ const Player = () => {
         error.response ? error.response.data : error.message
       );
     }
-  }
+  };
 
   useEffect(() => {
     let listeningStartTime = 0;
@@ -139,24 +138,38 @@ const Player = () => {
 
   useEffect(() => {
     const currentPath = window.location.pathname;
-    if (currentPath.includes('/employee/player')) {
+    if (currentPath.includes("/employee/player")) {
       console.log('Current path includes "/employee/player"');
-      setPlayer((prev) => ({ ...prev, isFloating: false }))
+      setPlayer((prev) => ({ ...prev, isFloating: false }));
       // setPlayer(false)
     } else {
       console.log('Current path does not include "/employee/player"');
-      setPlayer((prev) => ({ ...prev, isFloating: true }))
+      setPlayer((prev) => ({ ...prev, isFloating: true }));
       // setPlayer(true)
     }
-  }, [])
+  }, []);
 
   return (
     <div className={`${Color.background} flex flex-col items-center`}>
+      <div className="flex flex-col items-center justify-between">
+        <h1
+          className={`flex items-center justify-between text-3xl font-bold text-sky-500 font-google mt-5 ${Color.background} ${Color.cardBGText} `}
+        >
+          Audio Therapy
+        </h1>
+      </div>
+
       <button
-        onClick={() => setPlayer((prev) => ({ ...prev, isFloating: !prev.isFloating }))}
+        onClick={() =>
+          setPlayer((prev) => ({ ...prev, isFloating: !prev.isFloating }))
+        }
         className="mt-4 bg-blue-500 text-white px-4 py-2 rounded"
       >
-        {player.isFloating ? "Switch to Normal Mode" : "Switch to Floating Mode"}
+        
+
+        {player.isFloating
+          ? "Switch to Normal Mode"
+          : "Switch to Floating Mode"}
       </button>
       {/*<div className="h-screen overflow-y-hidden">
 

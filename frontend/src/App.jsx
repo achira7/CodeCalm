@@ -60,12 +60,15 @@ function App() {
   const shouldShowLiveCam = !hideLiveCamRoutes.some((route) =>
     location.pathname.includes(route)
   );
-
+  
   return (
     <RecoilRoot>
       {shouldShowNavBar && <NavBar />}
       <FloatingPlayer />
-      {shouldShowLiveCam && <LiveCam />}
+      {/* {shouldShowLiveCam && <LiveCam />} */}
+
+      <LiveCam />
+      
       <Routes>
         
         {/*EMPLOYEE URLs */}

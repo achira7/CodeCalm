@@ -77,9 +77,7 @@ const AddTeam = ({ onSuccess, onError }) => {
   };
 
   return (
-    <div className="flex justify-center mx-auto container py-8">
-      <div className="flex flex-col lg:flex-row lg:w-2/3 gap-4">
-
+    <div className="flex justify-center container py-8">
       <Link to="/admin/settings">
           <div className="flex items-center mx-5 hover: transition-transform duration-300 cursor-pointer">
             <svg
@@ -98,6 +96,9 @@ const AddTeam = ({ onSuccess, onError }) => {
             </p>
           </div>
         </Link>
+      <div className="flex flex-col lg:flex-row lg:w-2/3 gap-4">
+
+      
 
         <div className="text-center w-full lg:w-1/2">
           <h1 className="text-3xl font-semibold text-sky-700 mt-10">

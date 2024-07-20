@@ -9,6 +9,9 @@ import 'react-toastify/dist/ReactToastify.css';
 import { Color } from "../theme/Colors";
 import { BtnColor } from "../theme/ButtonTheme";
 
+import { roleStateAtom } from "../atoms";
+import { useRecoilValue, useSetRecoilState } from "recoil";
+
 const LiveCam = () => {
   const [userData, setUserData] = useState({});
   const [emotionResponseState, setEmotionResponseState] = useState("");
@@ -25,6 +28,8 @@ const LiveCam = () => {
 
   const webcamRef = useRef(null);
   const intervalRef = useRef(null);
+
+  const userRole = useRecoilValue(roleStateAtom)
 
   useEffect(() => {
     const timer = setTimeout(delayedFunction, 10000);
@@ -209,8 +214,14 @@ const LiveCam = () => {
 
   return (
     <div>
-    <div className={`min-h-screen flex flex-col items-center justify-center bg-gray-100 ${ window.location.pathname.includes("/employee/livecam")? ' ': 'hidden'}`} > 
+      
+    {/* <div className={`min-h-screen flex flex-col items-center justify-center bg-gray-100 ${ window.location.pathname.includes("/employee/livecam")? ' ': 'hidden'}`} >  */}
+    {userRole != "Admin" && <div className={`${window.location.pathname.includes("/employee/livecam") ? 'min-h-screen flex flex-col items-center justify-center bg-gray-100' : 'opacity-0 h-1 pointer-events-none fixed top-1'}`}>
+      <h1 className={`text-3xl font-bold text-sky-500 font-google ${Color.background} ${Color.cardBGText }`}>
+        Live Camera
+      </h1>
       <div className={` ${Color.chartsBGText} rounded-lg shadow-lg p-4 w-full max-w-xl`}>
+      
         <div className="relative">
           <Webcam
             audio={false}
@@ -254,7 +265,7 @@ const LiveCam = () => {
         </div>
       </div>
       
-    </div>
+    </div>}
     <ToastContainer />
     </div>
   );

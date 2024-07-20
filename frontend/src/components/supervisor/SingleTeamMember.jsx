@@ -4,6 +4,10 @@ import EmployeeDashboard from "../EmployeeDashboard";
 import EmployeeDashboardOverlay from "../EmployeeDashboardOverlay";
 import { useNavigate } from "react-router-dom";
 
+import { BtnColor, BtnClose, ReportButton } from "../../theme/ButtonTheme";
+import { IoClose, IoHelpCircleOutline } from "react-icons/io5";
+
+
 function SingleTeamMember(props) {
   const [isOpen, setIsOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -13,7 +17,7 @@ function SingleTeamMember(props) {
   const [weeklyExerciseData, setWeeklyExerciseData] = useState({});
   const [highestEmotion, setHighestEmotion] = useState({ key: "", value: 0 });
 
-  const[weeklyStressData, setWeeklyStressData] = useState(null);
+  const [weeklyStressData, setWeeklyStressData] = useState(null);
 
   const [monthlyExerciseData, setMonthlyExerciseData] = useState({});
   const [weeklyListeningData, setWeeklyListeningData] = useState({});
@@ -22,7 +26,7 @@ function SingleTeamMember(props) {
   const [mostListenedTrack, setMostListenedTrack] = useState(null);
   const [exerciseView, setExerciseView] = useState("weekly");
   const [listeningView, setListeningView] = useState("weekly");
-  const [emotionView, setEmotionView] = useState("daily"); 
+  const [emotionView, setEmotionView] = useState("daily");
   const [hourlyEmotion, setHourlyEmotion] = useState([]);
 
   const [maxValue, setmaxValue] = useState("");
@@ -138,7 +142,6 @@ function SingleTeamMember(props) {
     fetchListeningData(props.employee.id, listeningView);
     fetchEmotionData(props.employee.id, emotionView);
     fetchStressData(props.employee.id, "weekly");
-
   }, [props.employee.id, exerciseView, listeningView, emotionView]);
 
   return (
@@ -186,19 +189,19 @@ function SingleTeamMember(props) {
         </td>
 
         <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-        <p
-    className="text-gray-900 whitespace-no-wrap font-bold"
-    style={{
-      color:
-        weeklyStressData > 0
-          ? "red"
-          : weeklyStressData < 0
-          ? "green"
-          : "black",
-    }}
-  >
-    {weeklyStressData}
-  </p>
+          <p
+            className="text-gray-900 whitespace-no-wrap font-bold"
+            style={{
+              color:
+                weeklyStressData > 0
+                  ? "red"
+                  : weeklyStressData < 0
+                  ? "green"
+                  : "black",
+            }}
+          >
+            {weeklyStressData}
+          </p>
         </td>
 
         <td
@@ -270,59 +273,46 @@ function SingleTeamMember(props) {
 
       {isOpen && formDetails && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-800 bg-opacity-75">
-          <div className="relative p-8 bg-white w-full max-w-md m-auto flex-col flex rounded-lg">
-            
-            <h2 className="text-2xl font-bold mb-4">
-              Self Stress Detection Details
-            </h2>
-
-            <h2 className="font-semibold mt-4">
-              of {props.employee.first_name} {props.employee.last_name}
-            </h2>
-
-            <h2 className="font-semibold mt-4">
-              Submitted on: {props.employee.submitted_on}
-            </h2>
-
-            <div>
-              <h3 className="font-semibold">Answers:</h3>
-              <ol className="list-decimal list-inside">
-                {Object.entries(formDetails.answers).map(
-                  ([question, answer], index) => (
-                    <li key={index} className="mt-1">
-                      <strong>{question}</strong> - {answer}
-                    </li>
-                  )
-                )}
-              </ol>
-              <h3 className="font-semibold mt-4">
-                <strong>Additional Comments:</strong>
-              </h3>
-              <p>{formDetails.additional_comments || "None"}</p>
-            </div>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="mt-4 bg-red-500 text-white p-2 rounded"
-            >
-              Close
-            </button>
+        <div className="relative p-8 bg-white w-full max-w-md m-auto flex-col flex rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold mb-4">
+            Self Stress Detection Details
+          </h2>
+      
+          <h2 className="font-semibold mt-4 text-gray-700">
+            of {props.employee.first_name} {props.employee.last_name}
+          </h2>
+      
+          <h2 className="font-semibold mt-4 text-gray-700">
+            Submitted on: {props.employee.submitted_on}
+          </h2>
+      
+          <div>
+            <h3 className="font-semibold text-gray-700">Answers:</h3>
+            <ol className="list-decimal list-inside mt-2">
+              {Object.entries(formDetails.answers).map(
+                ([question, answer], index) => (
+                  <li key={index} className="mt-1 text-gray-600">
+                    <strong className="text-gray-800">{question}</strong> - {answer}
+                  </li>
+                )
+              )}
+            </ol>
+            <h3 className="font-semibold mt-4 text-gray-700">
+              <strong>Additional Comments:</strong>
+            </h3>
+            <p className="text-gray-600">{formDetails.additional_comments || "None"}</p>
           </div>
+          <button
+                onClick={() => setIsOpen(false)}
+                className={` text-black absolute top-5 right-5 ${BtnClose.base} ${BtnClose.hover}`}
+              >
+                <IoClose size={25} />
+              </button>
         </div>
+      </div>
+      
       )}
 
-      {showUserDashboardOverlay && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-800 bg-opacity-75">
-          <div className="relative p-8 bg-white w-full max-w-md m-auto flex-col flex rounded-lg">
-            <EmployeeDashboardOverlay employeeId={Number(props.employee.id)} />{" "}
-            <button
-              onClick={() => setShowUserDashboardOverlay(false)}
-              className="mt-4 bg-red-500 text-white p-2 rounded"
-            >
-              Close Overlay
-            </button>
-          </div>
-        </div>
-      )}
     </>
   );
 }

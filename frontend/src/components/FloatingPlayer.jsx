@@ -3,13 +3,14 @@ import { useRecoilState, useRecoilValue } from "recoil";
 import AudioPlayer from "react-h5-audio-player";
 import "react-h5-audio-player/lib/styles.css";
 import React, { useState, useRef, useEffect } from "react";
-import { Color } from "../theme/Colors"; 
+import { Color } from "../theme/Colors";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 import axios from "axios";
 
 import { IoBanOutline } from "react-icons/io5";
 import { useExtractColor } from "react-extract-colors";
+import { FaExpandArrowsAlt } from "react-icons/fa";
 
 const FloatingPlayer = () => {
   const [player, setPlayer] = useRecoilState(playerState);
@@ -41,7 +42,6 @@ const FloatingPlayer = () => {
       }
     })();
   }, []);
-
 
   const handleNext = () => {
     setPlayer((prev) => ({
@@ -82,9 +82,8 @@ const FloatingPlayer = () => {
   };
 
   const logListeningData = async (user_id, track_name, duration) => {
-    console.log(user_id, track_name, duration)
+    console.log(user_id, track_name, duration);
     if (!userID || !track_name || !duration) {
-        
       console.error("User, track name, and duration are required");
       return;
     }
@@ -101,7 +100,7 @@ const FloatingPlayer = () => {
         error.response ? error.response.data : error.message
       );
     }
-  }
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -139,12 +138,9 @@ const FloatingPlayer = () => {
     };
   }, [player.currentTrackIndex, userID, currentTrack.title]);
 
-
-  
-
   return (
     <div
-      className={`${
+      className={` flex flex-col items-center justify-between ${
         player.isFloating
           ? ""
           : window.location.pathname.includes("/employee/player")
@@ -152,6 +148,8 @@ const FloatingPlayer = () => {
           : ""
       }`}
     >
+      
+
       <div
         //   className={`fixed bottom-2 left-2 ${
         className={`bg-opacity-30 ${Color.playerBG} rounded-lg p-4 ${
@@ -167,7 +165,9 @@ const FloatingPlayer = () => {
           <div className="mb-8 flex items-center">
             <div className="mr-3">
               <img
-                src={`http://127.0.0.1:8000/${currentTrack.image}` || IoBanOutline}
+                src={
+                  `http://127.0.0.1:8000/${currentTrack.image}` || IoBanOutline
+                }
                 alt={currentTrack.title}
                 className="rounded-lg w-16 h-16 object-cover border-2 border-gray-200"
               />
@@ -207,7 +207,10 @@ const FloatingPlayer = () => {
         </div>
 
         {window.location.pathname.includes("/employee/player") ? (
-          <div className="relative mb-8 flex justify-center " style={{ zIndex: 5 }}>
+          <div
+            className="relative mb-8 flex justify-center "
+            style={{ zIndex: 5 }}
+          >
             <div
               className={` circle-content ${
                 player.isPlaying ? "breathing" : ""
@@ -262,8 +265,9 @@ const FloatingPlayer = () => {
           showSkipControls={true}
           onClickNext={handleNext}
           onClickPrevious={handlePrevious}
+          pro
           loop={player.isLoop}
-          style={{ backgroundColor : currentTrack.color }}
+          style={{ backgroundColor: currentTrack.color }}
         />
       </div>
     </div>

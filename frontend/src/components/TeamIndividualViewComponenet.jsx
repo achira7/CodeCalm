@@ -2,14 +2,25 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import SingleTeamMember from "./supervisor/SingleTeamMember";
 import { Navigate, Link } from "react-router-dom";
+import { IoIosArrowDropleft } from "react-icons/io";
+import { FaCaretRight } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+
+import { useRecoilValue } from "recoil";
+import { roleStateAtom } from "../atoms";
 
 const TeamIndividualViewComponenet = ({ team, role }) => {
-  const [navigate, setNavigate] = useState(false);
+  //const [navigate, setNavigate] = useState(false);
   const [message, setMessage] = useState("You are not authenticated");
   const [userData, setUserData] = useState([]);
   const [teamMembers, setTeamMembers] = useState([]);
   const [teamLeaders, setTeamLeaders] = useState([]);
   const [goBackText, setGoBackText] = useState("");
+
+  const userRole = useRecoilValue(roleStateAtom)
+
+
+  const navigate = useNavigate()
 
   const fetchTeamMembers = async (team) => {
     try {
@@ -33,53 +44,55 @@ const TeamIndividualViewComponenet = ({ team, role }) => {
 
   useEffect(() => {
     if (role === "Admin") {
-      setGoBackText("/admin/teamdashboard");
+      setGoBackText("/admin/dashboard");
     } else if (role === "Supervisor") {
       setGoBackText("/supervisor/teamdashboard");
     }
   }, [role]);
 
+  const goBackButton = () => {
+    navigate(goBackText)
+  }
+
   return (
     <div>
-      <Link to={goBackText}>
-        <div className="flex items-center mx-5 hover: transition-transform duration-300 cursor-pointer">
-          <svg
-            className="fill-sky-500"
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            id="back-arrow"
-          >
-            <path fill="none" d="M0 0h24v24H0V0z" opacity=".87"></path>
-            <path d="M16.62 2.99c-.49-.49-1.28-.49-1.77 0L6.54 11.3c-.39.39-.39 1.02 0 1.41l8.31 8.31c.49.49 1.28.49 1.77 0s.49-1.28 0-1.77L9.38 12l7.25-7.25c.48-.48.48-1.28-.01-1.76z"></path>
-          </svg>
-          <p className="text-sky-500 font-semibold font google text-lg mx-3">
-            Back to Team Dashboard
-          </p>
-        </div>
-      </Link>
+        <button
+          className="px-4 py-2 rounded-md mb-5 flex absolute top-24 left-5 button bg-sky-400 text-black  hover:bg-sky-600 hover:text-white duration-300"
+          onClick={goBackButton}
+        >
+          <IoIosArrowDropleft size={25} className="mr-2 arrow-icon" />
+          Go Back to {role=="Admin" ? "Admin Dashboard":"Team Dashboard"}
+        </button>
+
 
       <div className="text-center">
-        <h5 className="text-xl font-semibold text-sky-900">
-          Detailed View of <br />
-          Team {team}
-        </h5>
-        <h1>Team Leader(s)</h1>
+        <div className="felx items-center">
+          <div className="mt-5">
+            <h5 className="text-2xl font-bold text-sky-900">
+              Detailed View of:
+            </h5>
 
-        <div className="mt-4">
-          {teamLeaders.length > 0 ? (
-            <ul>
-              {teamLeaders.map((leader, index) => (
-                <li key={index} className="text-left">
-                  {leader.first_name} {leader.last_name}{" "}
-                  {/*leader.id === userData.id && "(You)"*/}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>No team leaders found.</p>
-          )}
+            <h5 className="text-lg text-black">Team {team}</h5>
+          </div>
+
+          <div className="felx items-center rounded-lg bg-gray-300 flex-wrap m-5 px-5 py-2 inline-block">
+            <h1 className="font-semibold">Team Leader(s):</h1>
+            <div className="flex items-center justify-center">
+              {teamLeaders.length > 0 ? (
+                <ul>
+                  {teamLeaders.map((leader, index) => (
+                    <li key={index} className="text-left flex items-center">
+                      <FaCaretRight className="" />
+                      {leader.first_name} {leader.last_name}
+                      {/*leader.id === userData.id && "(You)"*/}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No team leaders found.</p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -113,7 +126,7 @@ const TeamIndividualViewComponenet = ({ team, role }) => {
           </thead>
           <tbody>
             {teamMembers
-              .filter((member) => !member.is_staff) 
+              .filter((member) => !member.is_staff)
               .map((member) => (
                 <SingleTeamMember key={member.id} employee={member} />
               ))}

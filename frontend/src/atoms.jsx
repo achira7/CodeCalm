@@ -53,6 +53,10 @@ export const mediaRootAtom = atom({
   default: 'http://127.0.0.1:8000/media/',
 });
 
+export const roleStateAtom = atom({
+  key: 'roleStateAtom',
+  default: null,
+});
 
 //Music plater stuff
 export const playerState = atom({

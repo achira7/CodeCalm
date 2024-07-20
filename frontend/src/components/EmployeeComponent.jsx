@@ -24,6 +24,7 @@ import { CompareIconColor } from "../theme/ButtonTheme";
 import { DateSelector } from "../theme/ButtonTheme";
 import { NoData } from "../theme/ChartError";
 import { RetrieveError } from "../theme/ChartError";
+import { downloadPDF } from "./DownloadReport";
 import { PrimColor } from "../theme/Colors";
 
 import EmotionCompare from "./compare/EmotionCompare";
@@ -33,6 +34,8 @@ import ListeningCompare from "./compare/ListeningCompare";
 import StressCompare from "./compare/StressCompare";
 
 import EmployeeInfo from "./EmployeeInfo";
+import { useRecoilValue } from "recoil";
+import { roleStateAtom } from "../atoms";
 
 const pfp = "http://127.0.0.1:8000/media/profilePictures/default.jpg";
 const icons = "http://127.0.0.1:8000/media/icons";
@@ -51,7 +54,6 @@ const EmployeeComponent = ({ id, role }) => {
   });
   const [navigate, setNavigate] = useState(false);
   const [userData, setUserData] = useState({});
-
   const [emotionChartError, setEmotionChartError] = useState(null);
   const [stressChartError, setStressChartError] = useState(null);
   const [breathingChartError, setBreathingChartError] = useState(null);
@@ -84,7 +86,7 @@ const EmployeeComponent = ({ id, role }) => {
 
   const [hourlyEmotion, setHourlyEmotion] = useState([]);
 
-  const [userRole, setUserRole] = useState("");
+  //const [userRole, setUserRole] = useState("");
   const [componenetUserData, setComponenetUserData] = useState({});
 
   const [goBackText, setGoBackText] = useState("");
@@ -119,18 +121,12 @@ const EmployeeComponent = ({ id, role }) => {
         withCredentials: true,
       });
       setComponenetUserData(response.data);
-
-      if (response.data.is_superuser) {
-        setUserRole("Admin");
-      } else if (response.data.is_staff) {
-        setUserRole("Supervisor");
-      } else {
-        setUserRole("Employee");
-      }
     } catch (e) {
       console.log(e);
     }
   };
+
+  const userRole = useRecoilValue(roleStateAtom)
 
   const fetchEmotionData = async (period) => {
     try {
@@ -510,24 +506,19 @@ const EmployeeComponent = ({ id, role }) => {
 
   const generateReport = () => {
     downloadPDF({
-      componenetName: `Employee Overview ${team}`,
-      team: team,
-      name: name,
+      componenetName: `Employee Overview ${id}`,
+      name: `${userData.first_name} ${userData.last_name}`,
       userRole: role,
       orientation: "",
     });
   };
 
   return (
-    <div className={`min-h-screen ${Color.background}`}>
-      <div id="Employee Overview report-content">
-        <EmployeeInfo
-          name={`${userData.first_name} ${userData.last_name}`}
-          team={userData.team}
-          accountType={role}
-          picture={userData.profile_picture}
-        />
-
+    <div className={`min-h-screen ${Color.background} bg-red-700`}>
+      <div
+        id={`Employee Overview ${id} report-content`}
+        className={`min-h-screen ${Color.background}`}
+      >
         <div className="container mx-auto py-2 px-4 md:px-20 lg:px-12 xl:px-48">
           {/*Period Selection Buttons */}
 
@@ -577,19 +568,8 @@ const EmployeeComponent = ({ id, role }) => {
             >
               {/* Emotions */}
               <div className={`rounded-lg  ${Color.chartsBGText} m-4 p-6`}>
-                <div className="text-center flex-auto">
-                  <IoHelpCircleOutline size={25} />
-                  <h5 className="text-2xl font-semibold  mb-5">
-                    {emotionView === "daily"
-                      ? "Daily Emotions"
-                      : emotionView === "weekly"
-                      ? "Weekly Emotions"
-                      : emotionView === "monthly"
-                      ? "Monthly Emotions"
-                      : "Overall Emotions"}
-                  </h5>
-
-                  <div>
+                <div className="text-center flex-auto inline">
+                  <div className="flex items-center justify-between">
                     <button
                       onClick={openEmotionOverlay}
                       className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
@@ -597,14 +577,27 @@ const EmployeeComponent = ({ id, role }) => {
                     >
                       <FaArrowRightArrowLeft size={20} />
                     </button>
+                    <div className="flex-grow text-center mr-5">
+                      <h5 className="text-2xl font-semibold">
+                        {emotionView === "daily"
+                          ? "Daily Emotions"
+                          : emotionView === "weekly"
+                          ? "Weekly Emotions"
+                          : emotionView === "monthly"
+                          ? "Monthly Emotions"
+                          : "Overall Emotions"}
+                      </h5>
+                    </div>
                   </div>
 
                   {emotionChartError ? (
-                    <h2 className="text-xl  mt-4">{emotionChartError}</h2>
+                    <h2 className="text-xl mt-4">{emotionChartError}</h2>
                   ) : (
-                    <div>
-                      <div className="flex items-center justify-center">
-                        <DoughnutChart {...emotions} />
+                    <div className="flex items-center justify-center">
+                      <div className=" max-w-80 max-h-80 rounded-xl">
+                        <div className="p-5">
+                          <DoughnutChart {...emotions} />
+                        </div>
                       </div>
                     </div>
                   )}
@@ -613,22 +606,24 @@ const EmployeeComponent = ({ id, role }) => {
 
               {/* Stress Data */}
               <div className={`${Color.chartsBGText} rounded-lg  m-4 p-6`}>
-                <div className="text-center">
-                  <h5 className="text-2xl font-semibold  mb-5">
+                <div className="text-center flex-auto inline">
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={openStressOverlay}
+                    className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
+                    title="Compare Emotion Data"
+                  >
+                    <FaArrowRightArrowLeft size={20} />
+                  </button>
+                  <div className="flex-grow text-center mr-5">
+                  <h5 className="text-2xl font-semibold">
                     {stressView === "daily"
                       ? "Daily Stress Levels"
                       : stressView === "weekly"
                       ? "Weekly Stress Levels"
                       : "Monthly Stress Levels"}
                   </h5>
-                  <div>
-                    <button
-                      onClick={openStressOverlay}
-                      className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
-                      title="Compare Emotion Data"
-                    >
-                      <FaArrowRightArrowLeft size={20} />
-                    </button>
+                    </div>
                   </div>
 
                   {stressChartError ? (
@@ -645,32 +640,33 @@ const EmployeeComponent = ({ id, role }) => {
                       period={stressView}
                     />
                   )}
-                  <div className="mt-6">
-                    Use the filteration button on top to filter this result
-                    more. You can hover to view more details.
-                  </div>
+    
                 </div>
               </div>
 
               {/* Focus Data */}
-              <div className={` ${Color.chartsBGText}   rounded-lg m-4 p-6 `}>
-                <div className="text-center">
-                  <h5 className="text-2xl font-semibold  mb-5">
-                    {focusView === "daily"
-                      ? "Daily Focus Data"
-                      : focusView === "weekly"
-                      ? "Weekly Focus Data"
-                      : "Monthly Focus Data"}
-                  </h5>
-                  <div>
-                    <button
+              <div className={`rounded-lg  ${Color.chartsBGText} m-4 p-6`}>
+                <div className="text-center flex-auto inline">
+                  <div className="flex items-center justify-between">
+                  <button
                       onClick={openFocusOverlay}
                       className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
                       title="Compare Focus Data"
                     >
                       <FaArrowRightArrowLeft size={20} />
                     </button>
+                    <div className="flex-grow text-center mr-5">
+
+                  <h5 className="text-2xl font-semibold ">
+                    {focusView === "daily"
+                      ? "Daily Focus Data"
+                      : focusView === "weekly"
+                      ? "Weekly Focus Data"
+                      : "Monthly Focus Data"}
+                  </h5>
+                    </div>
                   </div>
+                    
                   {focusChartError ? (
                     <h2 className="text-xl  mt-4">{listeningChartError}</h2>
                   ) : (
@@ -689,24 +685,27 @@ const EmployeeComponent = ({ id, role }) => {
               </div>
 
               {/* Exercise Data */}
-              <div className={` ${Color.chartsBGText}  rounded-lg  m-4 p-6`}>
-                <div className="text-center">
-                  <h5 className="text-2xl font-semibold  mb-5">
-                    {exerciseView === "daily"
-                      ? "Daily Breathing Exercise Usage"
-                      : exerciseView === "weekly"
-                      ? "Weekly Breathing Exercise Usage"
-                      : "Monthly Breathing Exercise Usage"}
-                  </h5>
-                  <div>
-                    <button
+              <div className={`rounded-lg  ${Color.chartsBGText} m-4 p-6`}>
+                <div className="text-center flex-auto inline">
+                  <div className="flex items-center justify-between">
+                  <button
                       onClick={openBreathingOverlay}
                       className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
                       title="Compare Breathing Exercise Usage"
                     >
                       <FaArrowRightArrowLeft size={20} />
                     </button>
+                    <div className="flex-grow text-center mr-5">
+                  <h5 className="text-2xl font-semibold">
+                    {exerciseView === "daily"
+                      ? "Daily Breathing Exercise Usage"
+                      : exerciseView === "weekly"
+                      ? "Weekly Breathing Exercise Usage"
+                      : "Monthly Breathing Exercise Usage"}
+                    </h5>
+                    </div>
                   </div>
+
                   {breathingChartError ? (
                     <h2 className="text-xl  mt-4">{breathingChartError}</h2>
                   ) : (
@@ -738,24 +737,28 @@ const EmployeeComponent = ({ id, role }) => {
               </div>
 
               {/* Listening Data */}
-              <div className={` ${Color.chartsBGText}   rounded-lg m-4 p-6 `}>
-                <div className="text-center">
-                  <h5 className="text-2xl font-semibold  mb-5">
-                    {listeningView === "daily"
-                      ? "Daily Track Listening Usage"
-                      : listeningView === "weekly"
-                      ? "Weekly Track Listening Usage"
-                      : "Monthly Track Listening Usage"}
-                  </h5>
-                  <div>
-                    <button
+              <div className={`rounded-lg  ${Color.chartsBGText} m-4 p-6`}>
+                <div className="text-center flex-auto inline">
+                  <div className="flex items-center justify-between">
+                  <button
                       onClick={openListeningOverlay}
                       className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
                       title="Compare Audio Therapy Usage"
                     >
                       <FaArrowRightArrowLeft size={20} />
                     </button>
+                    <div className="flex-grow text-center mr-5">
+
+                  <h5 className="text-2xl font-semibold">
+                    {listeningView === "daily"
+                      ? "Daily Track Listening Usage"
+                      : listeningView === "weekly"
+                      ? "Weekly Track Listening Usage"
+                      : "Monthly Track Listening Usage"}
+                   </h5>
+                    </div>
                   </div>
+                  
                   {listeningChartError ? (
                     <h2 className="text-xl  mt-4">{listeningChartError}</h2>
                   ) : (

@@ -7,12 +7,15 @@ import axios from "axios";
 import Messages from "./Messages";
 import SettingsOverlay from "./SettingsOverlay";
 import { Color } from "../theme/Colors";
+import { useSetRecoilState } from "recoil";
+import { roleStateAtom } from "../atoms";
 
 const baseUrl = "http://localhost:8000/api/employee/";
 const assets = "http://127.0.0.1:8000/media/assets/";
 const media = "http://127.0.0.1:8000/media/";
 
 const NavBar = () => {
+  const setRole = useSetRecoilState(roleStateAtom)
   const navigate = useNavigate();
   const [profilePicture, setProfilePicture] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -40,12 +43,15 @@ const NavBar = () => {
       if (user.is_superuser) {
         setNavLinks(adminLinks);
         setUserType("Admin");
+        setRole("Admin")
       } else if (user.is_staff) {
         setNavLinks(supervisorLinks);
         setUserType("Supervisor");
+        setRole("Supervisor")
       } else {
         setNavLinks(employeeLinks);
         setUserType("Employee");
+        setRole("Employee")
       }
     } catch (e) {
       console.error(e);
@@ -207,35 +213,11 @@ const NavBar = () => {
 
       <div className="flex items-center space-x-4 mx-5">
         <ul className="flex space-x-4 items-center">
-          <li onClick={handleMessagesToggle} title="Messages">
-            <svg
-              className="h-6 w-6 transform hover:scale-110 transition-transform duration-300 cursor-pointer"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-            >
-              <path d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.67Z" />
-              <path d="M22.5 6.908V6.75a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3v.158l9.714 5.978a1.5 1.5 0 0 0 1.572 0L22.5 6.908Z" />
-            </svg>
-          </li>
-          <li title="Notifications">
-            <svg
-              className="h-6 w-6 transform hover:scale-110 transition-transform duration-300 cursor-pointer"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M5.25 9a6.75 6.75 0 0 1 13.5 0v.75c0 2.123.8 4.057 2.118 5.52a.75.75 0 0 1-.297 1.206c-1.544.57-3.16.99-4.831 1.243a3.75 3.75 0 1 1-7.48 0 24.585 24.585 0 0 1-4.831-1.244.75.75 0 0 1-.298-1.205A8.217 8.217 0 0 0 5.25 9.75V9Zm4.502 8.9a2.25 2.25 0 1 0 4.496 0 25.057 25.057 0 0 1-4.496 0Z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </li>
+
           <li>
             <button onClick={handleDropdownToggle} className="relative">
               <img
-                className="h-9 rounded-full border-2 border-white shadow-blue-600/50 transform hover:scale-110 transition-transform duration-300 cursor-pointer"
+                className="h-10 w-10 rounded-full border-2 border-white shadow-blue-600/50 transform hover:scale-110 transition-transform duration-300 cursor-pointer"
                 src={userData.profile_picture ? userData.profile_picture : " "}
                 alt="Profile"
               />
@@ -249,7 +231,7 @@ const NavBar = () => {
                   className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font google"
                 >
                   <img src={` `} className="w-4 inline-flex mx-2" />
-                  Theme:{" "}
+                  <b>Theme: </b>
                   {localStorage.getItem("darkMode") === "true"
                     ? "Dark"
                     : "Light"}
@@ -260,7 +242,7 @@ const NavBar = () => {
                   className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font google"
                 >
                   <img src={` `} className="w-4 inline-flex mx-2" />
-                  Notifications:{" "}
+                  <b>Notifications: </b>
                   {localStorage.getItem("notification") === "hidden"
                     ? "Off"
                     : "On"}
@@ -271,7 +253,7 @@ const NavBar = () => {
                   className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font google"
                 >
                   <img src={` `} className="w-4 inline-flex mx-2" />
-                  Logout
+                  <b>Logout</b>
                 </button>
               </div>
             )}

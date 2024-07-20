@@ -3,7 +3,9 @@ import axios from "axios";
 import { Navigate } from "react-router-dom";
 import "../index.css";
 import TestComponent from "./EmployeeComponent";
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from "react-router-dom";
+import { Color } from "../theme/Colors";
+import EmployeeInfo from "./EmployeeInfo";
 
 const pfp = "http://127.0.0.1:8000/media/profilePictures/default.jpg";
 const icons = "http://127.0.0.1:8000/media/icons";
@@ -37,19 +39,28 @@ const EmployeeDashboard = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto py-6">
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-semibold text-sky-700">
+    <div className={`min-h-screen bg-gray-50 ${Color.background}`}>
+      <div className="container mx-auto">
+        <div className="flex items-center justify-between text-center mr-3 ml-8">
+          <EmployeeInfo
+            name={`${userData.first_name} ${userData.last_name}`}
+            team={userData.team}
+            accountType={userRole}
+            picture={userData.profile_picture}
+          />
+
+          <h1
+            className={`text-3xl font-bold text-sky-700 font-google ${Color.background} ${Color.cardBGText} mr-14`}
+          >
             Employee Dashboard
           </h1>
         </div>
 
         <div className="container mx-auto py-6">
-            <TestComponent id={userData.id} role={userRole}/>
-          </div>
+          <TestComponent id={userData.id} role={userRole} />
         </div>
       </div>
+    </div>
   );
 };
 export default EmployeeDashboard;

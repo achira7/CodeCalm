@@ -8,7 +8,7 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 function BarChart({ data, period }) {
   const labels = period === 'weekly'
     ? ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-    : Object.keys(data).map(day => period === 'daily' ? day : `Day ${day}`);
+    : Object.keys(data).map(day => period === 'daily' ? day : `${day}`);
 
   const chartData = {
     labels: labels,
