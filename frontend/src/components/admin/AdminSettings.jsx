@@ -23,46 +23,69 @@ const AdminSettings = () => {
     navigate("/admin/addquestion");
   };
 
-  const goToAddTeam = () =>{
+  const goToAddTeam = () => {
     navigate("/admin/addteam");
-  }
+  };
 
   return (
     <div className={`min-h-screen ${Color.background}`}>
-    <div className="container mx-auto py-2 px-4 md:px-20 lg:px-12 xl:px-48 m-7">
-      
-      <div className={`flex items-center ${Color.chartsBGText} rounded-lg p-6 mb-4`}>
-        <button onClick={goToAddListening} className="flex items-center w-full">
-          <BsSoundwave size={30} className="mr-4" />
-          <span>Manage Audio Therapy</span>
-        </button>
-      </div>
+      <div className="container mx-auto py-2 px-4 md:px-20 lg:px-12 xl:px-48 m-7 flex items-center justify-between">
+        <div className="flex flex-col justify-center">
+          <div
+            className={`flex items-center ${Color.chartsBGText} rounded-lg p-6 mb-4 bg-slate-300 `}
+          >
+            <button
+              onClick={goToAddListening}
+              className="flex items-center w-full"
+            >
+              <BsSoundwave size={30} className="mr-4" />
+              <span>Manage Audio Therapy</span>
+            </button>
+          </div>
 
-      <div className={`flex items-center ${Color.chartsBGText} rounded-lg p-6 mb-4`}>
-        <button onClick={goToAddBreathing} className="flex items-center w-full">
-          <GiMeditation size={30} className="mr-4" />
-          <span>Manage Breathing Exercise</span>
-        </button>
-      </div>
+          <div
+            className={`flex items-center ${Color.chartsBGText} rounded-lg p-6 mb-4 bg-slate-300 `}
+          >
+            <button
+              onClick={goToAddBreathing}
+              className="flex items-center w-full"
+            >
+              <GiMeditation size={30} className="mr-4" />
+              <span>Manage Breathing Exercise</span>
+            </button>
+          </div>
 
-      <div className={`flex items-center ${Color.chartsBGText} rounded-lg p-6 mb-4`}>
-        <button onClick={goToAddStressQuestion} className="flex items-center w-full">
-          <GrDocumentPerformance size={30} className="mr-4" />
-          <span>Manage Self Stress Questions</span>
-        </button>
-      </div>
+          <div
+            className={`flex items-center ${Color.chartsBGText} bg-slate-300 rounded-lg p-6 mb-4`}
+          >
+            <button
+              onClick={goToAddStressQuestion}
+              className="flex items-center w-full"
+            >
+              <GrDocumentPerformance size={30} className="mr-4" />
+              <span>Manage Self Stress Questions</span>
+            </button>
+          </div>
 
-      <div className={`flex items-center ${Color.chartsBGText} rounded-lg p-6`}>
-        <button onClick={goToAddTeam} className="flex items-center w-full">
-          <MdGroups size={30} className="mr-4" />
-          <span>Add a Team</span>
-        </button>
+          <div
+            className={`flex items-center ${Color.chartsBGText} rounded-lg p-6 bg-slate-300 `}
+          >
+            <button onClick={goToAddTeam} className="flex items-center w-full">
+              <MdGroups size={30} className="mr-4" />
+              <span>Add a Team</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="mr-36">
+          <img
+            src="http://127.0.0.1:8000/media/settings/settings.png"
+            className="w-96"
+          />
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
 };
-
-
 
 export default AdminSettings;

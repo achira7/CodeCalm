@@ -2,7 +2,9 @@ import React, { useEffect, useState } from "react";
 import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { Link, useNavigate } from 'react-router-dom';
+import { Color } from "../../theme/Colors";
+import { useNavigate } from "react-router-dom";
+import { IoIosArrowDropleft } from "react-icons/io";
 
 const StressQuestionForm = () => {
   const [questions, setQuestions] = useState([]);
@@ -14,6 +16,8 @@ const StressQuestionForm = () => {
   const [editQuestionId, setEditQuestionId] = useState(null);
   const [deleteQuestionId, setDeleteQuestionId] = useState(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchUserData();
@@ -146,123 +150,135 @@ const StressQuestionForm = () => {
     closeConfirmBox();
   };
 
-  if (!isAuthenticated) {
-    return <div>Please log in to add a question.</div>;
+
+  const goBackToSettings = () => {
+    navigate("/admin/settings");
   }
 
   return (
-    <div className="max-w-md mx-auto mt-8 p-4 bg-white shadow-md rounded-md">
-      <ToastContainer />
-      <Link to="/admin/settings">
-          <div className="flex items-center mx-5 hover: transition-transform duration-300 cursor-pointer">
-            <svg
-              className="fill-sky-500"
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              id="back-arrow"
-            >
-              <path fill="none" d="M0 0h24v24H0V0z" opacity=".87"></path>
-              <path d="M16.62 2.99c-.49-.49-1.28-.49-1.77 0L6.54 11.3c-.39.39-.39 1.02 0 1.41l8.31 8.31c.49.49 1.28.49 1.77 0s.49-1.28 0-1.77L9.38 12l7.25-7.25c.48-.48.48-1.28-.01-1.76z"></path>
-            </svg>
-            <p className="text-sky-500 font-semibold font google text-lg mx-3">
-              To Settings Portal
-            </p>
-          </div>
-        </Link>
+<div>
+  <div className="text-center w-full my-5">
+    <h1 className="text-3xl font-semibold text-sky-700 ">
+      Manage Self Stress Questions
+    </h1>
 
-      <h2 className="text-xl font-bold mb-4">{editQuestionId ? 'Edit Stress Question' : 'Add New Stress Question'}</h2>
-      <form onSubmit={editQuestionId ? handleUpdateQuestion : handleNewQuestionSubmit}>
-        <label htmlFor="newQuestion" className="block text-sm font-medium text-gray-700">
-          Question:
-        </label>
-        <input
-          type="text"
-          id="newQuestion"
-          value={newQuestion}
-          onChange={handleNewQuestionChange}
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-        />
-        <label htmlFor="newAffect" className="block text-sm font-medium text-gray-700 mt-4">
-          Affect:
-        </label>
-        <select
-          id="newAffect"
-          value={newAffect}
-          onChange={handleNewAffectChange}
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-        >
-          <option value="P">Positive</option>
-          <option value="N">Negative</option>
-        </select>
+    <button
+      className="px-4 py-2 rounded-md mb-5 flex absolute top-24 left-5 button bg-sky-400 text-black  hover:bg-sky-600 hover:text-white duration-300"
+      onClick={goBackToSettings}
+    >
+      <IoIosArrowDropleft size={25} className="mr-2 arrow-icon" />
+      Go Back to Settings
+    </button>
+  </div>
 
-        <label htmlFor="type" className="block text-sm font-medium text-gray-700 mt-4">
-          Type:
-        </label>
-        <select
-          id="type"
-          value={newType}
-          onChange={handleNewTypeChange}
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-        >
-          <option value="A">Agreeable</option>
-          <option value="T">Occurrence Based</option>
-        </select>
-
-        <button type="submit" className="mt-4 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">
-          {editQuestionId ? 'Update Question' : 'Add Question'}
-        </button>
-      </form>
-      <h2 className="text-xl font-bold mt-8 mb-4">Stress Questions</h2>
-      <ul>
-        {questions.map(({ id, question, affect, type }) => (
-          <li key={id} className="mb-2 p-2 bg-gray-100 rounded-md flex justify-between items-center">
-            <div>
-            {question} 
-            </div>
-            <div>
-              <span className="text-gray-600">- Affect: {affect}</span>
-            </div>
-            <div>
-              <span className="text-gray-600">- Type: {type}</span>
-            </div>
-            <div>
-              <button onClick={() => handleEditQuestion(id)} className="ml-2 px-2 py-1 bg-green-500 text-white rounded-md hover:bg-green-600">
-                Edit
-              </button>
-              <button onClick={() => openConfirmBox(id)} className="ml-2 px-2 py-1 bg-red-500 text-white rounded-md hover:bg-red-600">
-                Delete
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
-
-      {isConfirmOpen && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-800 bg-opacity-75">
-          <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
-            <h2 className="text-xl mb-4">Are you sure you want to delete this question?</h2>
-            <p>{questions.find(question => question.id === deleteQuestionId)?.question}</p>
-            <div className="flex justify-end">
-              <button
-                onClick={closeConfirmBox}
-                className="bg-gray-300 text-gray-700 px-3 py-2 rounded mr-2"
+  <div className="flex justify-center mx-auto container">
+    <div className="flex flex-col lg:flex-row lg:w-2/3 gap-4">
+      <div className={`w-full`}>
+        <div className={`py-6`}>
+          <div className={`rounded-lg shadow-lg p-6 mb-6 ${Color.cardBox}`}>
+            <h2 className="text-xl font-semibold mb-4">Add a Question</h2>
+            <form onSubmit={editQuestionId ? handleUpdateQuestion : handleNewQuestionSubmit}>
+              <label htmlFor="newQuestion" className="block text-sm font-medium text-gray-700">
+                Question:
+              </label>
+              <input
+                type="text"
+                id="newQuestion"
+                value={newQuestion}
+                onChange={handleNewQuestionChange}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              />
+              <label htmlFor="newAffect" className="block text-sm font-medium text-gray-700 mt-4">
+                Affect:
+              </label>
+              <select
+                id="newAffect"
+                value={newAffect}
+                onChange={handleNewAffectChange}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
               >
-                Cancel
-              </button>
-              <button
-                onClick={confirmAction}
-                className="bg-red-500 text-white px-3 py-2 rounded"
+                <option value="P">Positive</option>
+                <option value="N">Negative</option>
+              </select>
+
+              <label htmlFor="type" className="block text-sm font-medium text-gray-700 mt-4">
+                Type:
+              </label>
+              <select
+                id="type"
+                value={newType}
+                onChange={handleNewTypeChange}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
               >
-                Confirm
+                <option value="A">Agreeable</option>
+                <option value="T">Occurrence Based</option>
+              </select>
+
+              <button type="submit" className="mt-4 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">
+                {editQuestionId ? 'Update Question' : 'Add Question'}
               </button>
-            </div>
+            </form>
           </div>
+
+          <div className={`py-6 w-full `}>
+          <div className={`rounded-lg shadow-lg p-6 mb-6 ${Color.cardBox}`}>
+            <h2 className="text-xl font-bold mt-8 mb-4">Stress Questions</h2>
+            
+            <ul>
+              {questions.map(({ id, question, affect, type }) => (
+                <li key={id} className="mb-2 p-2 bg-gray-100 rounded-md flex justify-between items-center">
+                  <div>{question}</div>
+                  <div>
+                    <span className="text-gray-600">- Affect: {affect}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">- Type: {type}</span>
+                  </div>
+                  <button
+                    onClick={() => handleEditQuestion(id)}
+                    className="ml-2 px-2 py-1 bg-green-500 text-white rounded-md hover:bg-green-600"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => openConfirmBox(id)}
+                    className="ml-2 px-2 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
+                  >
+                    Delete
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+          </div>
+
+          {isConfirmOpen && (
+            <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-800 bg-opacity-75">
+              <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
+                <h2 className="text-xl mb-4">Are you sure you want to delete this question?</h2>
+                <p>{questions.find((question) => question.id === deleteQuestionId)?.question}</p>
+                <div className="flex justify-end">
+                  <button
+                    onClick={closeConfirmBox}
+                    className="bg-gray-300 text-gray-700 px-3 py-2 rounded mr-2"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmAction}
+                    className="bg-red-500 text-white px-3 py-2 rounded"
+                  >
+                    Confirm
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
-  );
-};
+  </div>
+</div>
+  )}
 
 export default StressQuestionForm;

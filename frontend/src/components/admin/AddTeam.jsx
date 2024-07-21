@@ -5,13 +5,16 @@ import "tailwindcss/tailwind.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { FaTrash, FaEdit } from "react-icons/fa";
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { IoIosArrowDropleft } from "react-icons/io";
 
 const AddTeam = ({ onSuccess, onError }) => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [teamList, setTeamList] = useState([]);
   const [updatingTeam, setUpdatingTeam] = useState(null);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchTeams = async () => {
@@ -76,41 +79,34 @@ const AddTeam = ({ onSuccess, onError }) => {
     }
   };
 
+  const goBackToSettings = () => {
+    navigate("/admin/settings");
+  };
+
   return (
-    <div className="flex justify-center container py-8">
-      <Link to="/admin/settings">
-          <div className="flex items-center mx-5 hover: transition-transform duration-300 cursor-pointer">
-            <svg
-              className="fill-sky-500"
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              id="back-arrow"
-            >
-              <path fill="none" d="M0 0h24v24H0V0z" opacity=".87"></path>
-              <path d="M16.62 2.99c-.49-.49-1.28-.49-1.77 0L6.54 11.3c-.39.39-.39 1.02 0 1.41l8.31 8.31c.49.49 1.28.49 1.77 0s.49-1.28 0-1.77L9.38 12l7.25-7.25c.48-.48.48-1.28-.01-1.76z"></path>
-            </svg>
-            <p className="text-sky-500 font-semibold font google text-lg mx-3">
-              To Settings Portal
-            </p>
-          </div>
-        </Link>
-      <div className="flex flex-col lg:flex-row lg:w-2/3 gap-4">
+    <div>
+      <div className="text-center w-full my-5">
+        <h1 className="text-3xl font-semibold text-sky-700 ">
+          Manage Teams 
+        </h1>
 
-      
-
-        <div className="text-center w-full lg:w-1/2">
-          <h1 className="text-3xl font-semibold text-sky-700 mt-10">
-            {updatingTeam ? "Update Team" : "Create Team"}
-          </h1>
-        </div>
+        <button
+          className="px-4 py-2 rounded-md mb-5 flex absolute top-24 left-5 button bg-sky-400 text-black  hover:bg-sky-600 hover:text-white duration-300"
+          onClick={goBackToSettings}
+        >
+          <IoIosArrowDropleft size={25} className="mr-2 arrow-icon" />
+          Go Back to Settings
+        </button>
+      </div>
+    <div className="flex justify-center container pt-8">
+      <div className="flex flex-col lg:flex-row lg:w-2/3 gap-5">
 
         <div className="w-full lg:w-1/2">
           <div className={`rounded-lg shadow-lg p-6 mb-6 ${Color.cardBox}`}>
             <form method="POST" onSubmit={handleSubmit}>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">
+              <div className="mb-5">
+                <h1 className="font-bold text-2xl text-sky-500 font-google"> {updatingTeam ? "Update Team" : "Create Team"} </h1>
+                <label className="block text-lg font-medium text-gray-700 my-3">
                   Team Name:
                 </label>
                 <input
@@ -123,8 +119,8 @@ const AddTeam = ({ onSuccess, onError }) => {
                   required
                 />
               </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">
+              <div className="mb-5">
+                <label className="block text-lg font-medium text-gray-700 my-3">
                   Team Description:
                 </label>
                 <textarea
@@ -147,7 +143,7 @@ const AddTeam = ({ onSuccess, onError }) => {
           </div>
         </div>
 
-        <div className={`py-6 w-full lg:w-1/2`}>
+        <div className={`w-full lg:w-1/2`}>
           <div className={`rounded-lg shadow-lg p-6 mb-6 ${Color.cardBox}`}>
             <h1 className="text-xl">
               Currently Available Teams : {teamList.length}
@@ -188,6 +184,7 @@ const AddTeam = ({ onSuccess, onError }) => {
         </div>
       </div>
       <ToastContainer />
+    </div>
     </div>
   );
 };

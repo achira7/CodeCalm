@@ -2,7 +2,10 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { IoIosArrowDropleft } from "react-icons/io";
+import { Color } from "../../theme/Colors";
+
 
 
 const AddBreathingProfile = () => {
@@ -13,6 +16,7 @@ const AddBreathingProfile = () => {
   const [description, setDescription] = useState("");
   const [profiles, setProfiles] = useState([]);
   const [editProfileId, setEditProfileId] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchProfiles();
@@ -123,33 +127,36 @@ const AddBreathingProfile = () => {
     return null;
   };
 
+  const goBackToSettings = () => {
+    navigate("/admin/settings");
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto py-6">
+    <div>
+      <div className="text-center w-full my-5">
+        <h1 className="text-3xl font-semibold text-sky-700 ">
+          Manage Breathing Exercise Profiles
+        </h1>
 
-      <Link to="/admin/settings">
-          <div className="flex items-center mx-5 hover: transition-transform duration-300 cursor-pointer">
-            <svg
-              className="fill-sky-500"
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              id="back-arrow"
-            >
-              <path fill="none" d="M0 0h24v24H0V0z" opacity=".87"></path>
-              <path d="M16.62 2.99c-.49-.49-1.28-.49-1.77 0L6.54 11.3c-.39.39-.39 1.02 0 1.41l8.31 8.31c.49.49 1.28.49 1.77 0s.49-1.28 0-1.77L9.38 12l7.25-7.25c.48-.48.48-1.28-.01-1.76z"></path>
-            </svg>
-            <p className="text-sky-500 font-semibold font google text-lg mx-3">
-              To Settings Portal
-            </p>
-          </div>
-        </Link>
-
-        <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-6 mb-6">
+        <button
+          className="px-4 py-2 rounded-md mb-5 flex absolute top-24 left-5 button bg-sky-400 text-black  hover:bg-sky-600 hover:text-white duration-300"
+          onClick={goBackToSettings}
+        >
+          <IoIosArrowDropleft size={25} className="mr-2 arrow-icon" />
+          Go Back to Settings
+        </button>
+      </div>
+      <div className="flex justify-center mx-auto container bg-white border border-gray-200 rounded-lg shadow-lg p-3 m-6">
+        <div className="flex flex-col lg:flex-row lg:w-2/3 gap-4">
+          <div className={` w-full`}>
+            <div className={`py-6`}>
+              <div
+                className={`rounded-lg shadow-lg p-6 mb-6 ${Color.cardBox} `}
+              >
           <h2 className="text-xl font-semibold text-sky-900 mb-4">
             Add a Breathing Exercise Profile
           </h2>
+          
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
               <label className="block text-gray-700">Name:</label>
@@ -222,41 +229,55 @@ const AddBreathingProfile = () => {
               {editProfileId ? "Update Profile" : "Add Profile"}
             </button>
           </form>
+          </div>
         </div>
-        <div className="mt-6">
+        </div>
+            <ToastContainer />
+          </div>
+          <div className={`py-6 w-1/2 `}>
+            <div className={`rounded-lg shadow-lg p-6 mb-6  ${Color.cardBox} `}>
+            <h1 className="text-xl">
+                <div className="flex flex-initial">
+                  <p className="font-semibold">Currently Available Profiles: </p> <p> &nbsp;{profiles.length}</p>
+                </div>
+              </h1>
+              <div
+                className="mt-8 w-full max-w-2sl custom-scrollbar "
+                style={{ maxHeight: "500x", overflowY: "scroll" }}
+              >
           {profiles.map((profile) => (
             <div
               key={profile.id}
-              className="bg-white border border-gray-200 rounded-lg shadow-lg p-4 mb-4"
+              className={`flex ${Color.textFeild} flex items-center justify-between bg-white border border-gray-200 rounded-lg shadow-lg p-4 mb-4`}
             >
-              <h3 className="font-semibold text-xl">{profile.name}</h3>
-              <p className="py-1">
-                Inhale Duration: {profile.inhale_duration} seconds
+              <h3 className=" flex items-center justify-between font-semibold text-xl w-[100px]">{profile.name}</h3>
+              <p className="p-5">
+                Inhale: {profile.inhale_duration}s
               </p>
-              <p className="py-1">
-                Exhale Duration: {profile.exhale_duration} seconds
+              <p className="p-5">
+                Exhale: {profile.exhale_duration}s
               </p>
-              <p className="py-1">
-                Hold Duration: {profile.hold_duration} seconds
+              <p className="p-5">
+                Hold: {profile.hold_duration}s
               </p>
-              <p className="py-1">Description: {profile.description}</p>
-              <button
-                onClick={() => handleEdit(profile)}
-                className="bg-blue-500 text-white px-4 py-2 rounded mr-2 mt-3"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(profile.id)}
-                className="bg-red-500 text-white px-4 py-2 rounded"
-              >
-                Delete
-              </button>
-            </div>
+               <button
+                 onClick={() => handleEdit(profile)}
+                 className="bg-blue-500 text-white px-4 py-2 rounded"
+               >
+                 Edit
+               </button>
+               <button
+                 onClick={() => handleDelete(profile.id)}
+                 className="bg-red-500 text-white px-4 py-2 rounded"
+               >
+                 Delete
+               </button>
+             </div>
           ))}
         </div>
+        </div>
       </div>
-      <ToastContainer />
+    </div>
     </div>
   );
 };
