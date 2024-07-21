@@ -27,6 +27,10 @@ function DoughnutChart({ angry, disgust, fear, happy, sad, surprise, neutral }) 
           color: Color.chartText,  
           boxWidth: 40,  
           boxHeight: 13,  
+          font: {
+            family: 'Arial', 
+            size: 14,
+          }
         },
       },
       tooltip: {

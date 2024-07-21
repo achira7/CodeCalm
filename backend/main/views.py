@@ -7,11 +7,10 @@ import json
 from .models import Employee_Emotion, Employee_Team, Employee_Focus, BreathingExerciseUsage, TrackListening, StressQuestion, StressDetectionForm, ReportGeneration, Employee_Stress, BreathingProfile, Track, Reminder, FaceLoginProfile, FaceImage
 from django.utils.timezone import now, localtime
 
-from django.http import JsonResponse, StreamingHttpResponse
+from django.http import JsonResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.exceptions import AuthenticationFailed
-from rest_framework import permissions, status, generics
+from rest_framework import status, generics
 from .serializers import UserSerializer, EmployeeTeamSerializer, BreathingExerciseUsageSerializer, TrackListeningSerializer, StressQuestionSerializer, StressDetectionFormSerializer, BreathingProfileSerializer, TrackSerializer, ReminderSerializer, FaceImageSerializer
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate
@@ -495,7 +494,8 @@ def complete_face_registration(request):
     except FaceLoginProfile.DoesNotExist:
         return Response({"message": "Registration not started"}, status=400)
 
-        
+current_time = datetime.now().time()
+  
 
 class EmotionDataView(APIView):
     @csrf_exempt
@@ -506,76 +506,81 @@ class EmotionDataView(APIView):
 
         if not image_data or not userid:
             return JsonResponse({'emo': 'Missing frame or user_id', 'frq': 'none'})
-
-        try:
-            format, imgstr = image_data.split('image/jpeg;base64,')
-            opencv_image = stringToRGB(imgstr)
-            sharpened_image = imageSharpen(opencv_image)
-
-            if is_image_dark(opencv_image):
-                return JsonResponse({'emo': 'Webcam cover is closed or image is too dark', 'frq': 'none'})
-
-            if is_image_blurred(opencv_image):
-                return JsonResponse({'emo': 'Image is blurred. Please clear the webcam.', 'frq': 'none'})
-
+        
+        if current_time <= datetime.strptime("18:01", "%H:%M").time():
             try:
-                face_locations = face_recognition.face_locations(opencv_image)
-                if face_locations:
-                    for face_location in face_locations:
-                        top, right, bottom, left = face_location
-                        
-                        face_image = opencv_image[top:bottom, left:right]
+                format, imgstr = image_data.split('image/jpeg;base64,')
+                opencv_image = stringToRGB(imgstr)
+                sharpened_image = imageSharpen(opencv_image)
 
-                        #emotion detection using DeepFace
-                        emotion = detectEmotion(face_image, sharpened_image)
+                if is_image_dark(opencv_image):
+                    return JsonResponse({'emo': 'Webcam cover is closed or image is too dark', 'frq': 'none'})
 
-                        stress_weights = {
-                            'angry': 4,
-                            'disgust': 3,
-                            'fear': 4,
-                            'happy': -4,
-                            'sad': 3,
-                            'surprise': 1,
-                            'neutral': 0
-                        }
+                if is_image_blurred(opencv_image):
+                    return JsonResponse({'emo': 'Image is blurred. Please clear the webcam.', 'frq': 'none'})
 
-                        allowed_emotions = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
-                        if emotion in allowed_emotions:
-                            # Create a new record in the Employee_Emotion model
-                            Employee_Emotion.objects.create(employee_id=userid, emotion_data=emotion)
+                try:
+                    face_locations = face_recognition.face_locations(opencv_image)
+                    if face_locations:
+                        for face_location in face_locations:
+                            top, right, bottom, left = face_location
+                            
+                            face_image = opencv_image[top:bottom, left:right]
 
-                            # Get the stress weight for the detected emotion
-                            stress_weight = stress_weights.get(emotion, 0)
+                            #emotion detection using DeepFace
+                            emotion = detectEmotion(face_image, sharpened_image)
 
-                            Employee_Stress.objects.create(employee_id=userid, stress_data=stress_weight)
+                            stress_weights = {
+                                'angry': 4,
+                                'disgust': 3,
+                                'fear': 4,
+                                'happy': -4,
+                                'sad': 3,
+                                'surprise': 1,
+                                'neutral': 0
+                            }
 
-                            one_minute_ago = timezone.now() - timedelta(minutes=1)
+                            allowed_emotions = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
+                            if emotion in allowed_emotions:
+                                # Create a new record in the Employee_Emotion model
+                                print("Database", userid, emotion)
+                                Employee_Emotion.objects.create(employee_id=userid, emotion_data=emotion)
 
-                            negative_emotions_count = Employee_Emotion.objects.filter(
-                                employee_id=userid,
-                                emotion_data__in=['sad', 'angry', 'disgust', 'fear'],
-                                time__gte=one_minute_ago
-                            ).count()
+                                # Get the stress weight for the detected emotion
+                                stress_weight = stress_weights.get(emotion, 0)
 
-                            # Check if the count of negative emotions is 2 or more
-                            if negative_emotions_count >= 3:
-                                frq = "You seem to be stressed!"
+                                Employee_Stress.objects.create(employee_id=userid, stress_data=stress_weight)
+
+                                one_minute_ago = timezone.now() - timedelta(minutes=1)
+
+                                negative_emotions_count = Employee_Emotion.objects.filter(
+                                    employee_id=userid,
+                                    emotion_data__in=['sad', 'angry', 'disgust', 'fear'],
+                                    time__gte=one_minute_ago
+                                ).count()
+
+                                # Check if the count of negative emotions is 2 or more
+                                if negative_emotions_count >= 3:
+                                    frq = "You seem to be stressed!"
+                                else:
+                                    frq = "none"
                             else:
                                 frq = "none"
-                        else:
-                            frq = "none"
 
-                        # Return the emotion and frequency
-                        print(emotion)
-                        return JsonResponse({'emo': emotion, 'frq': frq})
+                            # Return the emotion and frequency
+                            print(emotion)
+                            return JsonResponse({'emo': emotion, 'frq': frq})
 
-                return JsonResponse({'emo': 'No face detected', 'frq': 'none'})
+                    return JsonResponse({'emo': 'No face detected', 'frq': 'none'})
+
+                except Exception as e:
+                    return JsonResponse({'emo': 'Loading...', 'frq': 'none'})
 
             except Exception as e:
                 return JsonResponse({'emo': 'Loading...', 'frq': 'none'})
-
-        except Exception as e:
-            return JsonResponse({'emo': 'Loading...', 'frq': 'none'})
+        else:
+            return JsonResponse({'emo': 'After 6', 'frq': 'After 6'})
+        
 
     def get(self, request):
         defaultEmotionValues = {'angry': 0, 'disgust': 0, 'fear': 0, 'happy': 0, 'sad': 0, 'surprise': 0, 'neutral': 0}
@@ -621,10 +626,10 @@ class EmotionDataView(APIView):
                                         .order_by('emotion_data') \
                                         .values_list('emotion_data', 'count')
 
-        # Convert the queryset to a dictionary
+        #Convert the queryset to a dictionary
         emotion_counts_dict = dict(emotion_counts_list)
 
-        # Update defaultEmotionValues with the fetched emotion counts
+        #Update defaultEmotionValues with the fetched emotion counts
         for key in defaultEmotionValues:
             if key in emotion_counts_dict:
                 defaultEmotionValues[key] += emotion_counts_dict[key]
@@ -971,8 +976,13 @@ class BreathingExerciseUsageView(APIView):
         exercise_name = request.data['exercise_name']
         duration = request.data['duration']
 
-        BreathingExerciseUsage.objects.create(employee_id=id, exercise_name=exercise_name, duration=duration)
-        return Response(status=status.HTTP_201_CREATED)
+
+        if current_time <= datetime.strptime("18:01", "%H:%M").time():
+            BreathingExerciseUsage.objects.create(employee_id=id, exercise_name=exercise_name, duration=duration)
+            return Response(status=status.HTTP_201_CREATED)
+        else:
+            return Response('After 6')
+
     
     def get(self, request):
         user_id = request.GET.get('user')
@@ -1126,14 +1136,20 @@ class TrackListeningView(APIView):
             track_name = request.data.get('track_name')
             duration = request.data.get('duration')
 
-            if user_id is None or track_name is None or duration is None:
-                return Response({"error": "User, track name, and duration are required"}, status=status.HTTP_400_BAD_REQUEST)
-
-            if duration <= 10:
-                return Response({"error": "Duration must be greater than 10"}, status=status.HTTP_400_BAD_REQUEST)
+            if current_time <= datetime.strptime("18:01", "%H:%M").time():
+                if user_id is None or track_name is None or duration is None:
+                    return Response({"error": "User, track name, and duration are required"}, status=status.HTTP_400_BAD_REQUEST)
+                
+                if current_time <= datetime.strptime("18:01", "%H:%M").time():
+                    if duration <= 10:
+                        return Response({"error": "Duration must be greater than 10"}, status=status.HTTP_400_BAD_REQUEST)
+                    else:
+                        TrackListening.objects.create(employee_id=user_id, track_name=track_name, duration=duration)
+                        return Response({"message": "Track listening recorded successfully"}, status=status.HTTP_201_CREATED)
+                else:
+                    return Response({"message": "No data recorded"})
             else:
-                TrackListening.objects.create(employee_id=user_id, track_name=track_name, duration=duration)
-                return Response({"message": "Track listening recorded successfully"}, status=status.HTTP_201_CREATED)
+                return Response({"message": "No data recorded after 6 PM"})
 
         except KeyError as e:
             return Response({"error": f"Missing key: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
@@ -1666,89 +1682,93 @@ class FocusDataView(APIView):
         if not image_data or not userid:
             return JsonResponse({'focused': False, 'text': 'Missing frame or user_id'})
         
-        try:
-            format, imgstr = image_data.split('image/jpeg;base64,')
-            opencv_image = stringToRGB(imgstr)
+        if current_time <= datetime.strptime("18:01", "%H:%M").time():
+            try:
+                format, imgstr = image_data.split('image/jpeg;base64,')
+                opencv_image = stringToRGB(imgstr)
 
-            if is_image_dark(opencv_image):
-                return JsonResponse({'text': 'Webcam cover is closed or image is too dark'})
+                if is_image_dark(opencv_image):
+                    return JsonResponse({'text': 'Webcam cover is closed or image is too dark'})
 
-            elif is_image_blurred(opencv_image):
-                return JsonResponse({'text': 'Image is blurred. Please clear the webcam.'})
-            else:
-                try:
-                    face_locations = face_recognition.face_locations(opencv_image)
-                    if face_locations:
-                        for face_location in face_locations:
-                            # Extract the facial landmarks
-                            face_landmarks = face_recognition.face_landmarks(opencv_image, [face_location])
-                            if face_landmarks:
-                                landmarks = face_landmarks[0]
+                elif is_image_blurred(opencv_image):
+                    return JsonResponse({'text': 'Image is blurred. Please clear the webcam.'})
+                else:
+                    try:
+                        face_locations = face_recognition.face_locations(opencv_image)
+                        if face_locations:
+                            for face_location in face_locations:
+                                # Extract the facial landmarks
+                                face_landmarks = face_recognition.face_landmarks(opencv_image, [face_location])
+                                if face_landmarks:
+                                    landmarks = face_landmarks[0]
 
-                                #Extract 2D coordinate
-                                image_points = np.array([
-                                    landmarks['nose_tip'][2],    # Nose tip
-                                    landmarks['chin'][8],        # Chin
-                                    landmarks['left_eye'][0],    # Left eye left corner
-                                    landmarks['right_eye'][3],   # Right eye right corner
-                                    landmarks['top_lip'][0],     # Left Mouth corner
-                                    landmarks['top_lip'][6]      # Right mouth corner
-                                ], dtype=np.float32)
+                                    #Extract 2D coordinate
+                                    image_points = np.array([
+                                        landmarks['nose_tip'][2],    # Nose tip
+                                        landmarks['chin'][8],        # Chin
+                                        landmarks['left_eye'][0],    # Left eye left corner
+                                        landmarks['right_eye'][3],   # Right eye right corner
+                                        landmarks['top_lip'][0],     # Left Mouth corner
+                                        landmarks['top_lip'][6]      # Right mouth corner
+                                    ], dtype=np.float32)
 
-                                #Camera matrix
-                                focal_length = opencv_image.shape[1]
-                                center = (opencv_image.shape[1] // 2, opencv_image.shape[0] // 2)
-                                camera_matrix = np.array([
-                                    [focal_length, 0, center[0]],
-                                    [0, focal_length, center[1]],
-                                    [0, 0, 1]
-                                ], dtype=np.float32)
+                                    #Camera matrix
+                                    focal_length = opencv_image.shape[1]
+                                    center = (opencv_image.shape[1] // 2, opencv_image.shape[0] // 2)
+                                    camera_matrix = np.array([
+                                        [focal_length, 0, center[0]],
+                                        [0, focal_length, center[1]],
+                                        [0, 0, 1]
+                                    ], dtype=np.float32)
 
-                                dist_coeffs = np.zeros((4, 1))
+                                    dist_coeffs = np.zeros((4, 1))
 
-                                #SolvePnP to find the rotation and translation vectors
-                                success, rotation_vector, translation_vector = cv2.solvePnP(
-                                    model_points, image_points, camera_matrix, dist_coeffs, flags=cv2.SOLVEPNP_ITERATIVE)
+                                    #SolvePnP to find the rotation and translation vectors
+                                    success, rotation_vector, translation_vector = cv2.solvePnP(
+                                        model_points, image_points, camera_matrix, dist_coeffs, flags=cv2.SOLVEPNP_ITERATIVE)
 
-                                #Project a 3D point (0, 0, 1000.0) onto the image plane to draw a line indicating the head pose
-                                (nose_end_point2D, jacobian) = cv2.projectPoints(
-                                    np.array([(0.0, 0.0, 1000.0)]), rotation_vector, translation_vector, camera_matrix, dist_coeffs)
+                                    #Project a 3D point (0, 0, 1000.0) onto the image plane to draw a line indicating the head pose
+                                    (nose_end_point2D, jacobian) = cv2.projectPoints(
+                                        np.array([(0.0, 0.0, 1000.0)]), rotation_vector, translation_vector, camera_matrix, dist_coeffs)
 
-                                #Draw the nose line
-                                p1 = (int(image_points[0][0]), int(image_points[0][1]))
-                                p2 = (int(nose_end_point2D[0][0][0]), int(nose_end_point2D[0][0][1]))
-                                cv2.line(opencv_image, p1, p2, (255, 0, 0), 2)
+                                    #Draw the nose line
+                                    p1 = (int(image_points[0][0]), int(image_points[0][1]))
+                                    p2 = (int(nose_end_point2D[0][0][0]), int(nose_end_point2D[0][0][1]))
+                                    cv2.line(opencv_image, p1, p2, (255, 0, 0), 2)
 
-                                rvec_matrix = cv2.Rodrigues(rotation_vector)[0]
-                                proj_matrix = np.hstack((rvec_matrix, translation_vector))
-                                eulerAngles = cv2.decomposeProjectionMatrix(proj_matrix)[6]
-                                yaw = eulerAngles[1]
+                                    rvec_matrix = cv2.Rodrigues(rotation_vector)[0]
+                                    proj_matrix = np.hstack((rvec_matrix, translation_vector))
+                                    eulerAngles = cv2.decomposeProjectionMatrix(proj_matrix)[6]
+                                    yaw = eulerAngles[1]
 
-                                focused = -25 < yaw < 25
+                                    focused = -25 < yaw < 25
 
-                                #Gaze detection based on eye landmarks
-                                left_eye_center = np.mean(landmarks['left_eye'], axis=0).astype(int)
-                                right_eye_center = np.mean(landmarks['right_eye'], axis=0).astype(int)
-                                gaze_direction = (left_eye_center[0] + right_eye_center[0]) / 2  
+                                    #Gaze detection based on eye landmarks
+                                    left_eye_center = np.mean(landmarks['left_eye'], axis=0).astype(int)
+                                    right_eye_center = np.mean(landmarks['right_eye'], axis=0).astype(int)
+                                    gaze_direction = (left_eye_center[0] + right_eye_center[0]) / 2  
 
-                                gaze_focused = 0.3 * opencv_image.shape[1] < gaze_direction < 0.7 * opencv_image.shape[1]  
+                                    gaze_focused = 0.3 * opencv_image.shape[1] < gaze_direction < 0.7 * opencv_image.shape[1]  
 
-                                if focused and gaze_focused:
-                                    focus_status = 'F'
-                                    Employee_Focus.objects.create(employee_id=userid, focus_data='F')
-                                else:
-                                    focus_status = 'NF'
-                                    Employee_Focus.objects.create(employee_id=userid, focus_data='NF')
+                                    if focused and gaze_focused:
+                                        focus_status = 'F'
+                                        Employee_Focus.objects.create(employee_id=userid, focus_data='F')
+                                    else:
+                                        focus_status = 'NF'
+                                        Employee_Focus.objects.create(employee_id=userid, focus_data='NF')
 
-                                print(focus_status)
-                                return JsonResponse({'text': focus_status})
+                                    print(focus_status)
+                                    return JsonResponse({'text': focus_status})
                     
-                    return JsonResponse({'focused': False, 'text': 'No face detected'})
+                        return JsonResponse({'focused': False, 'text': 'No face detected'})
                 
-                except Exception as e:
-                    return JsonResponse({'focused': False, 'text': 'Loading...'})
-        except:
-            return JsonResponse({'focused': False, 'text': 'Loading...'})
+                    except Exception as e:
+                        return JsonResponse({'focused': False, 'text': 'Loading...'})
+            except:
+                return JsonResponse({'focused': False, 'text': 'Loading...'})
+        else:
+            return JsonResponse({'focused': False, 'text': 'Data is not recorded after 6pm'})
+
 
 class ExactFocusDataView(APIView):
     def get(self, request):

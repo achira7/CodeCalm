@@ -29,7 +29,11 @@ function LineChart({ data, period }) {
         display: true,
         position: 'bottom',
         labels: {
-          color: Color.chartText 
+          color: Color.chartText,
+          font: {
+            family: 'Arial', 
+            size: 12,
+          } 
         }
       },
       tooltip: {
@@ -50,10 +54,18 @@ function LineChart({ data, period }) {
         title: {
           display: true,
           text: 'Days',
-          color: Color.chartText
+          color: Color.chartText,
+          font: {
+            family: 'Arial', 
+            size: 12,
+          }
         },
         ticks: {
-          color: Color.chartText,  
+          color: Color.chartText, 
+          font: {
+            family: 'Arial', 
+            size: 12,
+          } 
         },
         grid: {
           color: Color.chartGrids,  
@@ -64,10 +76,18 @@ function LineChart({ data, period }) {
           display: true,
           text: 'Duration (seconds)',
           color: Color.chartText,
+          font: {
+            family: 'Arial', 
+            size: 12,
+          }
         },
         beginAtZero: true,
         ticks: {
-          color: Color.chartText,  
+          color: Color.chartText,
+          font: {
+            family: 'Arial', 
+            size: 12,
+          }  
         },
         grid: {
           color: Color.chartGrids,  

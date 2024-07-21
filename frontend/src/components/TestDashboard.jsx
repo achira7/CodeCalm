@@ -18,10 +18,10 @@ const TestDashboard = (id) => {
 
 
   return (
-    <>
+    <div className="container mx-auto py-6">
         <TestComponent id={ id } />
         {/*<TeamComponent team={ 'Test' }/>*/}
-    </>
+    </div>
    
   );
 };

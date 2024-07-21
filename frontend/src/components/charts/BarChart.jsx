@@ -14,10 +14,17 @@ function BarChart({ data, period }) {
     labels: labels,
     datasets: [
       {
-        label: 'Stress Levels',
-        data: Object.values(data),
-        backgroundColor: Object.values(data).map(value => value < 0 ? '#4ade80' : '#f87171'),
-        borderColor: Object.values(data).map(value => value < 0 ? '#4ade80' : '#f87171'),
+        label: 'Positive Stress',
+        data: Object.values(data).map(value => (value >= 0 ? value : 0)),
+        backgroundColor: '#f87171',
+        borderColor: '#f87171',
+        borderWidth: 1,
+      },
+      {
+        label: 'Negative Stress',
+        data: Object.values(data).map(value => (value < 0 ? value : 0)),
+        backgroundColor: '#4ade80',
+        borderColor: '#4ade80',
         borderWidth: 1,
       },
     ],
@@ -26,10 +33,14 @@ function BarChart({ data, period }) {
   const options = {
     plugins: {
       legend: {
-        display: false,
+        display: true,
         position: 'bottom',
         labels: {
-          color: Color.chartText // Legend font color
+          color: Color.chartText,
+          font: {
+            family: 'Arial', 
+            size: 14, 
+          },
       }
       },
       tooltip: {
@@ -48,23 +59,39 @@ function BarChart({ data, period }) {
         title: {
           display: true,
           text: 'Day/Hour',
-          color: Color.chartText
+          color: Color.chartText,
+          font: {
+            family: 'Arial', 
+            size: 12,
+          },
         },
         ticks: {
-          color: Color.chartText,  // Change the color of the x-axis labels
+          color: Color.chartText, 
+          font: {
+            family: 'Arial', 
+            size: 12,
+          },
         },
         grid: {
-          color: Color.chartGrids,  // Change the color of the x-axis grid lines
+          color: Color.chartGrids,  
         },
       },
       y: {
         title: {
           display: true,
           text: 'Stress Level',
-          color: Color.chartText
+          color: Color.chartText,
+          font: {
+            family: 'Arial', 
+            size: 12,
+          },
         },
         ticks: {
-          color: Color.chartText,  
+          color: Color.chartText, 
+          font: {
+            family: 'Arial', 
+            size: 12,
+          }, 
         },
         grid: {
           color: Color.chartGrids,  

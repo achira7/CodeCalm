@@ -1,6 +1,11 @@
 import React from "react";
 import { Bar } from "react-chartjs-2";
 import { Color } from "../../theme/Colors";
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+
 
 const TwoValueBarChart = ({ data, period }) => {
   const labels = Object.keys(data).map(day => `${day}`);
@@ -38,7 +43,11 @@ const TwoValueBarChart = ({ data, period }) => {
         display: true,
         position: 'bottom',
         labels: {
-          color: Color.chartText 
+          color: Color.chartText ,
+          font: {
+            family: 'Arial', 
+            size: 14, 
+          },
         }
       },
       tooltip: {
@@ -59,10 +68,18 @@ const TwoValueBarChart = ({ data, period }) => {
         title: {
           display: true,
           text: period === "daily" ? 'Hour' : period === "weekly" ? 'Day of the Week' : 'Day of the Month',
-          color: Color.chartText
+          color: Color.chartText,
+          font: {
+            family: 'Arial', 
+            size: 12,
+          }
         },
         ticks: {
           color: Color.chartText,  
+          font: {
+            family: 'Arial', 
+            size: 12,
+          }
         },
         grid: {
           color: Color.chartGrids,  
@@ -72,11 +89,19 @@ const TwoValueBarChart = ({ data, period }) => {
         title: {
           display: true,
           text: 'Level',
-          color: Color.chartText
+          color: Color.chartText,
+          font: {
+            family: 'Arial', 
+            size: 12,
+          }
         },
         beginAtZero: true,
         ticks: {
           color: Color.chartText,  
+          font: {
+            family: 'Arial', 
+            size: 12,
+          }
         },
         grid: {
           color: Color.chartGrids, 

@@ -195,7 +195,7 @@ const TeamComponent = ({ team, role }) => {
   const fetchExerciseData = async (period) => {
     try {
       const response = await axios.get("http://localhost:8000/api/breathing/", {
-        params: { team_id: team, period: period  },
+        params: { team_id: team, period: period },
       });
       const data = response.data.days || {};
       const allZero = Object.values(data).every((value) => value === 0);
@@ -220,7 +220,7 @@ const TeamComponent = ({ team, role }) => {
   const fetchListeningData = async (period) => {
     try {
       const response = await axios.get("http://localhost:8000/api/listening/", {
-        params: { team_id: team, period: period  },
+        params: { team_id: team, period: period },
       });
       const data = response.data.days || {};
       const allZero = Object.values(data).every((value) => value === 0);
@@ -341,7 +341,7 @@ const TeamComponent = ({ team, role }) => {
         "http://localhost:8000/api/exact_focus/",
         {
           params: { team_id: team, period: period, exact_period: exact_period },
-        },
+        }
       );
       const data = response.data.days || {};
       if (period === "daily") {
@@ -366,14 +366,7 @@ const TeamComponent = ({ team, role }) => {
       fetchStressData(stressView);
       fetchFocusData(focusView);
     }
-  }, [
-    team,
-    exerciseView,
-    listeningView,
-    emotionView,
-    stressView,
-    focusView,
-  ]);
+  }, [team, exerciseView, listeningView, emotionView, stressView, focusView]);
 
   const handleViewChange = (viewSetter, view, direction, viewsArray) => {
     const currentIndex = viewsArray.indexOf(view);
@@ -494,10 +487,10 @@ const TeamComponent = ({ team, role }) => {
 
   return (
     <div className={`min-h-screen ${Color.background} bg-red-700`}>
-    <div
-      id={`Team Overview ${team} report-content`}
-      className={`min-h-screen ${Color.background}`}
-    >
+      <div
+        id={`Team Overview ${team} report-content`}
+        className={`min-h-screen ${Color.background}`}
+      >
         <div className="container mx-auto py-2 px-4 md:px-20 lg:px-12 xl:px-48">
           {/*Period Selection Buttons */}
 
@@ -547,7 +540,7 @@ const TeamComponent = ({ team, role }) => {
             >
               {/* Emotions */}
               <div className={`rounded-lg  ${Color.chartsBGText} m-4 p-6`}>
-              <div className="text-center flex-auto inline">
+                <div className="text-center flex-auto inline">
                   <div className="flex items-center justify-between">
                     <button
                       onClick={openEmotionOverlay}
@@ -558,24 +551,24 @@ const TeamComponent = ({ team, role }) => {
                     </button>
                     <div className="flex-grow text-center mr-5">
                       <h5 className="text-2xl font-semibold">
-                    {emotionView === "daily"
-                      ? "Daily Emotions"
-                      : emotionView === "weekly"
-                      ? "Weekly Emotions"
-                      : emotionView === "monthly"
-                      ? "Monthly Emotions"
-                      : "Overall Emotions"}
-                  </h5>
-                  </div>
+                        {emotionView === "daily"
+                          ? "Daily Emotions"
+                          : emotionView === "weekly"
+                          ? "Weekly Emotions"
+                          : emotionView === "monthly"
+                          ? "Monthly Emotions"
+                          : "Overall Emotions"}
+                      </h5>
+                    </div>
                   </div>
 
                   {emotionChartError ? (
                     <h2 className="text-xl mt-4">{emotionChartError}</h2>
                   ) : (
-                      <div className="flex items-center justify-center">
+                    <div className="flex items-center justify-center">
                       <div className=" max-w-80 max-h-80 rounded-xl">
                         <div className="p-5">
-                        <DoughnutChart {...emotions} />
+                          <DoughnutChart {...emotions} />
                         </div>
                       </div>
                     </div>
@@ -586,7 +579,7 @@ const TeamComponent = ({ team, role }) => {
               {/* Stress Data */}
               <div className={`${Color.chartsBGText} rounded-lg  m-4 p-6`}>
                 <div className="text-center flex-auto inline">
-                <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between">
                     <button
                       onClick={openStressOverlay}
                       className={`${CompareIconColor.base} ${CompareIconColor.hover} ${CompareIconColor.rotate}`}
@@ -594,14 +587,14 @@ const TeamComponent = ({ team, role }) => {
                     >
                       <FaArrowRightArrowLeft size={20} />
                     </button>
-                  <div className="flex-grow text-center mr-5">
-                  <h5 className="text-2xl font-semibold">
-                    {stressView === "daily"
-                      ? "Daily Stress Levels"
-                      : stressView === "weekly"
-                      ? "Weekly Stress Levels"
-                      : "Monthly Stress Levels"}
-                  </h5>
+                    <div className="flex-grow text-center mr-5">
+                      <h5 className="text-2xl font-semibold">
+                        {stressView === "daily"
+                          ? "Daily Stress Levels"
+                          : stressView === "weekly"
+                          ? "Weekly Stress Levels"
+                          : "Monthly Stress Levels"}
+                      </h5>
                     </div>
                   </div>
 
@@ -619,7 +612,6 @@ const TeamComponent = ({ team, role }) => {
                       period={stressView}
                     />
                   )}
-
                 </div>
               </div>
 
@@ -635,19 +627,18 @@ const TeamComponent = ({ team, role }) => {
                       <FaArrowRightArrowLeft size={20} />
                     </button>
                     <div className="flex-grow text-center mr-5">
+                      <h5 className="text-2xl font-semibold ">
+                        {focusView === "daily"
+                          ? "Daily Focus Data"
+                          : focusView === "weekly"
+                          ? "Weekly Focus Data"
+                          : "Monthly Focus Data"}
+                      </h5>
+                    </div>
+                  </div>
 
-                  <h5 className="text-2xl font-semibold ">
-                    {focusView === "daily"
-                      ? "Daily Focus Data"
-                      : focusView === "weekly"
-                      ? "Weekly Focus Data"
-                      : "Monthly Focus Data"}
-                  </h5>
-                  </div>
-                  </div>
-                    
                   {focusChartError ? (
-                    <h2 className="text-xl  mt-4">{listeningChartError}</h2>
+                    <h2 className="text-xl  mt-4">{focusChartError}</h2>
                   ) : (
                     <TwoValueBarChart
                       data={
@@ -675,14 +666,22 @@ const TeamComponent = ({ team, role }) => {
                       <FaArrowRightArrowLeft size={20} />
                     </button>
                     <div className="flex-grow text-center mr-5">
-                  <h5 className="text-2xl font-semibold">
-                    {exerciseView === "daily"
-                      ? "Daily Breathing Exercise Usage"
-                      : exerciseView === "weekly"
-                      ? "Weekly Breathing Exercise Usage"
-                      : "Monthly Breathing Exercise Usage"}
-                    </h5>
-                  </div>
+                      <h5 className="text-2xl font-semibold">
+                        {exerciseView === "daily" ? (
+                          <p>
+                            Daily Breathing <br /> Exercise Usage
+                          </p>
+                        ) : exerciseView === "weekly" ? (
+                          <p>
+                            Weekly Breathing <br /> Exercise Usage
+                          </p>
+                        ) : (
+                          <p>
+                            Monthly Breathing <br /> Exercise Usage
+                          </p>
+                        )}
+                      </h5>
+                    </div>
                   </div>
 
                   {breathingChartError ? (
@@ -727,17 +726,24 @@ const TeamComponent = ({ team, role }) => {
                       <FaArrowRightArrowLeft size={20} />
                     </button>
                     <div className="flex-grow text-center mr-5">
+                      <h5 className="text-2xl font-semibold">
+                        {listeningView === "daily" ? (
+                          <p>
+                            Daily Audio <br /> Therapy Usage
+                          </p>
+                        ) : listeningView === "weekly" ? (
+                          <p>
+                            Weekly Audio <br /> Therapy Usage
+                          </p>
+                        ) : (
+                          <p>
+                            Monthly Audio <br /> Therapy Usage
+                          </p>
+                        )}
+                      </h5>
+                    </div>
+                  </div>
 
-                  <h5 className="text-2xl font-semibold">
-                    {listeningView === "daily"
-                      ? "Daily Track Listening Usage"
-                      : listeningView === "weekly"
-                      ? "Weekly Track Listening Usage"
-                      : "Monthly Track Listening Usage"}
-                   </h5>
-                  </div>
-                  </div>
-                  
                   {listeningChartError ? (
                     <h2 className="text-xl  mt-4">{listeningChartError}</h2>
                   ) : (
@@ -830,9 +836,9 @@ const TeamComponent = ({ team, role }) => {
 
               <div className="flex justify-center items-center">
                 <StressCompare
-                team={team}
-                period={periodForExact}
-                userRole={userRole}
+                  team={team}
+                  period={periodForExact}
+                  userRole={userRole}
                 />
               </div>
             </div>
@@ -850,9 +856,9 @@ const TeamComponent = ({ team, role }) => {
               </button>
               <div>
                 <FocusCompare
-                team={team}
-                period={periodForExact}
-                userRole={userRole}
+                  team={team}
+                  period={periodForExact}
+                  userRole={userRole}
                 />
               </div>
             </div>
@@ -870,9 +876,9 @@ const TeamComponent = ({ team, role }) => {
               </button>
               <div>
                 <BreathingCompare
-                team={team}
-                period={periodForExact}
-                userRole={userRole}
+                  team={team}
+                  period={periodForExact}
+                  userRole={userRole}
                 />
               </div>
             </div>
@@ -890,9 +896,9 @@ const TeamComponent = ({ team, role }) => {
               </button>
               <div>
                 <ListeningCompare
-                team={team}
-                period={periodForExact}
-                userRole={userRole}
+                  team={team}
+                  period={periodForExact}
+                  userRole={userRole}
                 />
               </div>
             </div>
