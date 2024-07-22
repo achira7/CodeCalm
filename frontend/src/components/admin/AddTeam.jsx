@@ -5,7 +5,7 @@ import "tailwindcss/tailwind.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { FaTrash, FaEdit } from "react-icons/fa";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 import { IoIosArrowDropleft } from "react-icons/io";
 
 const AddTeam = ({ onSuccess, onError }) => {
@@ -86,9 +86,7 @@ const AddTeam = ({ onSuccess, onError }) => {
   return (
     <div>
       <div className="text-center w-full my-5">
-        <h1 className="text-3xl font-semibold text-sky-700 ">
-          Manage Teams 
-        </h1>
+        <h1 className="text-3xl font-semibold text-sky-700 ">Manage Teams</h1>
 
         <button
           className="px-4 py-2 rounded-md mb-5 flex absolute top-24 left-5 button bg-sky-400 text-black  hover:bg-sky-600 hover:text-white duration-300"
@@ -98,93 +96,95 @@ const AddTeam = ({ onSuccess, onError }) => {
           Go Back to Settings
         </button>
       </div>
-    <div className="flex justify-center container pt-8">
-      <div className="flex flex-col lg:flex-row lg:w-2/3 gap-5">
-
-        <div className="w-full lg:w-1/2">
-          <div className={`rounded-lg shadow-lg p-6 mb-6 ${Color.cardBox}`}>
-            <form method="POST" onSubmit={handleSubmit}>
-              <div className="mb-5">
-                <h1 className="font-bold text-2xl text-sky-500 font-google"> {updatingTeam ? "Update Team" : "Create Team"} </h1>
-                <label className="block text-lg font-medium text-gray-700 my-3">
-                  Team Name:
-                </label>
-                <input
-                  className={`w-full px-3 py-2 rounded-md ${Color.textFeild}`}
-                  type="text"
-                  name="name"
-                  value={name}
-                  placeholder="Team Name"
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="mb-5">
-                <label className="block text-lg font-medium text-gray-700 my-3">
-                  Team Description:
-                </label>
-                <textarea
-                  className={`w-full px-3 py-2 rounded-md ${Color.textFeild}`}
-                  name="description"
-                  value={description}
-                  placeholder="Team Description"
-                  onChange={(e) => setDescription(e.target.value)}
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <button
-                  className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:shadow-outline"
-                  type="submit"
-                >
-                  {updatingTeam ? "Update Team" : "Create Team"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        <div className={`w-full lg:w-1/2`}>
-          <div className={`rounded-lg shadow-lg p-6 mb-6 ${Color.cardBox}`}>
-            <h1 className="text-xl">
-              Currently Available Teams : {teamList.length}
-            </h1>
-            <div
-              className="mt-8 w-full max-w-lg custom-scrollbar"
-              style={{ maxHeight: "472px", overflowY: "scroll" }}
-            >
-              {teamList.map((team) => (
-                <div
-                  key={team.id}
-                  className={`flex ${Color.textFeild} items-center mb-4 p-1 rounded-lg`}
-                >
-                  <div className="flex-1">
-                    <p className="text-lg font-semibold">{team.name}</p>
-                    <p className="text-sm">{team.description}</p>
-                  </div>
+      <div className="flex justify-center container pt-8">
+        <div className="flex flex-col lg:flex-row lg:w-2/3 gap-5">
+          <div className="w-full lg:w-1/2">
+            <div className={`rounded-lg shadow-lg p-6 mb-6 ${Color.cardBox}`}>
+              <form method="POST" onSubmit={handleSubmit}>
+                <div className="mb-5">
+                  <h1 className="font-bold text-2xl text-sky-500 font-google">
+                    {" "}
+                    {updatingTeam ? "Update Team" : "Create Team"}{" "}
+                  </h1>
+                  <label className="block text-lg font-medium text-gray-700 my-3">
+                    Team Name:
+                  </label>
+                  <input
+                    className={`w-full px-3 py-2 rounded-md ${Color.textFeild}`}
+                    type="text"
+                    name="name"
+                    value={name}
+                    placeholder="Team Name"
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="mb-5">
+                  <label className="block text-lg font-medium text-gray-700 my-3">
+                    Team Description:
+                  </label>
+                  <textarea
+                    className={`w-full px-3 py-2 rounded-md ${Color.textFeild}`}
+                    name="description"
+                    value={description}
+                    placeholder="Team Description"
+                    onChange={(e) => setDescription(e.target.value)}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
                   <button
-                    onClick={() => {
-                      setName(team.name);
-                      setDescription(team.description);
-                      setUpdatingTeam(team);
-                    }}
-                    className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-2"
+                    className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:shadow-outline"
+                    type="submit"
                   >
-                    <FaEdit />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(team.id)}
-                    className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-2"
-                  >
-                    <FaTrash />
+                    {updatingTeam ? "Update Team" : "Create Team"}
                   </button>
                 </div>
-              ))}
+              </form>
+            </div>
+          </div>
+
+          <div className={`w-full lg:w-1/2`}>
+            <div className={`rounded-lg shadow-lg p-6 mb-6 ${Color.cardBox}`}>
+              <h1 className="text-xl">
+                Currently Available Teams : {teamList.length}
+              </h1>
+              <div
+                className="mt-8 w-full max-w-lg custom-scrollbar"
+                style={{ maxHeight: "472px", overflowY: "scroll" }}
+              >
+                {teamList.map((team) => (
+                  <div
+                    key={team.id}
+                    className={`flex ${Color.textFeild} items-center mb-4 p-1 rounded-lg`}
+                  >
+                    <div className="flex-1">
+                      <p className="text-lg font-semibold">{team.name}</p>
+                      <p className="text-sm">{team.description}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setName(team.name);
+                        setDescription(team.description);
+                        setUpdatingTeam(team);
+                      }}
+                      className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-2"
+                    >
+                      <FaEdit />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(team.id)}
+                      className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-2"
+                    >
+                      <FaTrash />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
+        <ToastContainer />
       </div>
-      <ToastContainer />
-    </div>
     </div>
   );
 };

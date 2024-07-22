@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import TeamComponent from '../TeamComponent';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import TeamComponent from "../TeamComponent";
 import AddTeam from "./AddTeam";
 
 const AllTeamsDashboard = () => {
   const [teams, setTeams] = useState([]);
   const [selectedTeam, setSelectedTeam] = useState("");
-  const [isOverlayOpen, setIsOverlayOpen] = useState(false); 
+  const [isOverlayOpen, setIsOverlayOpen] = useState(false);
 
   useEffect(() => {
     axios
@@ -20,11 +20,11 @@ const AllTeamsDashboard = () => {
   }, []);
 
   const handleAddTeam = () => {
-    setIsOverlayOpen(true); 
+    setIsOverlayOpen(true);
   };
 
   const handleCloseOverlay = () => {
-    setIsOverlayOpen(false); 
+    setIsOverlayOpen(false);
   };
 
   return (
@@ -32,7 +32,10 @@ const AllTeamsDashboard = () => {
       <div className="container mx-auto py-6">
         <h1 className="text-2xl font-bold mb-6">All Teams Dashboard</h1>
         <div className="mb-4">
-          <label htmlFor="teamSelect" className="block text-lg font-medium text-gray-700">
+          <label
+            htmlFor="teamSelect"
+            className="block text-lg font-medium text-gray-700"
+          >
             Select Team:
           </label>
           <select
@@ -49,7 +52,10 @@ const AllTeamsDashboard = () => {
             ))}
           </select>
           <div>
-            <a href={`/admin/team_individual_view/${selectedTeam}`} className="text-sky-600">
+            <a
+              href={`/admin/team_individual_view/${selectedTeam}`}
+              className="text-sky-600"
+            >
               Detailed View of Team {selectedTeam}
             </a>
             <button
@@ -61,7 +67,7 @@ const AllTeamsDashboard = () => {
             </button>
           </div>
         </div>
-        
+
         {selectedTeam && (
           <div className="container mx-auto py-6">
             <TeamComponent team={selectedTeam} />

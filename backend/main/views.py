@@ -65,6 +65,11 @@ from rest_framework.exceptions import ValidationError
 from rest_framework import status 
 from datetime import time
 
+import face_recognition
+
+import os
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+
 from pytz import timezone as pytz_timezone
 local_timezone = pytz_timezone('Asia/Colombo')
 
@@ -366,27 +371,29 @@ class FaceRegisterView(APIView):
 mp_face_mesh = mp.solutions.face_mesh
 face_mesh = mp_face_mesh.FaceMesh()
 
-
+#convert bas64 image to an image file
 def stringToRGB(base64_string):
     imgdata = base64.b64decode(str(base64_string))
     img = Image.open(io.BytesIO(imgdata))
-    opencv_img = cv2.cvtColor(np.array(img), cv2.COLOR_BGR2RGB)
+    opencv_img = cv2.cvtColor(np.array(img), cv2.COLOR_BGR2RGB)     #convert image to numpy array, convert colors from BGR to RGB
     return opencv_img
 
+#sharpen image using convolution kernel
 def imageSharpen(image):
     kernel = np.array([[-1, -1, -1],
-                       [-1, 9, -1],
+                       [-1, 9, -1],         # 9 sharpen the central pixel and -1 reduce intensity
                        [-1, -1, -1]])
     return cv2.filter2D(image, -1, kernel)
 
+# set a brightness threshold and compare it with the image
 def is_image_dark(image, threshold=50):
     gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     avg_brightness = np.mean(gray_image)
     return avg_brightness < threshold
 
 def is_image_blurred(image, threshold=20):
-    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    laplacian_var = cv2.Laplacian(gray_image, cv2.CV_64F).var()
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)                # make ths image grescale as it's easier to detect blurryness
+    laplacian_var = cv2.Laplacian(gray_image, cv2.CV_64F).var()         # calculates the variance of the Laplacian of the img
     return laplacian_var < threshold
 
 
@@ -394,22 +401,24 @@ def is_image_blurred(image, threshold=20):
 
 
 def detectEmotion(image, sharpened_image):
-    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-    gray_frame = cv2.cvtColor(sharpened_image, cv2.COLOR_BGR2GRAY)
-    rgb_frame = cv2.cvtColor(gray_frame, cv2.COLOR_GRAY2RGB)
-    faces = face_cascade.detectMultiScale(gray_frame, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')     #loading haar cascade
+    gray_frame = cv2.cvtColor(sharpened_image, cv2.COLOR_BGR2GRAY)                                          #converting the frame to greyscale using opencvs
+    rgb_frame = cv2.cvtColor(gray_frame, cv2.COLOR_GRAY2RGB)                                                #converting the frame to colored using opencvs
+    faces = face_cascade.detectMultiScale(gray_frame, scaleFactor=1.7, minNeighbors=5, minSize=(30, 30))    #Detecting Faces uses face_cascae in haarcascade
 
+    #reject multiple faces
     if len(faces) == 0:
         return 'No Face Detected'
     elif len(faces) >= 2:
         return 'Multiple Faces Detected'
 
     for (x, y, w, h) in faces:
-        face_roi = rgb_frame[y:y + h, x:x + w]
+        face_roi = rgb_frame[y:y + h, x:x + w]                                                             #Marking the Region of intrest (drawing the face rectangle)
 
-        result = DeepFace.analyze(face_roi, actions=['emotion'], enforce_detection=False)
-        emotion = result[0]['dominant_emotion']
+        result = DeepFace.analyze(face_roi, actions=['emotion'], enforce_detection=False)                  #Using Deepface to detect emotion
+        emotion = result[0]['dominant_emotion']                                                            #extracting the most similar emotion detected
 
+        #Drawing Reactangle, used for Testing 
         cv2.rectangle(sharpened_image, (x, y), (x + w, y + h), (0, 0, 255), 2)
         cv2.putText(sharpened_image, emotion, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 255), 2)
         return emotion
@@ -503,12 +512,11 @@ class EmotionDataView(APIView):
         image_data = request.data.get('frame')
         userid = request.data.get('user_id')
         
-
         if not image_data or not userid:
             return JsonResponse({'emo': 'Missing frame or user_id', 'frq': 'none'})
         
         # time limit og 6 pm
-        if current_time <= datetime.strptime("18:01", "%H:%M").time():
+        if datetime.now(local_timezone).time() <= datetime.strptime("18:01", "%H:%M").time():
             try:
                 format, imgstr = image_data.split('image/jpeg;base64,')
                 opencv_image = stringToRGB(imgstr)
@@ -561,8 +569,8 @@ class EmotionDataView(APIView):
                                     time__gte=one_minute_ago
                                 ).count()
 
-                                # Check if the count of negative emotions is 2 or more
-                                if negative_emotions_count >= 3:
+                                #Check if the count of negative emotions is 10 or more
+                                if negative_emotions_count >= 10:
                                     frq = "You seem to be stressed!"
                                 else:
                                     frq = "none"
@@ -979,7 +987,7 @@ class BreathingExerciseUsageView(APIView):
         duration = request.data['duration']
 
 
-        if current_time <= datetime.strptime("18:01", "%H:%M").time():
+        if datetime.now(local_timezone).time() <= datetime.strptime("18:01", "%H:%M").time():
             BreathingExerciseUsage.objects.create(employee_id=id, exercise_name=exercise_name, duration=duration)
             return Response(status=status.HTTP_201_CREATED)
         else:
@@ -1138,11 +1146,11 @@ class TrackListeningView(APIView):
             track_name = request.data.get('track_name')
             duration = request.data.get('duration')
 
-            if current_time <= datetime.strptime("18:01", "%H:%M").time():
+            if datetime.now(local_timezone).time() <= datetime.strptime("18:01", "%H:%M").time():
                 if user_id is None or track_name is None or duration is None:
                     return Response({"error": "User, track name, and duration are required"}, status=status.HTTP_400_BAD_REQUEST)
                 
-                if current_time <= datetime.strptime("18:01", "%H:%M").time():
+                if datetime.now(local_timezone).time() <= datetime.strptime("18:01", "%H:%M").time():
                     if duration <= 10:
                         return Response({"error": "Duration must be greater than 10"}, status=status.HTTP_400_BAD_REQUEST)
                     else:
@@ -1601,8 +1609,7 @@ class ReminderCreateView(generics.CreateAPIView):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-import face_recognition
-
+# predefined 3D facial features of a real world face
 model_points = np.array([
     (0.0, 0.0, 0.0),             # Nose tip
     (0.0, -330.0, -65.0),        # Chin
@@ -1684,11 +1691,12 @@ class FocusDataView(APIView):
         if not image_data or not userid:
             return JsonResponse({'focused': False, 'text': 'Missing frame or user_id'})
         
-        if current_time <= datetime.strptime("18:01", "%H:%M").time():
+        if datetime.now(local_timezone).time() <= datetime.strptime("23:01", "%H:%M").time():
             try:
                 format, imgstr = image_data.split('image/jpeg;base64,')
                 opencv_image = stringToRGB(imgstr)
 
+                #estimating image quality
                 if is_image_dark(opencv_image):
                     return JsonResponse({'text': 'Webcam cover is closed or image is too dark'})
 
@@ -1696,15 +1704,17 @@ class FocusDataView(APIView):
                     return JsonResponse({'text': 'Image is blurred. Please clear the webcam.'})
                 else:
                     try:
+                        #useing py face_recognition to return bounding boxes for each face
                         face_locations = face_recognition.face_locations(opencv_image)
                         if face_locations:
                             for face_location in face_locations:
-                                # Extract the facial landmarks
+
+                                # Extract the facial landmarks using face_recognition
                                 face_landmarks = face_recognition.face_landmarks(opencv_image, [face_location])
                                 if face_landmarks:
-                                    landmarks = face_landmarks[0]
+                                    landmarks = face_landmarks[0] #landmarks of the first detected face
 
-                                    #Extract 2D coordinate
+                                    #Only getting the relevant facial landmarks for calculation
                                     image_points = np.array([
                                         landmarks['nose_tip'][2],    # Nose tip
                                         landmarks['chin'][8],        # Chin
@@ -1716,14 +1726,15 @@ class FocusDataView(APIView):
 
                                     #Camera matrix
                                     focal_length = opencv_image.shape[1]
-                                    center = (opencv_image.shape[1] // 2, opencv_image.shape[0] // 2)
-                                    camera_matrix = np.array([
-                                        [focal_length, 0, center[0]],
+                                    center = (opencv_image.shape[1] // 2, opencv_image.shape[0] // 2) # getting the center of the image
+                                    camera_matrix = np.array([              
+                                        [focal_length, 0, center[0]],           
                                         [0, focal_length, center[1]],
                                         [0, 0, 1]
                                     ], dtype=np.float32)
 
-                                    dist_coeffs = np.zeros((4, 1))
+                                    dist_coeffs = np.zeros((4, 1))  #Distortion Coefficients used to detect lens blur 
+                                                                    #primary radial and tangential distortion coefficients are considered
 
                                     #SolvePnP to find the rotation and translation vectors
                                     success, rotation_vector, translation_vector = cv2.solvePnP(
@@ -1734,21 +1745,22 @@ class FocusDataView(APIView):
                                         np.array([(0.0, 0.0, 1000.0)]), rotation_vector, translation_vector, camera_matrix, dist_coeffs)
 
                                     #Draw the nose line
-                                    p1 = (int(image_points[0][0]), int(image_points[0][1]))
+                                    p1 = (int(image_points[0][0]), int(image_points[0][1]))                 #nose tip 
                                     p2 = (int(nose_end_point2D[0][0][0]), int(nose_end_point2D[0][0][1]))
                                     cv2.line(opencv_image, p1, p2, (255, 0, 0), 2)
 
-                                    rvec_matrix = cv2.Rodrigues(rotation_vector)[0]
-                                    proj_matrix = np.hstack((rvec_matrix, translation_vector))
-                                    eulerAngles = cv2.decomposeProjectionMatrix(proj_matrix)[6]
-                                    yaw = eulerAngles[1]
+                                    #Head pose estimation - euler angles
+                                    rvec_matrix = cv2.Rodrigues(rotation_vector)[0]                 # Convert rotataion vector into a matrix
+                                    proj_matrix = np.hstack((rvec_matrix, translation_vector))      # Create projection matrix
+                                    eulerAngles = cv2.decomposeProjectionMatrix(proj_matrix)[6]     # Get Euler angles from projection matrix
+                                    yaw = eulerAngles[1]                                            # extract euler angles
 
-                                    focused = -25 < yaw < 25
+                                    focused = -25 < yaw < 25  #give 25 degrees plus or minus
 
                                     #Gaze detection based on eye landmarks
-                                    left_eye_center = np.mean(landmarks['left_eye'], axis=0).astype(int)
-                                    right_eye_center = np.mean(landmarks['right_eye'], axis=0).astype(int)
-                                    gaze_direction = (left_eye_center[0] + right_eye_center[0]) / 2  
+                                    left_eye_center = np.mean(landmarks['left_eye'], axis=0).astype(int)    #center of left eye
+                                    right_eye_center = np.mean(landmarks['right_eye'], axis=0).astype(int)  #center of right eye
+                                    gaze_direction = (left_eye_center[0] + right_eye_center[0]) / 2         #average x coordiantes of eye centers
 
                                     gaze_focused = 0.3 * opencv_image.shape[1] < gaze_direction < 0.7 * opencv_image.shape[1]  
 

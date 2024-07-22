@@ -48,10 +48,7 @@ function App() {
     "/employee/facelogin_reg",
   ];
   const hideLiveCamRoutes = [
-    "/admin/",
     "/employee/login/",
-    "/employee/facelogin/",
-    "/employee/facelogin_reg",
   ];
 
   const shouldShowNavBar = !hideNavBarRoutes.some((route) =>
@@ -65,9 +62,9 @@ function App() {
     <RecoilRoot>
       {shouldShowNavBar && <NavBar />}
       <FloatingPlayer />
-      {/* {shouldShowLiveCam && <LiveCam />} */}
+      {shouldShowLiveCam && <LiveCam />} 
 
-      <LiveCam />
+      {/* <LiveCam /> */}
       
       <Routes>
         

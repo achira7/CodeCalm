@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import SingleTeamMember from "../supervisor/SingleTeamMember";
-import { Navigate, Link, useParams, } from "react-router-dom";
+import { Navigate, Link, useParams } from "react-router-dom";
 import TeamIndividualViewComponenet from "../TeamIndividualViewComponenet";
-
-
 
 const AdminTeamIndividualView = () => {
   const [navigate, setNavigate] = useState(false);
@@ -35,8 +33,8 @@ const AdminTeamIndividualView = () => {
         "http://localhost:8000/api/team_detections/",
         {
           params: { team: team },
-        }, 
-      )
+        }
+      );
       const members = response.data.team_members;
       setTeamMembers(members);
       setTeamLeaders(members.filter((member) => member.is_staff));
@@ -51,9 +49,9 @@ const AdminTeamIndividualView = () => {
 
   return (
     <div>
-        <div className="text-center">
+      <div className="text-center">
         <TeamIndividualViewComponenet team={selectedTeam} role={"Admin"} />
-      </div>  
+      </div>
     </div>
   );
 };

@@ -1,9 +1,9 @@
 import axios from "axios";
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import AddTeam from "./AddTeam";  
+import AddTeam from "./AddTeam";
 
 const baseUrl = "http://127.0.0.1:8000/api/register/";
 
@@ -23,7 +23,7 @@ function EmployeeRegister() {
 
   const [selectedTeam, setSelectedTeam] = useState("");
   const [teams, setTeams] = useState([]);
-  const [isOverlayOpen, setIsOverlayOpen] = useState(false); 
+  const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -41,28 +41,30 @@ function EmployeeRegister() {
     e.preventDefault();
 
     const formData = new FormData();
-    formData.append('first_name', first_name);
-    formData.append('last_name', last_name);
-    formData.append('email', email);
-    formData.append('team', team);
-    formData.append('gender', gender);
-    formData.append('employment_type', employment_type);
-    formData.append('work_location', work_location);
-    formData.append('password', password);
-    formData.append('is_staff', is_staff);
-    formData.append('is_superuser', is_superuser);
+    formData.append("first_name", first_name);
+    formData.append("last_name", last_name);
+    formData.append("email", email);
+    formData.append("team", team);
+    formData.append("gender", gender);
+    formData.append("employment_type", employment_type);
+    formData.append("work_location", work_location);
+    formData.append("password", password);
+    formData.append("is_staff", is_staff);
+    formData.append("is_superuser", is_superuser);
     if (profile_picture) {
-      formData.append('profile_picture', profile_picture);
+      formData.append("profile_picture", profile_picture);
     }
 
     try {
       const response = await axios.post(baseUrl, formData, {
         headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+          "Content-Type": "multipart/form-data",
+        },
       });
       setregisterSucess(true);
-      toast.success(`${first_name} ${last_name} Employee successfully registered!`);
+      toast.success(
+        `${first_name} ${last_name} Employee successfully registered!`
+      );
       //navigate("/admin/allemployees");
     } catch (error) {
       console.error("Error registering employee:", error);
@@ -87,11 +89,11 @@ function EmployeeRegister() {
   );
 
   const handleAddTeam = () => {
-    setIsOverlayOpen(true); 
+    setIsOverlayOpen(true);
   };
 
   const handleCloseOverlay = () => {
-    setIsOverlayOpen(false); 
+    setIsOverlayOpen(false);
   };
 
   return (
@@ -104,7 +106,14 @@ function EmployeeRegister() {
               className="absolute top-0 right-0 m-4 text-gray-700 hover:text-gray-900"
               onClick={handleCloseOverlay}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" x="5px" y="5px" width="25" height="25" viewBox="0 0 30 30">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                x="5px"
+                y="5px"
+                width="25"
+                height="25"
+                viewBox="0 0 30 30"
+              >
                 <path d="M 7 4 C 6.744125 4 6.4879687 4.0974687 6.2929688 4.2929688 L 4.2929688 6.2929688 C 3.9019687 6.6839688 3.9019687 7.3170313 4.2929688 7.7070312 L 11.585938 15 L 4.2929688 22.292969 C 3.9019687 22.683969 3.9019687 23.317031 4.2929688 23.707031 L 6.2929688 25.707031 C 6.6839688 26.098031 7.3170313 26.098031 7.7070312 25.707031 L 15 18.414062 L 22.292969 25.707031 C 22.682969 26.098031 23.317031 26.098031 23.707031 25.707031 L 25.707031 23.707031 C 26.098031 23.316031 26.098031 22.682969 25.707031 22.292969 L 18.414062 15 L 25.707031 7.7070312 C 26.098031 7.3170312 26.098031 6.6829688 25.707031 6.2929688 L 23.707031 4.2929688 C 23.316031 3.9019687 22.682969 3.9019687 22.292969 4.2929688 L 15 11.585938 L 7.7070312 4.2929688 C 7.5115312 4.0974687 7.255875 4 7 4 z"></path>
               </svg>
             </button>
@@ -119,9 +128,9 @@ function EmployeeRegister() {
             />
           </div>
         </div>
-      )} 
+      )}
       <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <Link to="/admin/allemployees">
+        <Link to="/admin/allemployees">
           <div className="flex items-center mx-5 hover: transition-transform duration-300 cursor-pointer">
             <svg
               className="fill-sky-500"
@@ -215,7 +224,9 @@ function EmployeeRegister() {
                   >
                     <option value="">Select Team</option>
                     {teams.map((team, index) => (
-                      <option key={index} value={team.name}>{team.name}</option>
+                      <option key={index} value={team.name}>
+                        {team.name}
+                      </option>
                     ))}
                   </select>
                   <button
@@ -241,7 +252,9 @@ function EmployeeRegister() {
                   value={gender}
                   onChange={(e) => setGender(e.target.value)}
                 >
-                  <option value="" selected disabled hidden>Select Gender</option>
+                  <option value="" selected disabled hidden>
+                    Select Gender
+                  </option>
                   <option value="M">Male</option>
                   <option value="F">Female</option>
                   <option value="O">Other</option>
@@ -261,7 +274,9 @@ function EmployeeRegister() {
                   value={employment_type}
                   onChange={(e) => setEmployment_type(e.target.value)}
                 >
-                  <option value="" selected disabled hidden>Select Employment Type</option>
+                  <option value="" selected disabled hidden>
+                    Select Employment Type
+                  </option>
                   <option value="full_time">Full Time</option>
                   <option value="part_time">Part Time</option>
                   <option value="contract">Contract</option>
@@ -282,7 +297,9 @@ function EmployeeRegister() {
                   value={work_location}
                   onChange={(e) => setWork_location(e.target.value)}
                 >
-                  <option value="" selected disabled hidden>Select Work Location</option>
+                  <option value="" selected disabled hidden>
+                    Select Work Location
+                  </option>
                   <option value="On-site">On-site</option>
                   <option value="Remote">Remote</option>
                   <option value="Hybrid">Hybrid</option>
@@ -319,7 +336,6 @@ function EmployeeRegister() {
                   accept="image/*"
                   onChange={handleFileChange}
                 />
-                
               </div>
 
               {previewSrc && (

@@ -2,11 +2,9 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 import { IoIosArrowDropleft } from "react-icons/io";
 import { Color } from "../../theme/Colors";
-
-
 
 const AddBreathingProfile = () => {
   const [name, setName] = useState("");
@@ -68,19 +66,18 @@ const AddBreathingProfile = () => {
       }
     }
   };
-  
+
   <div className="mb-4">
     <label className="block text-gray-700">Hold Duration:</label>
     <input
       type="number"
       placeholder="in seconds"
-      value={holdDuration || ''}
+      value={holdDuration || ""}
       onChange={(e) => setHoldDuration(e.target.value)}
       required
       className="w-full px-3 py-2 border border-gray-300 rounded-md"
     />
-  </div>
-  
+  </div>;
 
   const resetForm = () => {
     setName("");
@@ -129,7 +126,7 @@ const AddBreathingProfile = () => {
 
   const goBackToSettings = () => {
     navigate("/admin/settings");
-  }
+  };
 
   return (
     <div>
@@ -153,131 +150,134 @@ const AddBreathingProfile = () => {
               <div
                 className={`rounded-lg shadow-lg p-6 mb-6 ${Color.cardBox} `}
               >
-          <h2 className="text-xl font-semibold text-sky-900 mb-4">
-            Add a Breathing Exercise Profile
-          </h2>
-          
-          <form onSubmit={handleSubmit}>
-            <div className="mb-4">
-              <label className="block text-gray-700">Name:</label>
-              <input
-                type="text"
-                min="1"
-                max="10"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                placeholder="Give a meaningful unique name"
-              />
+                <h2 className="text-xl font-semibold text-sky-900 mb-4">
+                  Add a Breathing Exercise Profile
+                </h2>
+
+                <form onSubmit={handleSubmit}>
+                  <div className="mb-4">
+                    <label className="block text-gray-700">Name:</label>
+                    <input
+                      type="text"
+                      min="1"
+                      max="10"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      placeholder="Give a meaningful unique name"
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-gray-700">
+                      Inhale Duration:
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="in seconds"
+                      min="1"
+                      max="10"
+                      value={inhaleDuration || ""}
+                      onChange={(e) => setInhaleDuration(e.target.value)}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    />
+                    {renderWarning(inhaleDuration)}
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-gray-700">
+                      Exhale Duration:
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="in seconds"
+                      min="1"
+                      max="10"
+                      value={exhaleDuration || ""}
+                      onChange={(e) => setExhaleDuration(e.target.value)}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    />
+                    {renderWarning(exhaleDuration)}
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-gray-700">
+                      Hold Duration:
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="in seconds"
+                      value={holdDuration || ""}
+                      onChange={(e) => setHoldDuration(e.target.value)}
+                      required
+                      min="0"
+                      max="10"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    />
+                    {renderWarning(holdDuration)}
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-gray-700">Description:</label>
+                    <textarea
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      placeholder="Type instructions to perform the breathing exercise here."
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                  >
+                    {editProfileId ? "Update Profile" : "Add Profile"}
+                  </button>
+                </form>
+              </div>
             </div>
-            <div className="mb-4">
-              <label className="block text-gray-700">Inhale Duration:</label>
-              <input
-                type="number"
-                placeholder="in seconds"
-                min="1"
-                max="10"
-                value={inhaleDuration || ""}
-                onChange={(e) => setInhaleDuration(e.target.value)}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              />
-              {renderWarning(inhaleDuration)}
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700">Exhale Duration:</label>
-              <input
-                type="number"
-                placeholder="in seconds"
-                min="1"
-                max="10"
-                value={exhaleDuration || ""}
-                onChange={(e) => setExhaleDuration(e.target.value)}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              />
-              {renderWarning(exhaleDuration)}
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700">Hold Duration:</label>
-              <input
-                type="number"
-                placeholder="in seconds"
-                value={holdDuration || ""}
-                onChange={(e) => setHoldDuration(e.target.value)}
-                required
-                min="0"
-                max="10"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              />
-              {renderWarning(holdDuration)}
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700">Description:</label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                placeholder="Type instructions to perform the breathing exercise here."
-              />
-            </div>
-            <button
-              type="submit"
-              className="bg-blue-500 text-white px-4 py-2 rounded-md"
-            >
-              {editProfileId ? "Update Profile" : "Add Profile"}
-            </button>
-          </form>
           </div>
+          <ToastContainer />
         </div>
-        </div>
-            <ToastContainer />
-          </div>
-          <div className={`py-6 w-1/2 `}>
-            <div className={`rounded-lg shadow-lg p-6 mb-6  ${Color.cardBox} `}>
+        <div className={`py-6 w-1/2 `}>
+          <div className={`rounded-lg shadow-lg p-6 mb-6  ${Color.cardBox} `}>
             <h1 className="text-xl">
-                <div className="flex flex-initial">
-                  <p className="font-semibold">Currently Available Profiles: </p> <p> &nbsp;{profiles.length}</p>
-                </div>
-              </h1>
-              <div
-                className="mt-8 w-full max-w-2sl custom-scrollbar "
-                style={{ maxHeight: "500x", overflowY: "scroll" }}
-              >
-          {profiles.map((profile) => (
+              <div className="flex flex-initial">
+                <p className="font-semibold">Currently Available Profiles: </p>{" "}
+                <p> &nbsp;{profiles.length}</p>
+              </div>
+            </h1>
             <div
-              key={profile.id}
-              className={`flex ${Color.textFeild} flex items-center justify-between bg-white border border-gray-200 rounded-lg shadow-lg p-4 mb-4`}
+              className="mt-8 w-full max-w-2sl custom-scrollbar "
+              style={{ maxHeight: "500x", overflowY: "scroll" }}
             >
-              <h3 className=" flex items-center justify-between font-semibold text-xl w-[100px]">{profile.name}</h3>
-              <p className="p-5">
-                Inhale: {profile.inhale_duration}s
-              </p>
-              <p className="p-5">
-                Exhale: {profile.exhale_duration}s
-              </p>
-              <p className="p-5">
-                Hold: {profile.hold_duration}s
-              </p>
-               <button
-                 onClick={() => handleEdit(profile)}
-                 className="bg-blue-500 text-white px-4 py-2 rounded"
-               >
-                 Edit
-               </button>
-               <button
-                 onClick={() => handleDelete(profile.id)}
-                 className="bg-red-500 text-white px-4 py-2 rounded"
-               >
-                 Delete
-               </button>
-             </div>
-          ))}
-        </div>
+              {profiles.map((profile) => (
+                <div
+                  key={profile.id}
+                  className={`flex ${Color.textFeild} flex items-center justify-between bg-white border border-gray-200 rounded-lg shadow-lg p-4 mb-4`}
+                >
+                  <h3 className=" flex items-center justify-between font-semibold text-xl w-[100px]">
+                    {profile.name}
+                  </h3>
+                  <p className="p-5">Inhale: {profile.inhale_duration}s</p>
+                  <p className="p-5">Exhale: {profile.exhale_duration}s</p>
+                  <p className="p-5">Hold: {profile.hold_duration}s</p>
+                  <button
+                    onClick={() => handleEdit(profile)}
+                    className="bg-blue-500 text-white px-4 py-2 rounded"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(profile.id)}
+                    className="bg-red-500 text-white px-4 py-2 rounded"
+                  >
+                    Delete
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
-    </div>
     </div>
   );
 };
