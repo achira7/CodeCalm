@@ -21,8 +21,7 @@ const TeamIndividualView = () => {
       });
       const user = response.data;
       setUserData(user);
-      console.log(user)
-      setMessage(`Hi ${user.first_name} ${user.last_name}`);
+      setMessage(`${user.first_name} ${user.last_name}`);
       fetchTeamMembers(user.team);
     } catch (e) {
       console.error(e);

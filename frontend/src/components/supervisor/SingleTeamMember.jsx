@@ -7,7 +7,6 @@ import { useNavigate } from "react-router-dom";
 import { BtnColor, BtnClose, ReportButton } from "../../theme/ButtonTheme";
 import { IoClose, IoHelpCircleOutline } from "react-icons/io5";
 
-
 function SingleTeamMember(props) {
   const [isOpen, setIsOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -119,6 +118,7 @@ function SingleTeamMember(props) {
       });
       setWeeklyListeningData(response.data.days);
       setMostListenedTrack(response.data.most_listened_track);
+      console.log(response.data.days);
     } catch (error) {
       console.error("Error fetching listening data:", error);
     }
@@ -137,12 +137,18 @@ function SingleTeamMember(props) {
     0
   );
 
+  const totalWeeklyListening = Object.values(weeklyListeningData).reduce(
+    (sum, value) => sum + value,
+    0
+  );
+
   useEffect(() => {
     fetchExerciseData(props.employee.id, exerciseView);
     fetchListeningData(props.employee.id, listeningView);
     fetchEmotionData(props.employee.id, emotionView);
     fetchStressData(props.employee.id, "weekly");
   }, [props.employee.id, exerciseView, listeningView, emotionView]);
+
 
   return (
     <>
@@ -173,7 +179,7 @@ function SingleTeamMember(props) {
         <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
           <p className="text-blue-500 underline whitespace-no-wrap">
             <a
-              href={`mailto:${props.employee.email}`}
+              href={`mailto:${props.employee.email}?subject=CodeCalm: `}
               target="_blank"
               title={`Send an email to ${props.employee.first_name} ${props.employee.last_name}`}
             >
@@ -226,7 +232,7 @@ function SingleTeamMember(props) {
 
           <p className="text-gray-900 whitespace-no-wrap">
             {weeklyListeningData
-              ? `${(weeklyListeningData / 60.0).toFixed(2)} Minutes`
+              ? `${(totalWeeklyListening / 60.0).toFixed(2)} Minutes`
               : " - "}
           </p>
         </td>
@@ -261,10 +267,16 @@ function SingleTeamMember(props) {
                 More Details
               </button>
               <button
-                onClick={openConfirmBox}
                 className="flex w-1/2 justify-center rounded-md bg-blue-300 px-1 py-1.5 mx-2 font-google text-sm font-semibold leading-6 text-neutral-950 shadow-sm hover:bg-red-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
               >
-                Send Message
+                <a
+              href={`mailto:${props.employee.email}?subject=CodeCalm: `}
+              target="_blank"
+              title={`Send an email to ${props.employee.first_name} ${props.employee.last_name}`}
+            >
+              Send Message
+            </a>
+                
               </button>
             </p>
           </td>
@@ -273,46 +285,47 @@ function SingleTeamMember(props) {
 
       {isOpen && formDetails && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-800 bg-opacity-75">
-        <div className="relative p-8 bg-white w-full max-w-md m-auto flex-col flex rounded-lg shadow-lg">
-          <h2 className="text-2xl font-bold mb-4">
-            Self Stress Detection Details
-          </h2>
-      
-          <h2 className="font-semibold mt-4 text-gray-700">
-            of {props.employee.first_name} {props.employee.last_name}
-          </h2>
-      
-          <h2 className="font-semibold mt-4 text-gray-700">
-            Submitted on: {props.employee.submitted_on}
-          </h2>
-      
-          <div>
-            <h3 className="font-semibold text-gray-700">Answers:</h3>
-            <ol className="list-decimal list-inside mt-2">
-              {Object.entries(formDetails.answers).map(
-                ([question, answer], index) => (
-                  <li key={index} className="mt-1 text-gray-600">
-                    <strong className="text-gray-800">{question}</strong> - {answer}
-                  </li>
-                )
-              )}
-            </ol>
-            <h3 className="font-semibold mt-4 text-gray-700">
-              <strong>Additional Comments:</strong>
-            </h3>
-            <p className="text-gray-600">{formDetails.additional_comments || "None"}</p>
-          </div>
-          <button
-                onClick={() => setIsOpen(false)}
-                className={` text-black absolute top-5 right-5 ${BtnClose.base} ${BtnClose.hover}`}
-              >
-                <IoClose size={25} />
-              </button>
-        </div>
-      </div>
-      
-      )}
+          <div className="relative p-8 bg-white w-full max-w-md m-auto flex-col flex rounded-lg shadow-lg">
+            <h2 className="text-2xl font-bold mb-4">
+              Self Stress Detection Details
+            </h2>
 
+            <h2 className="font-semibold mt-4 text-gray-700">
+              of {props.employee.first_name} {props.employee.last_name}
+            </h2>
+
+            <h2 className="font-semibold mt-4 text-gray-700">
+              Submitted on: {props.employee.submitted_on}
+            </h2>
+
+            <div>
+              <h3 className="font-semibold text-gray-700">Answers:</h3>
+              <ol className="list-decimal list-inside mt-2">
+                {Object.entries(formDetails.answers).map(
+                  ([question, answer], index) => (
+                    <li key={index} className="mt-1 text-gray-600">
+                      <strong className="text-gray-800">{question}</strong> -{" "}
+                      {answer}
+                    </li>
+                  )
+                )}
+              </ol>
+              <h3 className="font-semibold mt-4 text-gray-700">
+                <strong>Additional Comments:</strong>
+              </h3>
+              <p className="text-gray-600">
+                {formDetails.additional_comments || "None"}
+              </p>
+            </div>
+            <button
+              onClick={() => setIsOpen(false)}
+              className={` text-black absolute top-5 right-5 ${BtnClose.base} ${BtnClose.hover}`}
+            >
+              <IoClose size={25} />
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

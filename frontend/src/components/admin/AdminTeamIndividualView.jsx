@@ -12,8 +12,7 @@ const AdminTeamIndividualView = () => {
   const [userData, setUserData] = useState([]);
   const [teamMembers, setTeamMembers] = useState([]);
   const [teamLeaders, setTeamLeaders] = useState([]);
-
-  let { selectedTeam } = useParams();
+  const { selectedTeam } = useParams();
 
   const fetchUserData = async () => {
     try {
@@ -22,8 +21,7 @@ const AdminTeamIndividualView = () => {
       });
       const user = response.data;
       setUserData(user);
-      console.log(user)
-      setMessage(`Hi ${user.first_name} ${user.last_name}`);
+      setMessage(`${user.first_name} ${user.last_name}`);
       fetchTeamMembers(user.team);
     } catch (e) {
       console.error(e);

@@ -507,12 +507,14 @@ class EmotionDataView(APIView):
         if not image_data or not userid:
             return JsonResponse({'emo': 'Missing frame or user_id', 'frq': 'none'})
         
+        # time limit og 6 pm
         if current_time <= datetime.strptime("18:01", "%H:%M").time():
             try:
                 format, imgstr = image_data.split('image/jpeg;base64,')
                 opencv_image = stringToRGB(imgstr)
                 sharpened_image = imageSharpen(opencv_image)
 
+                # frame quality check
                 if is_image_dark(opencv_image):
                     return JsonResponse({'emo': 'Webcam cover is closed or image is too dark', 'frq': 'none'})
 
@@ -533,11 +535,11 @@ class EmotionDataView(APIView):
                             stress_weights = {
                                 'angry': 4,
                                 'disgust': 3,
-                                'fear': 4,
+                                'fear': 3,
                                 'happy': -4,
                                 'sad': 3,
                                 'surprise': 1,
-                                'neutral': 0
+                                'neutral': -3
                             }
 
                             allowed_emotions = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
@@ -1403,10 +1405,10 @@ class TeamDetection(APIView):
             stress_info = self.get_stress_score(member['id'])
 
             member.update({
-                'emotion': 'happy',
-                'stress': 'low',
-                'breathing': 'white noise',
-                'audio': 'rain',
+                'emotion': '',
+                'stress': '',
+                'breathing': '',
+                'audio': '',
                 'stress_score': stress_info['score'],
                 'submitted_on': stress_info['submitted_on']
             })

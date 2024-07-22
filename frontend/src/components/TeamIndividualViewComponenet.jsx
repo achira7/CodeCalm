@@ -66,7 +66,7 @@ const TeamIndividualViewComponenet = ({ team, role }) => {
 
 
       <div className="text-center">
-        <div className="felx items-center">
+        <div className="items-center">
           <div className="mt-5">
             <h5 className="text-2xl font-bold text-sky-900">
               Detailed View of:
@@ -75,7 +75,7 @@ const TeamIndividualViewComponenet = ({ team, role }) => {
             <h5 className="text-lg text-black">Team {team}</h5>
           </div>
 
-          <div className="felx items-center rounded-lg bg-gray-300 flex-wrap m-5 px-5 py-2 inline-block">
+          <div className="items-center rounded-lg bg-gray-300 flex-wrap m-5 px-5 py-2 inline-block">
             <h1 className="font-semibold">Team Leader(s):</h1>
             <div className="flex items-center justify-center">
               {teamLeaders.length > 0 ? (
@@ -84,7 +84,6 @@ const TeamIndividualViewComponenet = ({ team, role }) => {
                     <li key={index} className="text-left flex items-center">
                       <FaCaretRight className="" />
                       {leader.first_name} {leader.last_name}
-                      {/*leader.id === userData.id && "(You)"*/}
                     </li>
                   ))}
                 </ul>
