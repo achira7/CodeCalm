@@ -1,11 +1,14 @@
 import React, { useState, useRef, useEffect } from "react";
-import AudioPlayer from "react-h5-audio-player";
+import axios from "axios";
 import "react-h5-audio-player/lib/styles.css";
-import tracks from "../Tracks";
+import { Color } from "../theme/Colors";
 import "tailwindcss/tailwind.css";
-import "./PlayerStyles.css"; // Import custom CSS for additional styling
-import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
-import 'react-circular-progressbar/dist/styles.css';
+import { playerState, tracksState } from "../atoms";
+import "./PlayerStyles.css";
+import "react-circular-progressbar/dist/styles.css";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import "./noScroll.css";
+import { FaExpandArrowsAlt } from "react-icons/fa";
 
 const Player = () => {
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
@@ -14,40 +17,108 @@ const Player = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [dominantColor, setDominantColor] = useState("#000");
   const [progress, setProgress] = useState(0);
+  const [userID, setUserID] = useState("");
+  const [player, setPlayer] = useRecoilState(playerState);
 
-  const currentTrack = tracks[currentTrackIndex];
+  const tracks = useRecoilValue(tracksState);
+  const setTracks = useSetRecoilState(tracksState);
+
+  // const [tracks, setTracks] = useState({})
+
+  // const currentTrack = tracks[currentTrackIndex];
   const audioRef = useRef(null);
   const imageRef = useRef(null);
 
-  const handleNext = () => {
-    setCurrentTrackIndex((currentTrackIndex + 1) % tracks.length);
-  };
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
 
-  const handlePrevious = () => {
-    setCurrentTrackIndex(
-      (currentTrackIndex - 1 + tracks.length) % tracks.length
-    );
-  };
+  const currentTrack = tracks.length > 0 ? tracks[currentTrackIndex] : {};
 
-  const toggleRepeat = () => {
-    setIsRepeat(!isRepeat);
-  };
+  useEffect(() => {
+    (async () => {
+      try {
+        const response = await axios.get("http://localhost:8000/api/getuser/", {
+          withCredentials: true,
+        });
+        setUserID(response.data.id);
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+  }, []);
 
-  const toggleLoop = () => {
-    setIsLoop(!isLoop);
-  };
+  useEffect(() => {
+    const fetchTracks = async () => {
+      try {
+        const response = await axios.get("http://localhost:8000/api/tracks/");
+        setTracks(response.data);
+        console.log(response.data);
+      } catch (error) {
+        console.error("Error fetching tracks: ", error);
+      }
+    };
 
-  const handlePlayPause = () => {
-    setIsPlaying(!audioRef.current.audio.current.paused);
-  };
+    fetchTracks();
+  }, []);
 
   const updateProgress = () => {
     if (audioRef.current && audioRef.current.audio.current) {
       const currentTime = audioRef.current.audio.current.currentTime;
       const duration = audioRef.current.audio.current.duration;
+      setCurrentTime(currentTime);
+      setDuration(duration);
       setProgress((currentTime / duration) * 100);
     }
   };
+
+  const logListeningData = async (user_id, track_name, duration) => {
+    if (!user_id || !track_name || !duration) {
+      console.error("User, track name, and duration are required");
+      return;
+    }
+
+    try {
+      await axios.post("http://localhost:8000/api/listening/", {
+        user: user_id,
+        track_name: track_name,
+        duration: duration,
+      });
+    } catch (error) {
+      console.error(
+        "Error posting data: ",
+        error.response ? error.response.data : error.message
+      );
+    }
+  };
+
+  useEffect(() => {
+    let listeningStartTime = 0;
+
+    const handlePlaying = () => {
+      listeningStartTime = audioRef.current.audio.current.currentTime;
+    };
+
+    const handlePaused = async () => {
+      const listeningEndTime = audioRef.current.audio.current.currentTime;
+      const listeningDuration = listeningEndTime - listeningStartTime;
+      if (listeningDuration > 0) {
+        await logListeningData(userID, currentTrack.title, listeningDuration);
+      }
+    };
+
+    if (audioRef.current && audioRef.current.audio.current) {
+      const player = audioRef.current.audio.current;
+      player.addEventListener("playing", handlePlaying);
+      player.addEventListener("pause", handlePaused);
+      player.addEventListener("ended", handlePaused);
+
+      return () => {
+        player.removeEventListener("playing", handlePlaying);
+        player.removeEventListener("pause", handlePaused);
+        player.removeEventListener("ended", handlePaused);
+      };
+    }
+  }, [currentTrackIndex, userID, currentTrack.title]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -59,54 +130,50 @@ const Player = () => {
     return () => clearInterval(interval);
   }, [isPlaying]);
 
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
+  };
+
+  useEffect(() => {
+    const currentPath = window.location.pathname;
+    if (currentPath.includes("/employee/player")) {
+      console.log('Current path includes "/employee/player"');
+      setPlayer((prev) => ({ ...prev, isFloating: false }));
+      // setPlayer(false)
+    } else {
+      console.log('Current path does not include "/employee/player"');
+      setPlayer((prev) => ({ ...prev, isFloating: true }));
+      // setPlayer(true)
+    }
+  }, []);
+
   return (
-    <div className="p-4 flex flex-col items-center">
-      <div className="relative mb-8">
-        <div className={`circle-content ${isPlaying ? "breathing" : ""} circle-border`} style={{ "--dominant-color": dominantColor }}>
-          <div className="relative" style={{ width: "250px", height: "250px" }}>
-            <CircularProgressbar
-            strokeWidth={2}
-              value={progress}
-              size={10}
-              styles={buildStyles({
-                pathColor: "rgb(1, 161, 219)",
-                trailColor: "#d6d6d6",
-                strokeLinecap: "butt",
-                pathTransitionDuration: 0.5,
-              })}
-            />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <img
-                ref={imageRef}
-                src={currentTrack.artwork}
-                alt={currentTrack.name}
-                className={`w-56 h-56 rounded-full ${isPlaying ? "spinning" : "paused"}`}
-              />
-            </div>
-          </div>
-          <h2 className="text-white text-center song-title">
-            {currentTrack.name}
-          </h2>
-        </div>
+    <div className={`${Color.background} flex flex-col items-center`}>
+      <div className="flex flex-col items-center justify-between">
+        <h1
+          className={`flex items-center justify-between text-3xl font-bold text-sky-500 font-google mt-5 ${Color.background} ${Color.cardBGText} `}
+        >
+          Audio Therapy
+        </h1>
       </div>
 
-      <AudioPlayer
-        autoPlay={false}
-        ref={audioRef}
-        src={currentTrack.url}
-        onPlay={handlePlayPause}
-        onPause={handlePlayPause}
-        onEnded={handleNext}
-        layout="horizontal"
-        showJumpControls={true}
-        showSkipControls={true}
-        onClickNext={handleNext}
-        onClickPrevious={handlePrevious}
-        customProgressBarSection={[]}
-        loop={isLoop}
-        className="custom-audio-player"
-        style={{ width: '700px' }}
-      />
+      <button
+        onClick={() =>
+          setPlayer((prev) => ({ ...prev, isFloating: !prev.isFloating }))
+        }
+        className="mt-4 bg-blue-500 text-white px-4 py-2 rounded"
+      >
+        
+
+        {player.isFloating
+          ? "Switch to Normal Mode"
+          : "Switch to Floating Mode"}
+      </button>
+      {/*<div className="h-screen overflow-y-hidden">
+
+  </div>*/}
     </div>
   );
 };

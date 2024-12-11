@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.utils.deconstruct import deconstructible
 import os
+from django.utils import timezone
+from datetime import timedelta
 
 class UserAccountManager(BaseUserManager):
     def create_user(self, email, first_name, last_name, password=None, **extra_fields):
@@ -80,25 +82,133 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email + " | " + self.first_name
 
+
+class Employee_Team(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+    description = models.TextField(null=True, blank=True)
+
+    @classmethod
+    def create_team(cls, name, description):
+        team = cls(name=name, description=description)
+        team.save(using=cls._default_manager.db)
+        return team
+
+    def __str__(self):
+        return self.name
+
 class Employee_Stress(models.Model):  
     employee = models.ForeignKey(UserAccount, on_delete=models.CASCADE)
-    time = models.DateTimeField(auto_now_add=True)
-    stress_data = models.CharField(max_length=10)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    stress_data = models.IntegerField()
 
 class Employee_Emotion(models.Model):  
     employee = models.ForeignKey(UserAccount, on_delete=models.CASCADE)
     time = models.DateTimeField(auto_now_add=True)
     emotion_data = models.CharField(max_length=10)
 
-class UserTokens(models.Model):
-    user_id = models.IntegerField()
-    token = models.CharField(max_length=255)
-    created_at = models.DateTimeField(auto_now_add=True)
-    expired_at = models.DateTimeField()
+class Employee_Focus(models.Model):  
+    employee = models.ForeignKey(UserAccount, on_delete=models.CASCADE)
+    time = models.DateTimeField(auto_now_add=True)
+    focus_data = models.CharField(max_length=5)
 
-class PasswordReset(models.Model):
-    email = models.EmailField(max_length=255)
-    token = models.CharField(max_length=255, unique=True)
+class BreathingExerciseUsage(models.Model):
+    employee = models.ForeignKey(UserAccount, on_delete=models.CASCADE)
+    exercise_name = models.CharField(max_length=255)
+    duration = models.IntegerField() 
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.employee.first_name} - {self.exercise_name} for {self.duration} seconds"
+    
+
+class TrackListening(models.Model):
+    employee = models.ForeignKey(UserAccount, on_delete=models.CASCADE)
+    track_name = models.CharField(max_length=255)
+    duration = models.FloatField()  
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.employee.first_name} listened to {self.track_name} for {self.duration} seconds"
+
+
+class Message(models.Model):
+    sender = models.ForeignKey(UserAccount, related_name='sent_messages', on_delete=models.CASCADE)
+    receiver = models.ForeignKey(UserAccount, related_name='received_messages', on_delete=models.CASCADE)
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'Message from {self.sender} to {self.receiver} at {self.timestamp}'
+    
+
+class StressQuestion(models.Model):
+    question = models.CharField(max_length=500)
+    affect = models.CharField(max_length=3)
+    type = models.CharField(max_length=3)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+class StressDetectionForm(models.Model):
+    user = models.ForeignKey(UserAccount, on_delete=models.CASCADE)
+    answers = models.JSONField() 
+    score = models.IntegerField()
+    additional_comments = models.TextField(null=True, blank=True)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Stress Detection Form by {self.employee.first_name} {self.employee.last_name}  Submitted on {self.submitted_at}"
+
+class ReportGeneration(models.Model):
+    downloaded_by = models.ForeignKey(UserAccount, on_delete=models.CASCADE)
+    role = models.CharField(max_length=10)
+    downloaded_on = models.DateTimeField(auto_now_add=False)
+
+class BreathingProfile(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    inhale_duration = models.IntegerField()
+    exhale_duration = models.IntegerField()
+    hold_duration = models.IntegerField()
+    description = models.TextField()
+
+    def __str__(self):
+        return self.name
+    
+
+class Track(models.Model):
+    title = models.CharField(max_length=100, unique=True)
+    artist = models.CharField(max_length=100)
+    audioSrc = models.FileField(upload_to='audio/')
+    image = models.ImageField(upload_to='audio_images/')
+    color = models.CharField(max_length=7)
+
+    def __str__(self):
+        return self.title
+
+
+class Reminder(models.Model):
+    user = models.ForeignKey(UserAccount, on_delete=models.CASCADE)
+    date = models.DateTimeField()
+    message = models.CharField(max_length=255)
+    type = models.CharField(max_length=50, choices=[('Breathing Exercise', 'Breathing Exercise'), ('Track Listening', 'Track Listening')])
+
+    def __str__(self):
+        return f"{self.user} - {self.type} - {self.date}"
+    
+    
+def user_directory_path(instance, filename):
+    return f'face_login_images/user_{instance.user.id}/{filename}'
+
+class FaceLoginProfile(models.Model):
+    user = models.OneToOneField(UserAccount, on_delete=models.CASCADE, related_name="face_login_profile")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    completed = models.BooleanField(default=False)
+
+class FaceImage(models.Model):
+    profile = models.ForeignKey(FaceLoginProfile, on_delete=models.CASCADE, related_name="face_images")
+    image = models.ImageField(upload_to=user_directory_path)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
 
 
 
